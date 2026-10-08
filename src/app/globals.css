@@ -1,26 +1,307 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Identité reprise de docs/ref-design.pptx (thème, polices, illustrations). */
+@theme {
+  --color-encre: #333233;
+  --color-papier: #f3f0e7;
+  --color-brun: #5d4433;
+  --color-moutarde: #e3ad46;
+  --color-sable: #ebcb91;
+  --color-ocre: #bd9b68;
+  --color-rouge: #d45943;
+  --color-vert: #92b159;
+
+  --font-sans: var(--font-lato), system-ui, sans-serif;
+  --font-titre: var(--font-lilita), "Arial Black", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  overflow-x: clip;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-padding-top: 5rem;
+}
+
+a,
+button {
+  touch-action: manipulation;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-papier) url("/illustrations/paper.webp") top center / 1400px auto;
+  color: var(--color-encre);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brun);
+  outline-offset: 3px;
+}
+
+/* Icône monochrome : le SVG sert de masque, la couleur vient de `color`. */
+.icone {
+  display: inline-block;
+  background-color: currentColor;
+  mask: var(--src) center / contain no-repeat;
+}
+
+/* Texte long des articles et des profils. */
+.texte-long p {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  max-width: 68ch;
+}
+.texte-long p + p {
+  margin-top: 1.1em;
+}
+
+/* Filets des cadres : quatre traits, pour pouvoir les dessiner un à un. */
+.filet {
+  position: absolute;
+  background: var(--color-encre);
+  pointer-events: none;
+}
+.filet-haut,
+.filet-bas {
+  left: 0;
+  right: 0;
+  height: 1.5px;
+}
+.filet-gauche,
+.filet-droite {
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+}
+.filet-haut {
+  top: 0;
+  transform-origin: left;
+}
+.filet-droite {
+  right: 0;
+  transform-origin: top;
+}
+.filet-bas {
+  bottom: 0;
+  transform-origin: right;
+}
+.filet-gauche {
+  left: 0;
+  transform-origin: bottom;
+}
+
+/* ---------- Animations (classe `anim` posée sur <html> avant le premier rendu) ---------- */
+
+/* Les cadres restent invisibles jusqu'à ce que leur animation d'entrée démarre. */
+.anim [data-cadre] {
+  opacity: 0;
+}
+
+/* Les masques de SplitText ne doivent pas couper les jambages de Lilita One. */
+.ligne-mask {
+  padding-block: 0.12em;
+  margin-block: -0.12em;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.eclat {
+  position: fixed;
+  z-index: 120;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.curseur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 9999px;
+  background: var(--color-brun);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.rail {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 40;
+  height: 34px;
+  pointer-events: none;
+}
+.rail::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 5px 0;
+  height: 1.5px;
+  background: var(--color-encre);
+  opacity: 0.35;
+}
+.rail img {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 46px;
+}
+
+@media (hover: none) {
+  .curseur {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .curseur,
+  .rail {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .rail {
+    height: calc(26px + env(safe-area-inset-bottom));
+  }
+  .rail::after {
+    bottom: calc(4px + env(safe-area-inset-bottom));
+  }
+  .rail img {
+    width: 34px;
+    bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ---------- Écran de chargement ---------- */
+
+#chargement {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  /* Secours : si les scripts ne démarrent jamais, l'écran s'efface seul. */
+  animation: chargement-secours 0.6s 9s forwards;
+}
+.chargement-strate,
+.chargement-papier {
+  position: absolute;
+  inset: 0;
+}
+.chargement-papier {
+  background: var(--color-papier) url("/illustrations/paper.webp") top center / 1400px auto;
+  --progres: 0%;
+}
+.chargement-cadre {
+  position: absolute;
+  inset: clamp(14px, 2.4vw, 28px);
+  border: 1.5px solid var(--color-encre);
+}
+.chargement-centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 5vh, 56px);
+  padding-inline: 8vw;
+}
+.chargement-logo {
+  width: clamp(7rem, 16vw, 11rem);
+  height: auto;
+  margin-bottom: calc(-1 * clamp(12px, 2.5vh, 28px));
+}
+.chargement-mot {
+  position: relative;
+  font-size: clamp(4.5rem, 17vw, 15rem);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+}
+.chargement-mot-fond {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-encre);
+}
+/* Le mot se remplit d'or par le bas, comme un wagonnet qu'on charge. */
+.chargement-mot-plein {
+  position: absolute;
+  inset: 0;
+  color: var(--color-moutarde);
+  -webkit-text-stroke: 1.5px var(--color-encre);
+  clip-path: inset(calc(100% - var(--progres)) 0 0 0);
+}
+.chargement-rail {
+  position: relative;
+  width: min(100%, 46rem);
+  height: 74px;
+  border-bottom: 1.5px solid var(--color-encre);
+}
+.chargement-tas {
+  position: absolute;
+  bottom: 2px;
+  width: 44px;
+  margin-left: -22px;
+  animation: chargement-sursaut 1.6s ease-in-out infinite;
+}
+.chargement-wagon {
+  position: absolute;
+  bottom: -9px;
+  left: 0;
+  width: 84px;
+  animation: chargement-cahot 0.32s ease-in-out infinite alternate;
+}
+.chargement-devise {
+  position: absolute;
+  left: clamp(28px, 5vw, 64px);
+  bottom: clamp(28px, 5vw, 56px);
+}
+.chargement-compteur {
+  position: absolute;
+  right: clamp(28px, 5vw, 64px);
+  bottom: clamp(20px, 4vw, 44px);
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  line-height: 1;
+  color: var(--color-brun);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes chargement-sursaut {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  80% {
+    transform: translateY(-9px) scale(0.96, 1.06);
+  }
+  90% {
+    transform: translateY(0) scale(1.05, 0.94);
+  }
+}
+@keyframes chargement-cahot {
+  from {
+    translate: 0 0;
+    rotate: -0.6deg;
+  }
+  to {
+    translate: 0 -2px;
+    rotate: 0.6deg;
+  }
+}
+@keyframes chargement-secours {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #chargement {
+    display: none;
+  }
 }

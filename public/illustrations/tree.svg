@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="68.0" height="62.0" viewBox="326.0 171.5 68.0 62.0">
+<defs>
+<filter id="filter-remove-color" x="0%" y="0%" width="100%" height="100%">
+<feColorMatrix color-interpolation-filters="sRGB" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0" />
+</filter>
+<filter id="filter-remove-color-and-invert-alpha" x="0%" y="0%" width="100%" height="100%">
+<feColorMatrix color-interpolation-filters="sRGB" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -1 1"/>
+</filter>
+<filter id="filter-0" x="0%" y="0%" width="100%" height="100%">
+<feImage xlink:href="#compositing-group-1" result="source" x="0" y="0" width="1036.8" height="583.220409"/>
+<feImage xlink:href="#compositing-group-2" result="destination" x="0" y="0" width="1036.8" height="583.220409"/>
+<feComposite in="source" in2="destination" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" color-interpolation-filters="sRGB"/>
+</filter>
+<filter id="filter-1" x="0%" y="0%" width="100%" height="100%">
+<feImage xlink:href="#compositing-group-4" result="source" x="0" y="0" width="1036.8" height="583.220409"/>
+<feImage xlink:href="#compositing-group-5" result="destination" x="0" y="0" width="1036.8" height="583.220409"/>
+<feComposite in="source" in2="destination" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" color-interpolation-filters="sRGB"/>
+</filter>
+<clipPath id="clip-0">
+<path clip-rule="nonzero" d="M 0.875 0 L 719.097656 0 L 719.097656 404.003906 L 0.875 404.003906 Z M 0.875 0 "/>
+</clipPath>
+<mask id="mask-0">
+<g filter="url(#filter-remove-color)">
+<rect x="-72" y="-40.501417" width="864" height="486.017008" fill="rgb(0%, 0%, 0%)" fill-opacity="0.25"/>
+</g>
+</mask>
+<g id="compositing-group-0" transform="translate(497.4, 306.103118)">
+<rect x="-497.4" y="-306.103118" width="1036.8" height="583.220409" fill="rgb(0%, 0%, 0%)" fill-opacity="0"/>
+<clipPath id="clip-1">
+<path clip-rule="nonzero" d="M 0.386719 0.03125 L 53.632812 0.03125 L 53.632812 14.566406 L 0.386719 14.566406 Z M 0.386719 0.03125 "/>
+</clipPath>
+<g clip-path="url(#clip-1)">
+<path fill-rule="evenodd" fill="rgb(100%, 100%, 100%)" fill-opacity="1" d="M 19.867188 0.03125 L 10.054688 5.714844 L 0.386719 5.714844 L 0.386719 8.851562 L 9.632812 8.851562 L 19.53125 14.539062 L 41.21875 14.539062 L 53.605469 7.355469 L 41.613281 0.03125 Z M 19.867188 0.03125 "/>
+</g>
+</g>
+<mask id="mask-1">
+<use xlink:href="#compositing-group-0"/>
+</mask>
+<mask id="mask-2">
+<use xlink:href="#compositing-group-0" filter="url(#filter-remove-color-and-invert-alpha)"/>
+</mask>
+<g id="compositing-group-1" mask="url(#mask-1)">
+<g transform="translate(497.4, 306.103118)">
+<rect x="-497.4" y="-306.103118" width="1036.8" height="583.220409" fill="rgb(36.470032%, 26.66626%, 19.999695%)" fill-opacity="1"/>
+</g>
+</g>
+<g id="compositing-group-2" mask="url(#mask-2)">
+<g transform="translate(497.4, 306.103118)">
+</g>
+</g>
+<clipPath id="clip-2">
+<rect x="0" y="0" width="54" height="15"/>
+</clipPath>
+<g id="source-6" clip-path="url(#clip-2)">
+<g filter="url(#filter-0)" transform="translate(-497.4, -306.103118)">
+<rect x="0" y="0" width="1036.8" height="583.220409" fill="rgb(0%, 0%, 0%)" fill-opacity="1"/>
+</g>
+</g>
+<mask id="mask-3">
+<g filter="url(#filter-remove-color)">
+<rect x="-72" y="-40.501417" width="864" height="486.017008" fill="rgb(0%, 0%, 0%)" fill-opacity="0.25"/>
+</g>
+</mask>
+<g id="compositing-group-3" transform="translate(494.4, 265.103118)">
+<rect x="-494.4" y="-265.103118" width="1036.8" height="583.220409" fill="rgb(0%, 0%, 0%)" fill-opacity="0"/>
+<clipPath id="clip-3">
+<path clip-rule="nonzero" d="M 0.613281 0.933594 L 11.613281 0.933594 L 11.613281 9.164062 L 0.613281 9.164062 Z M 0.613281 0.933594 "/>
+</clipPath>
+<g clip-path="url(#clip-3)">
+<path fill-rule="evenodd" fill="rgb(100%, 100%, 100%)" fill-opacity="1" d="M 3.894531 0.933594 L 0.613281 9.132812 L 5.703125 9.132812 L 11.585938 5.65625 Z M 3.894531 0.933594 "/>
+</g>
+</g>
+<mask id="mask-4">
+<use xlink:href="#compositing-group-3"/>
+</mask>
+<mask id="mask-5">
+<use xlink:href="#compositing-group-3" filter="url(#filter-remove-color-and-invert-alpha)"/>
+</mask>
+<g id="compositing-group-4" mask="url(#mask-4)">
+<g transform="translate(494.4, 265.103118)">
+<rect x="-494.4" y="-265.103118" width="1036.8" height="583.220409" fill="rgb(36.470032%, 26.66626%, 19.999695%)" fill-opacity="1"/>
+</g>
+</g>
+<g id="compositing-group-5" mask="url(#mask-5)">
+<g transform="translate(494.4, 265.103118)">
+</g>
+</g>
+<clipPath id="clip-4">
+<rect x="0" y="0" width="12" height="10"/>
+</clipPath>
+<g id="source-10" clip-path="url(#clip-4)">
+<g filter="url(#filter-1)" transform="translate(-494.4, -265.103118)">
+<rect x="0" y="0" width="1036.8" height="583.220409" fill="rgb(0%, 0%, 0%)" fill-opacity="1"/>
+</g>
+</g>
+</defs>
+<g clip-path="url(#clip-0)">
+</g>
+<g mask="url(#mask-0)">
+<use xlink:href="#source-6" transform="matrix(1, 0, 0, 1, 339, 217)"/>
+</g>
+<path fill-rule="evenodd" fill="rgb(36.470032%, 26.66626%, 19.999695%)" fill-opacity="1" d="M 341.703125 197.039062 L 339.355469 198.394531 L 339.355469 225.851562 L 341.703125 224.46875 Z M 341.703125 197.039062 "/>
+<path fill-rule="evenodd" fill="rgb(30.587769%, 25.097656%, 23.136902%)" fill-opacity="1" d="M 339.355469 195.652344 L 336.980469 197.039062 L 339.355469 198.425781 L 341.703125 197.039062 Z M 339.355469 195.652344 "/>
+<path fill-rule="evenodd" fill="rgb(36.470032%, 26.66626%, 19.999695%)" fill-opacity="1" d="M 336.980469 197.039062 L 336.980469 224.46875 L 339.355469 225.851562 L 339.355469 198.394531 Z M 336.980469 197.039062 "/>
+<path fill-rule="evenodd" fill="rgb(51.371765%, 59.999084%, 34.117126%)" fill-opacity="1" d="M 352.109375 182.476562 L 342.46875 188.046875 L 339.726562 189.660156 L 339.726562 218.644531 L 352.109375 211.429688 Z M 352.109375 182.476562 "/>
+<path fill-rule="evenodd" fill="rgb(57.254028%, 69.410706%, 34.901428%)" fill-opacity="1" d="M 342.46875 176.933594 L 342.46875 182.050781 L 336.472656 185.21875 L 329.402344 181.261719 L 327.339844 182.476562 L 329.402344 183.71875 L 336.472656 187.820312 L 339.726562 189.660156 L 342.46875 188.074219 L 352.109375 182.476562 Z M 342.46875 176.933594 "/>
+<g mask="url(#mask-3)">
+<use xlink:href="#source-10" transform="matrix(1, 0, 0, 1, 336, 176)"/>
+</g>
+<path fill-rule="evenodd" fill="rgb(51.371765%, 59.999084%, 34.117126%)" fill-opacity="1" d="M 342.496094 176.480469 L 336.5 179.960938 L 336.5 185.191406 L 342.496094 182.023438 Z M 342.496094 176.480469 "/>
+<path fill-rule="evenodd" fill="rgb(57.254028%, 69.410706%, 34.901428%)" fill-opacity="1" d="M 327.339844 182.476562 L 327.339844 211.429688 L 339.726562 218.644531 L 339.726562 189.660156 L 336.472656 187.820312 L 329.402344 183.691406 Z M 327.339844 182.476562 "/>
+<path fill-rule="evenodd" fill="rgb(57.254028%, 69.410706%, 34.901428%)" fill-opacity="1" d="M 329.429688 175.914062 L 329.429688 181.261719 L 336.472656 185.191406 L 336.472656 179.988281 L 334.070312 178.574219 Z M 329.429688 175.914062 "/>
+<path fill-rule="evenodd" fill="rgb(57.254028%, 69.410706%, 34.901428%)" fill-opacity="1" d="M 335.425781 172.410156 L 329.429688 175.859375 L 334.070312 178.546875 L 336.5 179.988281 L 342.183594 176.707031 L 342.496094 176.480469 Z M 335.425781 172.410156 "/>
+<path fill-rule="evenodd" fill="rgb(57.254028%, 69.410706%, 34.901428%)" fill-opacity="1" d="M 345.945312 191.949219 L 345.945312 202.722656 L 348.546875 204.222656 L 348.546875 193.449219 Z M 345.945312 191.949219 "/>
+<path fill-rule="evenodd" fill="rgb(57.254028%, 69.410706%, 34.901428%)" fill-opacity="1" d="M 352.082031 188.359375 L 345.917969 191.949219 L 348.519531 193.476562 L 354.769531 189.855469 C 354.769531 189.855469 352.109375 188.359375 352.082031 188.359375 Z M 352.082031 188.359375 "/>
+<path fill-rule="evenodd" fill="rgb(51.371765%, 59.999084%, 34.117126%)" fill-opacity="1" d="M 354.796875 189.828125 L 348.546875 193.417969 L 348.546875 204.164062 L 354.796875 200.574219 Z M 354.796875 189.828125 "/>
+</svg>

@@ -1,0 +1,314 @@
+import type { Member } from "./types";
+
+// Bureau élu le 22 septembre 2024. Textes repris des fiches officielles publiées
+// par l'ENSMG (https://ensmg.ucad.sn/article/alumnis), dans l'ordre protocolaire.
+const membres: Member[] = [
+  {
+    slug: "ibrahima-diao",
+    nom: "Dr Ibrahima Diao",
+    fonction: "Président",
+    titre: "Chef de mission",
+    organisation: "CACO",
+    specialite: "Géologie",
+    promotion: 2006,
+    numero: 173,
+    photo: "/membres/ibrahima-diao.jpg",
+    resume:
+      "Président de l'ADEMIG depuis le 22 septembre 2024, il s'est engagé à redynamiser l'amicale et à promouvoir l'ingénieur géologue.",
+    bio: [
+      "« Je commencerai par adresser mes sincères remerciements à l'ensemble des alumni qui ont porté leur confiance en ma modeste personne au matin du 22 septembre 2024, en me portant à la tête de cette prestigieuse amicale.",
+      "Avec le bureau exécutif élu le même jour, nous nous engageons à travailler vivement pour la redynamisation de l'amicale et la promotion de l'ingénieur géologue.",
+      "Nous comptons vivement sur la main mise de chacun des alumni pour la réussite de cette mission. Aux sages, aux aînés, à la génération intermédiaire, aux plus jeunes, nous vous invitons vivement à vous approprier cette amicale afin d'en faire une réussite honorable pour l'intérêt de tout ingénieur géologue, mais également pour le développement du Sénégal et de l'Afrique. »",
+    ],
+    parcours: [
+      { periode: "Depuis 2024", poste: "Président", organisation: "ADEMIG" },
+      { periode: "Actuellement", poste: "Chef de mission", organisation: "CACO" },
+      { periode: "2006", poste: "Ingénieur diplômé, n° 173", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Géologie", "Contenu local", "Secteur extractif"],
+  },
+  {
+    slug: "sokhna-khadidjatou-thioye",
+    nom: "Sokhna Khadidjatou Thioye",
+    fonction: "Vice-présidente",
+    titre: "Chef de projet",
+    organisation: "PETROSEN",
+    specialite: "Pétrole et gaz",
+    promotion: 2008,
+    numero: 190,
+    photo: "/membres/sokhna-khadidjatou-thioye.jpg",
+    resume:
+      "Project manager du projet pétrolier Grand Tortue Ahmeyim (GTA) à PETROSEN, elle enseigne la géologie des hydrocarbures à l'ENSMG depuis 2016.",
+    bio: [
+      "« Je m'appelle Sokhna Khadidjatou Thioye Sakho, diplômée de l'École nationale supérieure des mines et de la géologie (ex-IST) en 2008. Depuis 2016, je dispense le cours de géologie des hydrocarbures au sein de l'ENSMG. Actuellement, je travaille à PETROSEN en tant que project manager du projet pétrolier Grand Tortue Ahmeyim (GTA).",
+      "L'une de mes passions reste la vulgarisation du secteur du pétrole et du gaz partout, en particulier au niveau national, qui est encore à ses prémisses en matière de maîtrise du secteur. À part cela, j'ai toujours été passionnée par l'éducation des jeunes et l'insertion des femmes dans les systèmes éducatifs, notamment techniques, et leur intégration dans les plus hautes sphères décisionnelles.",
+      "Plus récemment, je m'intéresse au secteur agricole au vu des défis actuels et futurs que rencontre ce domaine, notamment pour l'autosuffisance alimentaire et la création d'emploi.",
+      "Enfin, je reste dévouée à « mes familles », proches comme élargies, constituées au cours de ma courte vie, et je suis ravie de faire partie du cercle de l'ADEMIG, pour lequel je marque mon engagement. »",
+    ],
+    parcours: [
+      { periode: "Actuellement", poste: "Project manager, projet Grand Tortue Ahmeyim", organisation: "PETROSEN" },
+      { periode: "Depuis 2016", poste: "Enseignante, géologie des hydrocarbures", organisation: "ENSMG" },
+      { periode: "2008", poste: "Ingénieure diplômée, n° 190", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Gestion de projet pétrolier", "Géologie des hydrocarbures", "Enseignement"],
+  },
+  {
+    slug: "bineta-gueye-fall",
+    nom: "Bineta Gueye Fall",
+    fonction: "Secrétaire générale",
+    titre: "Doctorante",
+    organisation: "CIRAD",
+    specialite: "Environnement",
+    promotion: 2009,
+    numero: 208,
+    ville: "Montpellier",
+    photo: "/membres/bineta-gueye-fall.jpg",
+    resume:
+      "Spécialiste des sciences du sol, elle étudie la séquestration du carbone par l'altération des roches silicatées, avec des expérimentations au Sénégal.",
+    bio: [
+      "« Après un bref passage dans les industries extractives, je me suis spécialisée dans les sciences du sol, plus précisément dans le domaine de la biogéochimie. Mes travaux, en tant que doctorante dans l'unité de recherche « Recyclage et risque » du CIRAD (Montpellier), tournent autour de la séquestration du carbone dans les sols comme solution d'atténuation aux changements climatiques, avec des pratiques agroécologiques durables pour assurer une sécurité alimentaire.",
+      "Cette séquestration du carbone se base sur les techniques d'altération améliorée des roches silicatées pour capturer le carbone et fertiliser les sols en même temps. Mes expérimentations se déroulent au Sénégal, au sein du laboratoire mixte international de l'IRD « Intensification écologique des sols cultivés en Afrique de l'Ouest » (IESOL). »",
+    ],
+    parcours: [
+      { periode: "Actuellement", poste: "Doctorante, unité « Recyclage et risque »", organisation: "CIRAD, Montpellier" },
+      { periode: "2009", poste: "Ingénieure diplômée, n° 208", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Biogéochimie", "Sciences du sol", "Séquestration du carbone", "Agroécologie"],
+  },
+  {
+    slug: "zackaria-diaw",
+    nom: "Zackaria Diaw",
+    fonction: "Secrétaire général adjoint",
+    titre: "Chef de projets",
+    organisation: "Esri France",
+    specialite: "Géomatique",
+    promotion: 2013,
+    numero: 286,
+    ville: "France",
+    photo: "/membres/zackaria-diaw.jpg",
+    resume:
+      "Chef de projets SIG chez Esri France, passé par le déploiement de la fibre optique, il met la géomatique au service des enjeux environnementaux, sociaux et économiques.",
+    bio: [
+      "« Passionné par la géomatique, la géologie et les technologies spatiales, j'ai à cœur de contribuer à la valorisation des données géographiques pour répondre aux enjeux environnementaux, sociaux et économiques de notre époque.",
+      "Je suis très heureux de faire partie de ce bureau de l'ADEMIG et je m'investirai pleinement pour la réalisation de nos objectifs. Merci pour votre confiance. »",
+    ],
+    parcours: [
+      {
+        periode: "Mars 2024 – aujourd'hui",
+        poste: "Chef de projet SIG",
+        organisation: "Esri France",
+        description: "Recueil et analyse du besoin, cadrage de projets SIG, chiffrage, spécifications techniques et encadrement d'équipe.",
+      },
+      {
+        periode: "Janv. 2023 – févr. 2024",
+        poste: "Chef de projet exploitation, en mission chez SFR",
+        organisation: "Esri France",
+      },
+      {
+        periode: "Juil. – déc. 2022",
+        poste: "Expert SIG",
+        organisation: "Esri France",
+        description: "Plateformes web, analyses spatiales avancées et bases de données spatiales.",
+      },
+      { periode: "Oct. 2021 – juil. 2022", poste: "Responsable d'études techniques FTTH, projet Megalis", organisation: "Axione" },
+      { periode: "Juil. 2018 – sept. 2021", poste: "Référent technique FTTH", organisation: "Axione" },
+      { periode: "Oct. 2016 – mai 2018", poste: "Chargé d'études SIG FTTH", organisation: "Axione" },
+      { periode: "2013", poste: "Ingénieur diplômé, n° 286", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["ArcGIS", "Gestion de projets SIG", "Python", "PostgreSQL", "Télécommunications"],
+    realisations: [
+      {
+        titre: "Master IGAST",
+        description:
+          "Information géographique, analyse spatiale et télédétection, à l'ENSG et à l'Université Gustave Eiffel.",
+      },
+    ],
+  },
+  {
+    slug: "moustapha-diaw-kamby",
+    nom: "Moustapha Diaw Kamby",
+    fonction: "Président de la commission finances",
+    titre: "Responsable de la production",
+    organisation: "Dangote Cement Sénégal",
+    specialite: "Mines",
+    promotion: 2014,
+    numero: 296,
+    photo: "/membres/moustapha-diaw-kamby.jpg",
+    resume:
+      "Ingénieur des mines, il dirige la section production de Dangote Cement Sénégal après une dizaine d'années d'expérience dans l'exploitation.",
+    bio: [
+      "« Je me nomme Moustapha Diaw Kamby, ingénieur des mines. Après cinq bonnes années à l'ENSMG, ex-IST, j'ai décroché mon premier travail en tant que contractuel au CEREEQ, puis j'ai été recruté à la société des mines du Diobass en tant qu'ingénieur en charge de la production, avant d'atterrir à Dangote Cement Sénégal. J'y ai démarré comme chef de poste, ensuite gestionnaire de la base de données minières, puis responsable des opérations, et actuellement responsable de la section production.",
+      "Sur le plan du développement personnel, j'ai dispensé des cours de géologie dans des universités privées. Je suis titulaire de certificats en tir de mine, en logiciels miniers et en management d'équipe en milieu industriel.",
+      "Le désir d'être utile, de rendre service et de contribuer au bien commun m'a très tôt intégré à la vie associative. Aujourd'hui, je viens d'intégrer l'ADEMIG en tant que responsable d'une commission très sensible, la finance. Je mesure à sa juste valeur toute l'attention, la transparence et la rigueur que cela demande. »",
+    ],
+    parcours: [
+      { periode: "Actuellement", poste: "Responsable de la section production", organisation: "Dangote Cement Sénégal" },
+      { periode: "Auparavant", poste: "Ingénieur en charge de la production", organisation: "Société des mines du Diobass" },
+      { periode: "Premier poste", poste: "Ingénieur contractuel", organisation: "CEREEQ" },
+      { periode: "2014", poste: "Ingénieur diplômé, n° 296", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Production minière", "Tir de mine", "Leapfrog", "Management d'équipe"],
+  },
+  {
+    slug: "mariama-sow",
+    nom: "Mariama Sow",
+    fonction: "Vice-présidente de la commission finances",
+    titre: "Étudiante en maîtrise de recherche",
+    organisation: "Université du Québec en Abitibi-Témiscamingue",
+    specialite: "Environnement",
+    promotion: 2022,
+    numero: 447,
+    ville: "Québec",
+    photo: "/membres/mariama-sow.jpg",
+    resume:
+      "Diplômée en 2022, elle mène au Québec une recherche géochimique et géoenvironnementale sur les stériles d'un gisement de terres rares.",
+    bio: [
+      "« Diplômée de l'ENSMG (ex-IST) en 2022, j'ai toujours nourri une passion profonde pour l'approfondissement de mes connaissances dans le domaine minier. Actuellement, je suis étudiante en maîtrise à l'Institut de recherche en mines et environnement de l'Université du Québec en Abitibi-Témiscamingue. Mes travaux portent sur une étude géochimique et géoenvironnementale des stériles d'un gisement de terres rares.",
+      "En ma qualité de vice-présidente de la commission finance de l'ADEMIG, je souhaite mettre à profit mon expertise et mon engagement pour contribuer au progrès et à la croissance de notre amicale. Mon objectif est de renforcer la transparence financière et d'optimiser la gestion des ressources de notre organisation. »",
+    ],
+    parcours: [
+      {
+        periode: "Actuellement",
+        poste: "Maîtrise de recherche",
+        organisation: "Institut de recherche en mines et environnement, UQAT",
+      },
+      { periode: "2022", poste: "Ingénieure diplômée, n° 447", organisation: "ENSMG" },
+    ],
+    competences: ["Géochimie", "Environnement minier", "Terres rares"],
+  },
+  {
+    slug: "birama-ndoye",
+    nom: "Birama Ndoye",
+    fonction: "Président de la commission communication et relations publiques",
+    titre: "Directeur général de SenSIG, responsable SIG et bases de données à MGO",
+    organisation: "SenSIG et MGO",
+    specialite: "Géomatique",
+    promotion: 2006,
+    numero: 174,
+    ville: "Kédougou",
+    photo: "/membres/birama-ndoye.jpg",
+    resume:
+      "Ingénieur géologue senior et géomaticien, expert en bases de données, SIG et télédétection, avec plus de 18 ans d'expérience dans les mines d'or.",
+    bio: [
+      "Birama Ndoye est ingénieur géologue senior et géomaticien, expert en bases de données, SIG et télédétection, avec plus de 18 ans d'expérience dans les mines d'or. Il est responsable SIG et base de données à MGO (Makabingui Gold Operation), directeur général de SenSIG Groupe et président du GIE Kédougou Dental, titulaire d'une autorisation d'exploitation semi-mécanisée d'or alluvionnaire.",
+      "Il s'est formé à l'École des mines de Marrakech, à l'ENSMG (ex-IST), à l'École nationale des sciences géographiques en France et à l'ITC aux Pays-Bas. Il détient des certificats avancés en modélisation géologique (Leapfrog Geo), en géostatistique et estimation de réserves (Datamine), en cartographie et modélisation 3D (Target for ArcGIS) et en télédétection.",
+    ],
+    parcours: [
+      { periode: "Actuellement", poste: "Responsable SIG et base de données", organisation: "MGO, Makabingui Gold Operation" },
+      { periode: "Actuellement", poste: "Directeur général", organisation: "SenSIG Groupe" },
+      { periode: "2006", poste: "Ingénieur diplômé, n° 174", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["SIG", "Télédétection", "Leapfrog Geo", "Datamine", "Estimation de réserves"],
+  },
+  {
+    slug: "aloise-ngor-mak-diagne",
+    nom: "Aloïse Ngor Mak Diagne",
+    fonction: "Vice-président de la commission communication et relations publiques",
+    titre: "Ingénieur production",
+    organisation: "PETROSEN",
+    specialite: "Pétrole et gaz",
+    promotion: 2015,
+    numero: 346,
+    photo: "/membres/aloise-ngor-mak-diagne.jpg",
+    resume:
+      "Ingénieur pétrolier en charge des opérations et des installations de production du projet GTA, avec plus de sept ans d'expérience en exploration, forage et production.",
+    bio: [
+      "Aloïse Ngor Mak Diagne est ingénieur de terrain et d'opérations, avec plus de sept ans d'expérience dans l'industrie du pétrole et du gaz : exploration, forage, production. Il est actuellement ingénieur pétrolier en charge des opérations et des installations de production du projet GTA.",
+      "Son parcours, à la sortie de l'ENSMG (ex-IST), a été complété par des expériences et des formations chez IAMGOLD, Fortesa International, l'INPG, Woodside Energy, PETRONAS, INSTEP et IFP Training. Il est membre de la Society of Petroleum Engineers et alumni du Malaysian Technical Cooperation Programme.",
+      "« En avant toute pour une communication saine, pragmatique et qui fait honneur à notre rang de scientifiques avérés et reconnus de notre époque, de notre pays et de notre continent ! »",
+    ],
+    parcours: [
+      { periode: "Actuellement", poste: "Ingénieur production, projet GTA", organisation: "PETROSEN" },
+      { periode: "2015", poste: "Ingénieur diplômé, n° 346", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Production pétrolière", "Forage", "Exploration", "Opérations offshore"],
+  },
+  {
+    slug: "daouda-mane",
+    nom: "Daouda Mane",
+    fonction: "Président de la commission insertion et partenariats",
+    titre: "Ingénieur chef de projets",
+    organisation: "GEOMIN SA",
+    specialite: "Géologie",
+    promotion: 2017,
+    numero: 370,
+    photo: "/membres/daouda-mane.jpg",
+    resume:
+      "Ingénieur géologue de la 32e promotion, il pilote le pôle géoservices et ingénierie du cabinet GEOMIN depuis 2022.",
+    bio: [
+      "« Je me nomme Daouda Mane, ingénieur géologue de la 32e promotion de l'IST (2017). Après une brève expérience dans l'exploration minière aurifère, où j'ai fait mes premières armes, j'ai rejoint le cabinet GEOMIN, où j'occupe depuis 2022 le poste d'ingénieur chef de projets en charge du pilotage des activités du pôle géoservices et ingénierie : montage de dossiers d'appel d'offres, conduite et coordination des projets du cabinet.",
+      "À ce titre, j'ai conduit plusieurs missions d'envergure dans l'assistance technique de promoteurs miniers, dans la recherche de phosphate, de gisements de fer, d'or et de matériaux de construction. Je suis titulaire de certificats en gestion de projets, en technique de prospection minière, en restauration de sites miniers et en système de management de la qualité.",
+      "L'opportunité de défendre la cause commune a toujours été une mission pour moi, bien plus qu'un privilège. C'est d'ailleurs ce qui a motivé mon adhésion à l'amicale des élèves-ingénieurs, puis aujourd'hui au bureau exécutif de l'ADEMIG. Ensemble pour une ADEMIG forte. »",
+    ],
+    parcours: [
+      { periode: "2022 – aujourd'hui", poste: "Ingénieur chef de projets, pôle géoservices et ingénierie", organisation: "GEOMIN SA" },
+      { periode: "Auparavant", poste: "Géologue d'exploration aurifère", organisation: "Exploration minière" },
+      { periode: "2017", poste: "Ingénieur diplômé, n° 370, 32e promotion", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Gestion de projets", "Prospection minière", "Géophysique", "Restauration de sites miniers"],
+  },
+  {
+    slug: "mahamat-tourki-nouri",
+    nom: "Mahamat Tourki Nouri",
+    fonction: "Président de la commission sociale",
+    titre: "Chef du département géologie et contrôle qualité",
+    organisation: "Baobab Mining and Chemicals Corporation",
+    specialite: "Mines",
+    promotion: 2005,
+    numero: 154,
+    photo: "/membres/mahamat-tourki-nouri.jpg",
+    resume:
+      "Ingénieur senior d'exploration et des mines, membre de l'Australasian Institute of Mining and Metallurgy, il dirige la géologie et le contrôle qualité de Baobab Mining.",
+    bio: [
+      "Tourki Nouri est ingénieur senior d'exploration et des mines, membre de l'Australasian Institute of Mining and Metallurgy (MAusIMM).",
+      "« Contribuons ensemble à l'émergence de notre chère ENSMG. »",
+    ],
+    parcours: [
+      {
+        periode: "2017 – aujourd'hui",
+        poste: "Chef du département géologie et contrôle qualité",
+        organisation: "Baobab Mining and Chemicals Corporation",
+      },
+      { periode: "2015 – 2017", poste: "Superintendant géologie", organisation: "Gadde Bissik Operations" },
+      { periode: "2012 – 2015", poste: "Géologue en chef", organisation: "Atlas Ressources" },
+      { periode: "2005", poste: "Ingénieur diplômé, n° 154", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Exploration minière", "Contrôle qualité", "Phosphates"],
+  },
+  {
+    slug: "oumar-niang",
+    nom: "Oumar Niang",
+    fonction: "Vice-président de la commission sociale",
+    titre: "Consultant",
+    organisation: "SAYTU GEOS",
+    specialite: "Géomatique",
+    promotion: 2010,
+    numero: 216,
+    photo: "/membres/oumar-niang.jpg",
+    resume:
+      "Ingénieur géologue et ancien expert d'Esri France, il accompagne depuis 2023 ses clients en géomatique et en informatique avec son cabinet SAYTU GEOS.",
+    bio: [
+      "« Ingénieur géologue de conception et diplômé de l'ENSG (Paris, Marne-la-Vallée), j'ai une petite expérience dans l'exploration aurifère à Kédougou. Depuis 2014, j'accompagne des entreprises françaises comme ENGIE, SFR, RTE ou ENEDIS dans la mise en place de leur infrastructure SIG.",
+      "Ancien expert d'Esri France, mon travail tourne autour de l'architecture des plateformes SIG, de la performance des bases de données spatiales et de la gestion de la mise en production. Depuis début 2023, je suis consultant avec mon cabinet SAYTU GEOS, créé en France et au Sénégal, qui accompagne ses clients dans les domaines de la géomatique et de l'informatique.",
+      "Je reste engagé pour la réalisation des objectifs de l'ADEMIG. ENSMG ex-IST, une famille ! L'ADEMIG, le cordon ombilical des ingénieurs géologues. »",
+    ],
+    parcours: [
+      { periode: "2023 – aujourd'hui", poste: "Consultant et fondateur", organisation: "SAYTU GEOS" },
+      {
+        periode: "Depuis 2014",
+        poste: "Expert en infrastructures SIG, ancien expert d'Esri France",
+        organisation: "Pour ENGIE, SFR, RTE, ENEDIS",
+      },
+      { periode: "2010", poste: "Ingénieur diplômé, n° 216", organisation: "IST, aujourd'hui ENSMG" },
+    ],
+    competences: ["Architecture SIG", "Bases de données spatiales", "Géomatique"],
+  },
+];
+
+export async function getMembres() {
+  return membres;
+}
+
+export async function getMembre(slug: string) {
+  return membres.find((m) => m.slug === slug);
+}
