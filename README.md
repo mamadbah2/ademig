@@ -65,7 +65,9 @@ Pour l'activer : installer l'intégration Resend avec le domaine vérifié, puis
 | `npm run db:seed` | Importe le contenu initial (`src/db/donnees-initiales/`) |
 | `npm run admin:creer` | Crée un super-admin |
 | `npm test` | Tests unitaires et d'intégration (PGlite, sans réseau) |
-| `npm run test:e2e` | Tests de bout en bout (port 3100, base de `DATABASE_URL`) |
+| `E2E_AUTORISE=1 npm run test:e2e` | Tests de bout en bout (port 3100, base de `DATABASE_URL`) ; refusés sans `E2E_AUTORISE=1` |
+
+> Les tests e2e créent un super-administrateur (`*@ademig.test`, mot de passe aléatoire par lancement) dans la base de `DATABASE_URL`, puis le suppriment. À lancer uniquement contre une base de développement, jamais contre celle de la production.
 
 ### Mise en production
 

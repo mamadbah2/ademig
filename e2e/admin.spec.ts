@@ -1,7 +1,7 @@
 import { type Page, expect, test } from "@playwright/test";
-import { COMPTES, MOT_DE_PASSE } from "./comptes";
+import { COMPTES, motDePasseE2E } from "./comptes";
 
-async function seConnecter(page: Page, email: string, motDePasse = MOT_DE_PASSE) {
+async function seConnecter(page: Page, email: string, motDePasse = motDePasseE2E()) {
   await page.goto("/admin/connexion");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Mot de passe").fill(motDePasse);

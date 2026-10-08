@@ -8,6 +8,7 @@ try {
 export default defineConfig({
   testDir: "e2e",
   globalSetup: "./e2e/preparation.ts",
+  globalTeardown: "./e2e/nettoyage.ts",
   // Les tests partagent la même base : on les enchaîne.
   workers: 1,
   use: { baseURL: "http://localhost:3100", trace: "retain-on-failure" },
