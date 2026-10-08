@@ -1,4 +1,3 @@
-import { reglagesInitiaux } from "@/db/donnees-initiales/reglages";
 
 // Configuration générale du site.
 // Les valeurs marquées « À CONFIRMER » doivent être validées par le bureau de l'ADEMIG.
@@ -14,8 +13,6 @@ export const site = {
   // À CONFIRMER : nom de domaine définitif (ademig.org appartient à une autre association, au Niger).
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.ademig.sn",
   locale: "fr_SN",
-  contact: reglagesInitiaux.contact,
-  social: reglagesInitiaux.reseaux,
 } as const;
 
 export const navigation = [

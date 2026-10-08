@@ -1,15 +1,9 @@
-import { evenements } from "@/db/donnees-initiales/evenements";
-import type { EvenementInitial } from "@/db/donnees-initiales/types";
-import { paragraphesEnHtml } from "@/lib/html";
-import type { Evenement } from "./types";
+import { unstable_cache } from "next/cache";
+import { db } from "@/db";
+import { listerEvenements, trouverEvenement } from "@/db/requetes/evenements";
+import { TAGS } from "./tags";
 
-const versEvenement = (e: EvenementInitial): Evenement => ({ ...e, corps: paragraphesEnHtml(e.corps) });
+const options = { tags: [TAGS.evenements, TAGS.media] };
 
-export async function getEvenements() {
-  return evenements.map(versEvenement).sort((a, b) => b.debut.localeCompare(a.debut));
-}
-
-export async function getEvenement(slug: string) {
-  const e = evenements.find((x) => x.slug === slug);
-  return e && versEvenement(e);
-}
+export const getEvenements = unstable_cache(() => listerEvenements(db), ["evenements"], options);
+export const getEvenement = unstable_cache((slug: string) => trouverEvenement(db, slug), ["evenement"], options);

@@ -1,15 +1,10 @@
-import { actualites } from "@/db/donnees-initiales/actualites";
-import type { ActualiteInitiale } from "@/db/donnees-initiales/types";
-import { paragraphesEnHtml } from "@/lib/html";
-import type { Actualite } from "./types";
+import { unstable_cache } from "next/cache";
+import { db } from "@/db";
+import { listerActualites, trouverActualite } from "@/db/requetes/actualites";
+import { TAGS } from "./tags";
 
-const versActualite = (a: ActualiteInitiale): Actualite => ({ ...a, corps: paragraphesEnHtml(a.corps) });
+// Les photos viennent de la médiathèque : un texte alternatif modifié doit se voir ici.
+const options = { tags: [TAGS.actualites, TAGS.media] };
 
-export async function getActualites() {
-  return actualites.map(versActualite).sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export async function getActualite(slug: string) {
-  const a = actualites.find((x) => x.slug === slug);
-  return a && versActualite(a);
-}
+export const getActualites = unstable_cache(() => listerActualites(db), ["actualites"], options);
+export const getActualite = unstable_cache((slug: string) => trouverActualite(db, slug), ["actualite"], options);

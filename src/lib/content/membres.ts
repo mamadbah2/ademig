@@ -1,15 +1,10 @@
-import { membres } from "@/db/donnees-initiales/membres";
-import type { MembreInitial } from "@/db/donnees-initiales/types";
-import { paragraphesEnHtml } from "@/lib/html";
-import type { Member } from "./types";
+import { unstable_cache } from "next/cache";
+import { db } from "@/db";
+import { listerMembres, trouverMembre } from "@/db/requetes/membres";
+import { TAGS } from "./tags";
 
-const versMembre = (m: MembreInitial): Member => ({ ...m, bio: m.bio && paragraphesEnHtml(m.bio) });
+// La fonction d'un membre dépend du bureau en place.
+const options = { tags: [TAGS.membres, TAGS.bureau, TAGS.media] };
 
-export async function getMembres() {
-  return membres.map(versMembre);
-}
-
-export async function getMembre(slug: string) {
-  const m = membres.find((x) => x.slug === slug);
-  return m && versMembre(m);
-}
+export const getMembres = unstable_cache(() => listerMembres(db), ["membres"], options);
+export const getMembre = unstable_cache((slug: string) => trouverMembre(db, slug), ["membre"], options);

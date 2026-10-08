@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { IconeCarre, type IconeName, type Ton } from "@/components/illustration";
 import { Cadre, PageHeader, SectionTitle } from "@/components/ui";
-import { partenaires } from "@/lib/content/organisation";
+import { getPartenaires } from "@/lib/content/organisation";
 import type { Partenaire } from "@/lib/content/types";
 
 export const metadata: Metadata = {
@@ -18,7 +18,9 @@ const categories: { cle: Partenaire["categorie"]; titre: string; icone: IconeNam
   { cle: "Événement", titre: "Organisateurs d'événements", icone: "explosion", ton: "ocre" },
 ];
 
-export default function Partenaires() {
+export default async function Partenaires() {
+  const partenaires = await getPartenaires();
+
   return (
     <>
       <PageHeader

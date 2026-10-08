@@ -3,8 +3,7 @@ import Link from "next/link";
 import { IconeCarre, ordreTons, type IconeName } from "@/components/illustration";
 import { Portrait } from "@/components/portrait";
 import { Cadre, PageHeader, SectionTitle } from "@/components/ui";
-import { getMembres } from "@/lib/content/membres";
-import { commissions, ordreBureau } from "@/lib/content/organisation";
+import { getBureau } from "@/lib/content/organisation";
 import type { Member } from "@/lib/content/types";
 
 export const metadata: Metadata = {
@@ -34,9 +33,7 @@ function FicheBureau({ membre, priority = false }: { membre: Member; priority?: 
 }
 
 export default async function Bureau() {
-  const membres = await getMembres();
-  const parSlug = new Map(membres.map((m) => [m.slug, m]));
-  const trouver = (slugs: string[]) => slugs.map((s) => parSlug.get(s)).filter((m) => !!m);
+  const { executif, commissions } = await getBureau();
 
   return (
     <>
@@ -49,7 +46,7 @@ export default async function Bureau() {
       <Cadre aria-labelledby="bureau-executif">
         <SectionTitle id="bureau-executif">Bureau exécutif</SectionTitle>
         <ul className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-          {trouver(ordreBureau).map((m, i) => (
+          {executif.map((m, i) => (
             <FicheBureau key={m.slug} membre={m} priority={i === 0} />
           ))}
         </ul>
@@ -63,7 +60,7 @@ export default async function Bureau() {
           </div>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed">{c.mission}</p>
           <ul className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {trouver(c.membres).map((m) => (
+            {c.membres.map((m) => (
               <FicheBureau key={m.slug} membre={m} />
             ))}
           </ul>

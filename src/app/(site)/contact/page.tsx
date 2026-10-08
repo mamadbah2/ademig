@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { IconeCarre } from "@/components/illustration";
 import { Cadre, PageHeader, SectionTitle } from "@/components/ui";
-import { site } from "@/lib/site";
+import { getReglages } from "@/lib/content/reglages";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -9,8 +9,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export default function Contact() {
-  const { address, email, phone, press } = site.contact;
+export default async function Contact() {
+  const { contact, reseaux } = await getReglages();
+  const { address, email, phone, press } = contact;
   return (
     <>
       <PageHeader
@@ -59,7 +60,7 @@ export default function Contact() {
       <Cadre aria-labelledby="reseaux" className="text-center">
         <SectionTitle id="reseaux">Suivre l&apos;amicale</SectionTitle>
         <ul className="mt-8 flex flex-wrap justify-center gap-3">
-          {site.social.map((r) => (
+          {reseaux.map((r) => (
             <li key={r.label}>
               <a
                 href={r.url}

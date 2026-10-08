@@ -6,8 +6,8 @@ import { Cadre, DateTexte, LienSouligne, PageHeader, SectionTitle } from "@/comp
 import { getEvenements } from "@/lib/content/evenements";
 import type { Evenement } from "@/lib/content/types";
 
-// La séparation « à venir » / « passés » dépend de la date : la page est régénérée chaque jour.
-export const revalidate = 86400;
+// Recalculée chaque heure pour qu'un événement passé change de section.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Événements",

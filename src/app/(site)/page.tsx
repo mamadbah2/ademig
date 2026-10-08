@@ -24,7 +24,7 @@ import {
 import { getActualites } from "@/lib/content/actualites";
 import { getEvenements } from "@/lib/content/evenements";
 import { getMembres } from "@/lib/content/membres";
-import { partenaires } from "@/lib/content/organisation";
+import { getPartenaires } from "@/lib/content/organisation";
 import { site } from "@/lib/site";
 
 const devise: { verbe: string; icone: IconeName; texte: string }[] = [
@@ -72,10 +72,11 @@ const diapositives = [
 const iconesActualites: IconeName[] = ["strates", "mineur", "minerai"];
 
 export default async function Accueil() {
-  const [actualites, evenements, membres] = await Promise.all([
+  const [actualites, evenements, membres, partenaires] = await Promise.all([
     getActualites(),
     getEvenements(),
     getMembres(),
+    getPartenaires(),
   ]);
   const dernierEvenement = evenements[0];
 
