@@ -9,8 +9,15 @@ import { erreursDe, type Resultat } from "@/lib/admin/resultat";
 import { auth } from "@/lib/auth";
 import { schemaInvitation, schemaRole } from "@/lib/validation/comptes";
 
-async function envoyerLien(email: string) {
-  await auth.api.requestPasswordReset({ body: { email, redirectTo: "/admin/reinitialiser" } });
+// Renvoie false si l'envoi échoue (journalisé sans lien ni jeton).
+async function envoyerLien(email: string): Promise<boolean> {
+  try {
+    await auth.api.requestPasswordReset({ body: { email, redirectTo: "/admin/reinitialiser" } });
+    return true;
+  } catch (erreur) {
+    console.error("Envoi du lien d'invitation impossible :", erreur instanceof Error ? erreur.message : "erreur inconnue");
+    return false;
+  }
 }
 
 export async function inviterCompte(_etat: Resultat | null, donnees: FormData): Promise<Resultat> {
@@ -18,8 +25,14 @@ export async function inviterCompte(_etat: Resultat | null, donnees: FormData): 
     const saisie = schemaInvitation.safeParse(Object.fromEntries(donnees));
     if (!saisie.success) return erreursDe(saisie.error);
     await creerCompte(db, saisie.data);
-    await envoyerLien(saisie.data.email);
+    const envoye = await envoyerLien(saisie.data.email);
     revalidatePath("/admin/comptes");
+    if (!envoye) {
+      return {
+        ok: false,
+        message: "Compte créé, mais l'email d'invitation n'a pas pu être envoyé. Utilisez « Renvoyer l'invitation » sur sa ligne.",
+      };
+    }
     return { ok: true, message: `Invitation envoyée à ${saisie.data.email}.` };
   });
 }
@@ -29,7 +42,9 @@ export async function renvoyerInvitation(id: string): Promise<Resultat> {
     const compte = await trouverCompte(db, id);
     if (!compte) throw new ErreurMetier("Compte introuvable.");
     if (compte.aMotDePasse) throw new ErreurMetier("Ce compte a déjà défini son mot de passe.");
-    await envoyerLien(compte.email);
+    if (!(await envoyerLien(compte.email))) {
+      return { ok: false, message: "L'email d'invitation n'a pas pu être envoyé. Réessayez plus tard." };
+    }
     return { ok: true, message: `Invitation renvoyée à ${compte.email}.` };
   });
 }
