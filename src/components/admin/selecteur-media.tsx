@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
+import type { Resultat } from "@/lib/admin/resultat";
 import type { Media } from "@/db/operations/media";
 import { chercherMedias } from "@/lib/admin/media";
 import { EnvoiImages } from "./envoi-images";
-import { Bouton, Champ } from "./ui";
+import { Alerte, Bouton, Champ, EtatVide } from "./ui";
 
 // Choix d'une ou plusieurs images de la médiathèque, avec envoi possible sans quitter le formulaire.
 export function SelecteurMedia({
@@ -24,11 +25,21 @@ export function SelecteurMedia({
   const [recherche, setRecherche] = useState("");
   const [choix, setChoix] = useState<string[]>(valeur);
   const [chargement, demarrer] = useTransition();
+  const [echec, setEchec] = useState<Resultat | null>(null);
+  const [charge, setCharge] = useState(false);
 
   const charger = (texte: string) =>
     demarrer(async () => {
-      const r = await chercherMedias(texte);
-      if (r.ok && r.donnees) setMedias(r.donnees);
+      try {
+        const r = await chercherMedias(texte);
+        if (r.ok) {
+          setMedias(r.donnees ?? []);
+          setEchec(null);
+          setCharge(true);
+        } else setEchec(r);
+      } catch {
+        setEchec({ ok: false, message: "Impossible de charger les images. Réessayez." });
+      }
     });
 
   const basculer = (id: string) =>
@@ -82,6 +93,10 @@ export function SelecteurMedia({
               />
             </details>
             {chargement && <p role="status">Chargement…</p>}
+            <Alerte resultat={echec} />
+            {charge && !chargement && !echec && medias.length === 0 && (
+              <EtatVide>{recherche ? "Aucune image ne correspond." : "Aucune image pour le moment."}</EtatVide>
+            )}
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
               {medias.map((m) => {
                 const choisi = choix.includes(m.id);

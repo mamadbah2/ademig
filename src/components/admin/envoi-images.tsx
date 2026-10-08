@@ -2,7 +2,7 @@
 
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { enregistrerMedia } from "@/lib/admin/media";
 import { preparerImage } from "@/lib/admin/preparer-image";
 import { TYPES_IMAGES, verifierFichier } from "@/lib/validation/media";
@@ -16,12 +16,15 @@ type Element = {
   credit: string;
   etat: "attente" | "envoi" | "erreur";
   erreur?: string;
+  // Fichier déjà envoyé au Blob : un nouvel essai ne le renvoie pas.
+  envoye?: { url: string; pathname: string; width: number; height: number; mime: string; taille: number };
 };
 
 export function EnvoiImages({ onEnvoye }: { onEnvoye?: (id: string) => void }) {
   const router = useRouter();
   const [elements, setElements] = useState<Element[]>([]);
   const [refus, setRefus] = useState<string[]>([]);
+  const enCours = useRef<Set<string>>(new Set());
 
   const maj = (cle: string, changement: Partial<Element>) =>
     setElements((liste) => liste.map((e) => (e.cle === cle ? { ...e, ...changement } : e)));
@@ -55,26 +58,35 @@ export function EnvoiImages({ onEnvoye }: { onEnvoye?: (id: string) => void }) {
   }
 
   async function envoyer(element: Element) {
+    if (enCours.current.has(element.cle)) return;
     if (element.alt.trim().length < 3) {
       return maj(element.cle, { etat: "erreur", erreur: "Décrivez l'image en quelques mots (texte alternatif)." });
     }
+    enCours.current.add(element.cle);
     maj(element.cle, { etat: "envoi", erreur: undefined });
     try {
-      const prete = await preparerImage(element.fichier);
-      const blob = await upload(`medias/${prete.fichier.name}`, prete.fichier, {
-        access: "public",
-        handleUploadUrl: "/api/media/upload",
-        contentType: prete.fichier.type,
-      });
+      let envoye = element.envoye;
+      if (!envoye) {
+        const prete = await preparerImage(element.fichier);
+        const blob = await upload(`medias/${prete.fichier.name}`, prete.fichier, {
+          access: "public",
+          handleUploadUrl: "/api/media/upload",
+          contentType: prete.fichier.type,
+        });
+        envoye = {
+          url: blob.url,
+          pathname: blob.pathname,
+          width: prete.width,
+          height: prete.height,
+          mime: prete.fichier.type,
+          taille: prete.fichier.size,
+        };
+        maj(element.cle, { envoye });
+      }
       const resultat = await enregistrerMedia({
-        url: blob.url,
-        pathname: blob.pathname,
+        ...envoye,
         alt: element.alt,
         credit: element.credit,
-        width: prete.width,
-        height: prete.height,
-        mime: prete.fichier.type,
-        taille: prete.fichier.size,
       });
       if (!resultat.ok) {
         return maj(element.cle, { etat: "erreur", erreur: resultat.erreurs?.alt?.[0] ?? resultat.message ?? "Envoi refusé." });
@@ -84,11 +96,13 @@ export function EnvoiImages({ onEnvoye }: { onEnvoye?: (id: string) => void }) {
       router.refresh();
     } catch {
       maj(element.cle, { etat: "erreur", erreur: "L'envoi a échoué. Vérifiez la connexion puis réessayez." });
+    } finally {
+      enCours.current.delete(element.cle);
     }
   }
 
   async function toutEnvoyer() {
-    for (const element of elements.filter((e) => e.etat !== "envoi")) await envoyer(element);
+    for (const element of elements.filter((e) => e.etat !== "envoi" && !enCours.current.has(e.cle))) await envoyer(element);
   }
 
   return (
