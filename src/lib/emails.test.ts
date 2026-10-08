@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { contenuEmailMotDePasse, envoyerEmailMotDePasse } from "./emails";
+import { contenuEmailMotDePasse, emailsConfigures, envoyerEmailMotDePasse } from "./emails";
 
 const url = "https://www.ademig.sn/api/auth/reset-password/abc?callbackURL=%2Fadmin%2Freinitialiser";
 
@@ -51,5 +51,27 @@ describe("envoyerEmailMotDePasse sans clé Resend", () => {
     for (const spy of [info, log]) {
       expect(spy.mock.calls.flat().join(" ")).not.toContain(url);
     }
+  });
+});
+
+describe("emailsConfigures", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("est vrai en production avec une clé", () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(emailsConfigures()).toBe(true);
+  });
+
+  it("est faux en production sans clé", () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(emailsConfigures()).toBe(false);
+  });
+
+  it("est vrai hors production sans clé", () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    expect(emailsConfigures()).toBe(true);
   });
 });

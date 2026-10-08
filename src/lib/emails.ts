@@ -25,14 +25,19 @@ export function contenuEmailMotDePasse({ nom, url, invitation }: EmailMotDePasse
   return { sujet, html };
 }
 
+// Faux seulement en production sans clé Resend : aucun email ne peut y partir.
+export function emailsConfigures(): boolean {
+  return Boolean(process.env.RESEND_API_KEY) || process.env.VERCEL_ENV !== "production";
+}
+
 export async function envoyerEmailMotDePasse(p: EmailMotDePasse & { email: string }) {
   const { sujet, html } = contenuEmailMotDePasse(p);
   const cle = process.env.RESEND_API_KEY;
+  // En production, ne jamais écrire le lien (jeton de 24 h) dans les journaux.
+  if (!emailsConfigures()) {
+    throw new Error("Envoi d'email impossible : RESEND_API_KEY n'est pas configurée.");
+  }
   if (!cle) {
-    // En production, ne jamais écrire le lien (jeton de 24 h) dans les journaux.
-    if (process.env.VERCEL_ENV === "production") {
-      throw new Error("Envoi d'email impossible : RESEND_API_KEY n'est pas configurée.");
-    }
     // Développement et prévisualisations sans Resend : le lien s'affiche dans le terminal.
     console.info(`[email non envoyé : RESEND_API_KEY absente] ${p.email} → ${p.url}`);
     return;

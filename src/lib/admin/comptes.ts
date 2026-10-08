@@ -7,8 +7,16 @@ import { ErreurMetier } from "@/db/operations/erreurs";
 import { action } from "@/lib/admin/action";
 import { erreursDe, type Resultat } from "@/lib/admin/resultat";
 import { auth } from "@/lib/auth";
+import { emailsConfigures } from "@/lib/emails";
 import { schemaInvitation, schemaRole } from "@/lib/validation/comptes";
 
+const EMAILS_NON_CONFIGURES: Resultat = {
+  ok: false,
+  message: "Les emails ne sont pas configurés sur ce site : l'invitation ne peut pas être envoyée. Contactez l'équipe technique.",
+};
+
+// Limite connue : Better Auth envoie l'email dans une tâche de fond et en avale les erreurs,
+// donc une panne de Resend n'est pas visible ici (d'où le contrôle préalable emailsConfigures).
 // Renvoie false si l'envoi échoue (journalisé sans lien ni jeton).
 async function envoyerLien(email: string): Promise<boolean> {
   try {
@@ -24,6 +32,7 @@ export async function inviterCompte(_etat: Resultat | null, donnees: FormData): 
   return action("superadmin", async () => {
     const saisie = schemaInvitation.safeParse(Object.fromEntries(donnees));
     if (!saisie.success) return erreursDe(saisie.error);
+    if (!emailsConfigures()) return EMAILS_NON_CONFIGURES;
     await creerCompte(db, saisie.data);
     const envoye = await envoyerLien(saisie.data.email);
     revalidatePath("/admin/comptes");
@@ -42,6 +51,7 @@ export async function renvoyerInvitation(id: string): Promise<Resultat> {
     const compte = await trouverCompte(db, id);
     if (!compte) throw new ErreurMetier("Compte introuvable.");
     if (compte.aMotDePasse) throw new ErreurMetier("Ce compte a déjà défini son mot de passe.");
+    if (!emailsConfigures()) return EMAILS_NON_CONFIGURES;
     if (!(await envoyerLien(compte.email))) {
       return { ok: false, message: "L'email d'invitation n'a pas pu être envoyé. Réessayez plus tard." };
     }
