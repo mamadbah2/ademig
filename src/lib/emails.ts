@@ -25,20 +25,21 @@ export function contenuEmailMotDePasse({ nom, url, invitation }: EmailMotDePasse
   return { sujet, html };
 }
 
-// Faux seulement en production sans clé Resend : aucun email ne peut y partir.
+// En production, il faut la clé Resend ET un expéditeur vérifié (l'expéditeur de test n'atteint que le propriétaire du compte).
+// Le terminal ne remplace l'envoi qu'en développement local.
 export function emailsConfigures(): boolean {
-  return Boolean(process.env.RESEND_API_KEY) || process.env.VERCEL_ENV !== "production";
+  if (process.env.NODE_ENV === "development") return true;
+  return Boolean(process.env.RESEND_API_KEY) && Boolean(process.env.EMAIL_EXPEDITEUR);
 }
 
 export async function envoyerEmailMotDePasse(p: EmailMotDePasse & { email: string }) {
   const { sujet, html } = contenuEmailMotDePasse(p);
   const cle = process.env.RESEND_API_KEY;
-  // En production, ne jamais écrire le lien (jeton de 24 h) dans les journaux.
+  // Jamais de lien (jeton de 24 h) dans les journaux hors développement.
   if (!emailsConfigures()) {
     throw new Error("Envoi d'email impossible : RESEND_API_KEY n'est pas configurée.");
   }
   if (!cle) {
-    // Développement et prévisualisations sans Resend : le lien s'affiche dans le terminal.
     console.info(`[email non envoyé : RESEND_API_KEY absente] ${p.email} → ${p.url}`);
     return;
   }

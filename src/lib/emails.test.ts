@@ -32,17 +32,17 @@ describe("envoyerEmailMotDePasse sans clé Resend", () => {
     vi.restoreAllMocks();
   });
 
-  it("affiche le lien dans le terminal hors production", async () => {
+  it("affiche le lien dans le terminal en développement", async () => {
     vi.stubEnv("RESEND_API_KEY", "");
-    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("NODE_ENV", "development");
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     await expect(envoyerEmailMotDePasse(p)).resolves.toBeUndefined();
     expect(info).toHaveBeenCalledWith(expect.stringContaining(url));
   });
 
-  it("refuse en production et n'écrit pas le lien", async () => {
+  it.each(["production", "test"])("refuse hors développement (%s) et n'écrit pas le lien", async (env) => {
     vi.stubEnv("RESEND_API_KEY", "");
-    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("NODE_ENV", env);
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     await expect(envoyerEmailMotDePasse(p)).rejects.toThrow(
@@ -57,21 +57,30 @@ describe("envoyerEmailMotDePasse sans clé Resend", () => {
 describe("emailsConfigures", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("est vrai en production avec une clé", () => {
+  it("est vrai hors développement avec la clé et l'expéditeur", () => {
+    vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("RESEND_API_KEY", "re_test");
-    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("EMAIL_EXPEDITEUR", "ADEMIG <contact@ademig.sn>");
     expect(emailsConfigures()).toBe(true);
   });
 
-  it("est faux en production sans clé", () => {
-    vi.stubEnv("RESEND_API_KEY", "");
-    vi.stubEnv("VERCEL_ENV", "production");
+  it("est faux en production sans expéditeur", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("EMAIL_EXPEDITEUR", "");
     expect(emailsConfigures()).toBe(false);
   });
 
-  it("est vrai hors production sans clé", () => {
+  it("est faux en production sans clé", () => {
+    vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("RESEND_API_KEY", "");
-    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("EMAIL_EXPEDITEUR", "ADEMIG <contact@ademig.sn>");
+    expect(emailsConfigures()).toBe(false);
+  });
+
+  it("est vrai en développement sans clé", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("RESEND_API_KEY", "");
     expect(emailsConfigures()).toBe(true);
   });
 });
