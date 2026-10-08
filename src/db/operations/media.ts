@@ -45,11 +45,15 @@ export async function mediaExiste(db: Db, url: string): Promise<boolean> {
 }
 
 export async function creerMedia(db: Db, donnees: NouveauMedia, creePar: string | null): Promise<Media> {
+  // Idempotent : une reprise après échec ne doit pas échouer sur l'URL déjà enregistrée.
+  const existant = await db.query.media.findFirst({ where: eq(media.url, donnees.url) });
+  if (existant) return existant;
   const [ligne] = await db
     .insert(media)
     .values({ ...donnees, creePar })
+    .onConflictDoNothing({ target: media.url })
     .returning();
-  return ligne;
+  return ligne ?? (await db.query.media.findFirst({ where: eq(media.url, donnees.url) }))!;
 }
 
 export async function modifierMedia(db: Db, id: string, donnees: { alt: string; credit: string | null }) {

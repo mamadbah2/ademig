@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { db } from "@/db";
 import { changerActivation, changerRole, creerCompte, trouverCompte } from "@/db/operations/comptes";
 import { ErreurMetier } from "@/db/operations/erreurs";
@@ -71,6 +72,7 @@ export async function modifierRole(id: string, role: string): Promise<Resultat> 
 
 export async function modifierActivation(id: string, actif: boolean): Promise<Resultat> {
   return action("superadmin", async (session) => {
+    if (!z.boolean().safeParse(actif).success) return { ok: false, message: "Demande invalide." };
     await changerActivation(db, { acteurId: session.userId, cibleId: id, actif });
     revalidatePath("/admin/comptes");
     return { ok: true, message: actif ? "Compte réactivé." : "Compte désactivé : ses sessions sont fermées." };

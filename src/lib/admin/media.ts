@@ -2,12 +2,15 @@
 
 import { del } from "@vercel/blob";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { z } from "zod";
 import { db } from "@/db";
 import { creerMedia, listerMedias, mediaExiste, type Media, modifierMedia, supprimerMedia } from "@/db/operations/media";
 import { action } from "@/lib/admin/action";
 import { erreursDe, type Resultat } from "@/lib/admin/resultat";
 import { TAGS } from "@/lib/content/tags";
 import { estUrlBlob, schemaMajMedia, schemaNouveauMedia } from "@/lib/validation/media";
+
+const INTROUVABLE = { ok: false, message: "Image introuvable." } as const;
 
 // Une image peut apparaître partout sur le site : on invalide tout le contenu public.
 function invaliderContenus() {
@@ -44,6 +47,7 @@ export async function enregistrerMedia(donnees: unknown): Promise<Resultat<{ id:
 
 export async function mettreAJourMedia(id: string, _etat: Resultat | null, donnees: FormData): Promise<Resultat> {
   return action("editeur", async () => {
+    if (!z.uuid().safeParse(id).success) return INTROUVABLE;
     const saisie = schemaMajMedia.safeParse(Object.fromEntries(donnees));
     if (!saisie.success) return erreursDe(saisie.error);
     await modifierMedia(db, id, saisie.data);
@@ -55,6 +59,7 @@ export async function mettreAJourMedia(id: string, _etat: Resultat | null, donne
 
 export async function supprimerMediaAction(id: string): Promise<Resultat> {
   return action("editeur", async () => {
+    if (!z.uuid().safeParse(id).success) return INTROUVABLE;
     const { url, pathname } = await supprimerMedia(db, id);
     // Les fichiers de /public ne sont jamais effacés du disque.
     if (pathname) await del(url);

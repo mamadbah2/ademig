@@ -24,6 +24,14 @@ describe("médiathèque", () => {
     expect((await listerMedias(db))[0].id).toBe(m.id);
   });
 
+  it("renvoie l'image existante si l'URL est déjà enregistrée", async () => {
+    const db = await creerDbTest();
+    const a = await creerMedia(db, nouveau, null);
+    const b = await creerMedia(db, { ...nouveau, alt: "Autre description" }, null);
+    expect(b.id).toBe(a.id);
+    expect(await listerMedias(db)).toHaveLength(1);
+  });
+
   it("recherche dans le texte alternatif et le crédit, sans tenir compte de la casse", async () => {
     const db = await creerDbTest();
     await creerMedia(db, nouveau, null);
