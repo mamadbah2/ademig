@@ -82,11 +82,14 @@ export default async function ProfilMembre({ params }: PageProps<"/membres/[slug
 
       <Cadre as="div" className="grid gap-14 lg:grid-cols-[2fr_1fr]">
         <div>
-          <div className="texte-long">
-            {(m.bio ?? [m.resume]).map((p) => (
-              <p key={p}>{p}</p>
-            ))}
-          </div>
+          {m.bio ? (
+            // HTML nettoyé à l'enregistrement (voir src/lib/html.ts).
+            <div className="texte-long" dangerouslySetInnerHTML={{ __html: m.bio }} />
+          ) : (
+            <div className="texte-long">
+              <p>{m.resume}</p>
+            </div>
+          )}
 
           <section aria-labelledby="parcours" className="mt-14">
             <SectionTitle id="parcours">Parcours</SectionTitle>

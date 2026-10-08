@@ -114,9 +114,8 @@ export default async function PageEvenement({ params }: PageProps<"/evenements/[
         <div>
         <div className="texte-long">
           <p>{e.resume}</p>
-          {e.corps.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
+          {/* HTML nettoyé à l'enregistrement (voir src/lib/html.ts). */}
+          <div dangerouslySetInnerHTML={{ __html: e.corps }} />
         </div>
         {e.partenaires && (
           <div className="mt-12">

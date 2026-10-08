@@ -70,11 +70,8 @@ export default async function Article({ params }: PageProps<"/actualites/[slug]"
       <Cadre as="div">
         {a.photos?.[0] && <PhotoCadre photo={a.photos[0]} priority className="mb-10" />}
         <p className="max-w-3xl text-xl leading-relaxed font-bold">{a.resume}</p>
-        <div className="texte-long mt-8">
-          {a.corps.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
-        </div>
+        {/* HTML nettoyé à l'enregistrement (voir src/lib/html.ts). */}
+        <div className="texte-long mt-8" dangerouslySetInnerHTML={{ __html: a.corps }} />
         {a.sources && (
           <p className="mt-12 text-sm">
             Sources :{" "}

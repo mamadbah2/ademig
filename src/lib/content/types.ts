@@ -33,7 +33,8 @@ export type Member = {
   organisation?: string;
   ville?: string;
   resume: string;
-  bio?: string[];
+  // Biographie en HTML nettoyé.
+  bio?: string;
   parcours: Etape[];
   competences: string[];
   realisations?: Realisation[];
@@ -48,7 +49,7 @@ export type Actualite = {
   titre: string;
   date: string; // ISO 8601
   resume: string;
-  corps: string[];
+  corps: string; // HTML nettoyé
   sources?: Source[];
   videos?: Video[];
   // La première photo illustre l'article dans les listes.
@@ -63,7 +64,7 @@ export type Evenement = {
   lieu: { nom: string; ville: string };
   theme?: string;
   resume: string;
-  corps: string[];
+  corps: string; // HTML nettoyé
   partenaires?: string[];
   // Identifiants YouTube des vidéos de l'événement.
   videos?: Video[];

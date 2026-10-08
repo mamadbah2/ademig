@@ -52,7 +52,8 @@ body {
   line-height: 1.7;
   max-width: 68ch;
 }
-.texte-long p + p {
+.texte-long p + p,
+.texte-long p + div {
   margin-top: 1.1em;
 }
 
