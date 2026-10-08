@@ -1,6 +1,6 @@
 # Back office ADEMIG — Sous-projet 1 : Fondations
 
-Date : 08/10/2026 · Statut : en revue
+Date : 08/10/2026 · Statut : implémenté
 
 ## 1. Contexte et objectif
 
