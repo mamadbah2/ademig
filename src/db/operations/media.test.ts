@@ -3,7 +3,7 @@ import { photos } from "@/db/donnees-initiales/photos";
 import { seed } from "@/db/seed";
 import { creerDbTest } from "@/test/db";
 import { ErreurMetier } from "./erreurs";
-import { creerMedia, lireMedia, listerMedias, modifierMedia, supprimerMedia, usagesMedia } from "./media";
+import { creerMedia, lireMedia, listerMedias, mediaExiste, modifierMedia, supprimerMedia, usagesMedia } from "./media";
 
 const nouveau = {
   url: "https://abc123.public.blob.vercel-storage.com/medias/visite-x1.webp",
@@ -69,5 +69,12 @@ describe("médiathèque", () => {
     const m = await creerMedia(db, nouveau, null);
     expect(await supprimerMedia(db, m.id)).toEqual({ url: nouveau.url, pathname: nouveau.pathname });
     expect(await lireMedia(db, m.id)).toBeUndefined();
+  });
+
+  it("indique si une adresse appartient déjà à une image", async () => {
+    const db = await creerDbTest();
+    await creerMedia(db, nouveau, null);
+    expect(await mediaExiste(db, nouveau.url)).toBe(true);
+    expect(await mediaExiste(db, "https://abc123.public.blob.vercel-storage.com/medias/autre.webp")).toBe(false);
   });
 });

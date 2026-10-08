@@ -3,7 +3,7 @@
 import { del } from "@vercel/blob";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/db";
-import { creerMedia, listerMedias, type Media, modifierMedia, supprimerMedia } from "@/db/operations/media";
+import { creerMedia, listerMedias, mediaExiste, type Media, modifierMedia, supprimerMedia } from "@/db/operations/media";
 import { action } from "@/lib/admin/action";
 import { erreursDe, type Resultat } from "@/lib/admin/resultat";
 import { TAGS } from "@/lib/content/tags";
@@ -16,13 +16,24 @@ function invaliderContenus() {
   }
 }
 
+// Supprime un fichier envoyé par la médiathèque seulement s'il n'est référencé par aucune image.
+async function nettoyerEnvoiOrphelin(url: string) {
+  try {
+    if (!estUrlBlob(url) || !new URL(url).pathname.startsWith("/medias/")) return;
+    if (await mediaExiste(db, url)) return;
+    await del(url);
+  } catch (erreur) {
+    console.error("Nettoyage du fichier orphelin impossible :", erreur);
+  }
+}
+
 export async function enregistrerMedia(donnees: unknown): Promise<Resultat<{ id: string }>> {
   return action<{ id: string }>("editeur", async (session) => {
     const saisie = schemaNouveauMedia.safeParse(donnees);
     if (!saisie.success) {
       // Le fichier est déjà dans Blob : on ne le laisse pas orphelin.
       const url = (donnees as { url?: unknown } | null)?.url;
-      if (typeof url === "string" && estUrlBlob(url)) await del(url);
+      if (typeof url === "string") await nettoyerEnvoiOrphelin(url);
       return erreursDe(saisie.error);
     }
     const media = await creerMedia(db, saisie.data, session.userId);

@@ -39,6 +39,11 @@ export async function lireMedia(db: Db, id: string): Promise<Media | undefined> 
   return db.query.media.findFirst({ where: eq(media.id, id) });
 }
 
+export async function mediaExiste(db: Db, url: string): Promise<boolean> {
+  const ligne = await db.query.media.findFirst({ where: eq(media.url, url), columns: { id: true } });
+  return ligne !== undefined;
+}
+
 export async function creerMedia(db: Db, donnees: NouveauMedia, creePar: string | null): Promise<Media> {
   const [ligne] = await db
     .insert(media)

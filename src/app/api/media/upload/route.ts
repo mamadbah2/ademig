@@ -1,4 +1,5 @@
 import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
+import { aLeRole } from "@/lib/roles";
 import { lireSession } from "@/lib/session";
 import { TAILLE_MAX, TYPES_IMAGES } from "@/lib/validation/media";
 
@@ -12,7 +13,8 @@ export async function POST(request: Request): Promise<Response> {
       body,
       request,
       onBeforeGenerateToken: async () => {
-        if (!(await lireSession())) throw new Error("Connexion requise.");
+        const session = await lireSession();
+        if (!session || !aLeRole(session.role, "editeur")) throw new Error("Accès refusé.");
         return {
           allowedContentTypes: [...TYPES_IMAGES],
           maximumSizeInBytes: TAILLE_MAX,
