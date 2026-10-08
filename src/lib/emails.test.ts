@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { contenuEmailMotDePasse } from "./emails";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { contenuEmailMotDePasse, envoyerEmailMotDePasse } from "./emails";
 
 const url = "https://www.ademig.sn/api/auth/reset-password/abc?callbackURL=%2Fadmin%2Freinitialiser";
 
@@ -22,5 +22,34 @@ describe("contenuEmailMotDePasse", () => {
     const { html } = contenuEmailMotDePasse({ nom: "<b>Awa</b>", url, invitation: true });
     expect(html).toContain("&lt;b&gt;Awa&lt;/b&gt;");
     expect(html).not.toContain("<b>Awa</b>");
+  });
+});
+
+describe("envoyerEmailMotDePasse sans clé Resend", () => {
+  const p = { email: "awa@ademig.test", nom: "Awa", url, invitation: true };
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("affiche le lien dans le terminal hors production", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    await expect(envoyerEmailMotDePasse(p)).resolves.toBeUndefined();
+    expect(info).toHaveBeenCalledWith(expect.stringContaining(url));
+  });
+
+  it("refuse en production et n'écrit pas le lien", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("VERCEL_ENV", "production");
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    await expect(envoyerEmailMotDePasse(p)).rejects.toThrow(
+      "Envoi d'email impossible : RESEND_API_KEY n'est pas configurée.",
+    );
+    for (const spy of [info, log]) {
+      expect(spy.mock.calls.flat().join(" ")).not.toContain(url);
+    }
   });
 });
