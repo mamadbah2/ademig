@@ -14,14 +14,14 @@ const rubriques: Record<string, string> = {
 
 export async function generateMetadata({ params }: PageProps<"/admin/[rubrique]">): Promise<Metadata> {
   const { rubrique } = await params;
-  return { title: rubriques[rubrique] ?? "Introuvable" };
+  return { title: Object.hasOwn(rubriques, rubrique) ? rubriques[rubrique] : "Introuvable" };
 }
 
 export default async function Rubrique({ params }: PageProps<"/admin/[rubrique]">) {
   await exigerSession();
   const { rubrique } = await params;
+  if (!Object.hasOwn(rubriques, rubrique)) notFound();
   const titre = rubriques[rubrique];
-  if (!titre) notFound();
   return (
     <>
       <TitrePage>{titre}</TitrePage>
