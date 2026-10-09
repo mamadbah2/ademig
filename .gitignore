@@ -42,3 +42,8 @@ next-env.d.ts
 
 # captures Playwright
 .playwright-mcp
+.env*.local
+!.env.example
+
+/test-results
+/playwright-report

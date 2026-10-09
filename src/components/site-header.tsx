@@ -12,7 +12,7 @@ function estActif(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
 
-export function SiteHeader() {
+export function SiteHeader({ email }: { email: string }) {
   const pathname = usePathname();
   const [ouvert, setOuvert] = useState(false);
   const [cache, setCache] = useState(false);
@@ -176,8 +176,8 @@ export function SiteHeader() {
                 </span>
               </p>
               <p className="mt-4">
-                <a href={`mailto:${site.contact.email}`} className="font-bold underline underline-offset-4">
-                  {site.contact.email}
+                <a href={`mailto:${email}`} className="font-bold underline underline-offset-4">
+                  {email}
                 </a>
               </p>
               <div data-menu-engin className="absolute right-0 bottom-0 w-36">

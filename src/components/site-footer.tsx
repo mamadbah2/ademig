@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { getReglages } from "@/lib/content/reglages";
 import { navigation, site } from "@/lib/site";
 import { Illustration } from "./illustration";
 import { Logo } from "./logo";
 import { Cadre, Etiquette } from "./ui";
 
 // Reprend la diapositive de clôture du modèle : grand titre centré, casque et tas d'or.
-export function SiteFooter() {
-  const { address, email } = site.contact;
+export async function SiteFooter() {
+  const { contact, reseaux } = await getReglages();
+  const { address, email } = contact;
   return (
     <footer className="pb-16">
       <Cadre
@@ -41,7 +43,7 @@ export function SiteFooter() {
         </nav>
 
         <ul className="relative mt-8 flex flex-wrap justify-center gap-3">
-          {site.social.map((r) => (
+          {reseaux.map((r) => (
             <li key={r.label}>
               <a
                 href={r.url}

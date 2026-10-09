@@ -1,3 +1,4 @@
+
 // Configuration générale du site.
 // Les valeurs marquées « À CONFIRMER » doivent être validées par le bureau de l'ADEMIG.
 
@@ -12,24 +13,6 @@ export const site = {
   // À CONFIRMER : nom de domaine définitif (ademig.org appartient à une autre association, au Niger).
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.ademig.sn",
   locale: "fr_SN",
-  contact: {
-    // À CONFIRMER : adresse email et téléphone officiels de l'ADEMIG.
-    email: "contact@ademig.sn",
-    phone: null as string | null,
-    press: { name: "Birama Ndoye", phone: "+221 77 552 52 25" },
-    address: {
-      street: "ENSMG, Bâtiment BRGM, Route de l'Université",
-      postalBox: "BP 5396 Dakar-Fann",
-      city: "Dakar",
-      country: "Sénégal",
-    },
-  },
-  // Comptes officiels, relevés sur la chaîne YouTube de l'amicale.
-  social: [
-    { label: "YouTube", url: "https://www.youtube.com/@ADEMIG-SN" },
-    { label: "LinkedIn", url: "https://www.linkedin.com/in/ademig-sn-14041b343/" },
-    { label: "Facebook", url: "https://www.facebook.com/share/1AhAE1eCAQ/" },
-  ],
 } as const;
 
 export const navigation = [
