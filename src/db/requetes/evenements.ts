@@ -37,9 +37,10 @@ export async function listerEvenements(db: Db): Promise<Evenement[]> {
   return lignes.map(versEvenement);
 }
 
-export async function trouverEvenement(db: Db, slug: string): Promise<Evenement | undefined> {
+// `brouillons` n'est utilisé que pour l'aperçu, après contrôle de la session (src/lib/apercu.ts).
+export async function trouverEvenement(db: Db, slug: string, o: { brouillons?: boolean } = {}): Promise<Evenement | undefined> {
   const ligne = await db.query.evenements.findFirst({
-    where: (e, { and, eq }) => and(eq(e.slug, slug), eq(e.statut, "publie")),
+    where: (e, { and, eq }) => (o.brouillons ? eq(e.slug, slug) : and(eq(e.slug, slug), eq(e.statut, "publie"))),
     with: { affiche: true, photos: { with: { media: true }, orderBy: (p, { asc }) => [asc(p.ordre)] } },
   });
   return ligne && versEvenement(ligne);
