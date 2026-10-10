@@ -7,7 +7,7 @@ import { db } from "@/db";
 import * as operations from "@/db/operations/actualites";
 import { CONFLIT, type Intention } from "@/db/operations/commun";
 import { action } from "@/lib/admin/action";
-import { erreursDe, type Resultat, sansMeta } from "@/lib/admin/resultat";
+import { lireFormulaire, type Resultat, sansMeta } from "@/lib/admin/resultat";
 import { TAGS } from "@/lib/content/tags";
 import { schemaEnvoiActualite } from "@/lib/validation/actualites";
 
@@ -26,14 +26,10 @@ function invalider(id?: string) {
   if (id) revalidatePath(`/admin/actualites/${id}`);
 }
 
-function lire(donnees: FormData) {
-  return schemaEnvoiActualite.safeParse(Object.fromEntries(donnees));
-}
-
 export async function creerActualite(_etat: ResultatActualite | null, donnees: FormData): Promise<ResultatActualite> {
   const resultat = await action<{ id: string }>("editeur", async () => {
-    const saisie = lire(donnees);
-    if (!saisie.success) return erreursDe(saisie.error);
+    const saisie = lireFormulaire(schemaEnvoiActualite, donnees);
+    if (!saisie.ok) return saisie.resultat;
     const { intention, ...autres } = saisie.data;
     const champs = sansMeta(autres);
     const { id } = await operations.creerActualite(db, champs, intention);
@@ -52,8 +48,8 @@ export async function enregistrerActualite(
 ): Promise<ResultatActualite> {
   return action<{ version: string }>("editeur", async () => {
     if (!z.uuid().safeParse(id).success) return INTROUVABLE;
-    const saisie = lire(donnees);
-    if (!saisie.success) return erreursDe(saisie.error);
+    const saisie = lireFormulaire(schemaEnvoiActualite, donnees);
+    if (!saisie.ok) return saisie.resultat;
     const { intention, modifierSlug, version, ...champs } = saisie.data;
     if (!version) return { ok: false, message: CONFLIT };
     const r = await operations.modifierActualite(db, id, champs, { version, intention, modifierSlug });
