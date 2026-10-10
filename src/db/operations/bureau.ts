@@ -52,8 +52,10 @@ export async function enregistrerMandat(db: Db, id: string, d: DonneesMandat, o:
       .update(mandats)
       .set({ libelle: d.libelle, dateElection: d.dateElection })
       .where(and(eq(mandats.id, id), memeVersion(mandats.majLe, o.version)))
-      .returning({ majLe: mandats.majLe });
+      .returning({ majLe: mandats.majLe, actif: mandats.actif });
     if (!maj) throw new ErreurMetier(CONFLIT);
+    // Lever l'erreur annule la transaction : rien n'est écrit.
+    if (maj.actif && d.postes.length === 0) throw new ErreurMetier("Le mandat en place doit garder au moins un poste.", "postes");
     await verifierMembres(tx, [...d.postes.map((p) => p.membreId), ...d.commissions.flatMap((c) => c.membres)]);
 
     await tx.delete(postesBureau).where(eq(postesBureau.mandatId, id));
@@ -87,12 +89,12 @@ export async function activerMandat(db: Db, id: string): Promise<void> {
     // majLe est recopié : activer ne doit pas invalider la version d'un formulaire ouvert.
     // L'index unique partiel refuse un second mandat actif si deux activations se croisent.
     await tx.update(mandats).set({ actif: false, majLe: sql`${mandats.majLe}` }).where(eq(mandats.actif, true));
-    const activés = await tx
+    const actives = await tx
       .update(mandats)
       .set({ actif: true, majLe: sql`${mandats.majLe}` })
       .where(eq(mandats.id, id))
       .returning({ id: mandats.id });
-    if (activés.length === 0) throw new ErreurMetier(INTROUVABLE);
+    if (actives.length === 0) throw new ErreurMetier(INTROUVABLE);
   });
 }
 

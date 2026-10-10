@@ -15,6 +15,7 @@ test("un éditeur prépare un mandat sans toucher au bureau en place, puis le su
   await page.getByLabel("Poste actuel").fill("Géologue");
   await page.getByLabel("Spécialité").fill("Géologie");
   await page.getByLabel("Résumé").fill("Membre créé par les tests.");
+  await expect(page.getByLabel("Visible sur le site")).not.toBeChecked();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/membres\/[0-9a-f-]{36}\?cree=1$/);
   const fiche = page.url().replace(/\?cree=1$/, "");

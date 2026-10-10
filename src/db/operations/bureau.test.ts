@@ -77,9 +77,26 @@ describe("bureau", () => {
     expect(await db.select().from(commissionMembres)).toHaveLength(1); // seule celle du mandat en place reste
   });
 
+  it("refuse de vider le mandat en place, sans rien écrire", async () => {
+    const v = await version(db, enPlace);
+    const erreur = await enregistrerMandat(
+      db,
+      enPlace,
+      { libelle: "Vidé", dateElection: "2024-09-22", postes: [], commissions: [] },
+      { version: v },
+    ).catch((e) => e);
+    expect(erreur.message).toBe("Le mandat en place doit garder au moins un poste.");
+    expect(erreur.champ).toBe("postes");
+    const apres = (await lireMandatAdmin(db, enPlace))!;
+    expect(apres).toMatchObject({ libelle: "Bureau 2024", version: v });
+    expect(apres.postes).toHaveLength(1);
+    expect(apres.commissions).toHaveLength(2);
+  });
+
   it("refuse une version périmée sans rien écrire", async () => {
     const v = await version(db, enPlace);
-    await enregistrerMandat(db, enPlace, { libelle: "Bureau 2024 (1)", dateElection: "2024-09-22", postes: [], commissions: [] }, { version: v });
+    const poste = { membreId: a, fonction: "Présidente", executif: true };
+    await enregistrerMandat(db, enPlace, { libelle: "Bureau 2024 (1)", dateElection: "2024-09-22", postes: [poste], commissions: [] }, { version: v });
     const erreur = await enregistrerMandat(
       db,
       enPlace,
@@ -87,7 +104,7 @@ describe("bureau", () => {
       { version: v },
     ).catch((e) => e);
     expect(erreur.message).toBe(CONFLIT);
-    expect(await lireMandatAdmin(db, enPlace)).toMatchObject({ libelle: "Bureau 2024 (1)", postes: [] });
+    expect(await lireMandatAdmin(db, enPlace)).toMatchObject({ libelle: "Bureau 2024 (1)", postes: [poste] });
   });
 
   it("refuse un membre disparu, sans rien écrire", async () => {
@@ -113,6 +130,7 @@ describe("bureau", () => {
     // Le formulaire resté ouvert s'enregistre encore.
     await enregistrerMandat(db, id, { ...d, libelle: "Bureau 2027-2030" }, { version: avant });
     expect((await lireBureau(db)).executif.map((m) => m.slug)).toEqual(["bineta"]);
+    expect((await lireBureau(db)).dateElection).toBe("2027-09-20");
     await activerMandat(db, id);
     expect(await actifs(db)).toEqual(["Bureau 2027-2030"]);
   });
@@ -145,6 +163,21 @@ describe("bureau", () => {
 });
 
 describe("types du bureau", () => {
+  it("signale un doublon même si les identifiants diffèrent par la casse", () => {
+    const id = crypto.randomUUID();
+    const r = schemaMandat.safeParse({
+      libelle: "X",
+      dateElection: "2027-09-20",
+      postes: JSON.stringify([
+        { membreId: id, fonction: "A", executif: true },
+        { membreId: id.toUpperCase(), fonction: "B", executif: false },
+      ]),
+      commissions: "[]",
+    });
+    expect(r.success).toBe(false);
+    expect(JSON.stringify(r.error?.issues)).toContain("Un membre n'occupe qu'un poste par mandat.");
+  });
+
   it("DonneesMandat est exactement la sortie de schemaMandat", () => {
     expectTypeOf<z.output<typeof schemaMandat>>().toExtend<DonneesMandat>();
     expectTypeOf<DonneesMandat>().toExtend<z.output<typeof schemaMandat>>();

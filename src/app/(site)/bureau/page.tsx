@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconeCarre, ordreTons, type IconeName } from "@/components/illustration";
 import { Portrait } from "@/components/portrait";
-import { Cadre, PageHeader, SectionTitle } from "@/components/ui";
+import { Cadre, formatDate, PageHeader, SectionTitle } from "@/components/ui";
 import { getBureau } from "@/lib/content/organisation";
 import type { Member } from "@/lib/content/types";
 
-export const metadata: Metadata = {
-  title: "Bureau et commissions",
-  description:
-    "Le bureau exécutif de l'ADEMIG, élu le 22 septembre 2024 et présidé par Dr Ibrahima Diao, et les commissions qui font vivre l'amicale.",
-  alternates: { canonical: "/bureau" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { dateElection } = await getBureau();
+  return {
+    title: "Bureau et commissions",
+    description: `Le bureau exécutif de l'ADEMIG${dateElection ? `, élu le ${formatDate(dateElection)}` : ""}, et les commissions qui font vivre l'amicale.`,
+    alternates: { canonical: "/bureau" },
+  };
+}
 
 const iconesCommissions: IconeName[] = ["lingots", "explosion", "partage", "casque"];
 
@@ -33,13 +35,13 @@ function FicheBureau({ membre, priority = false }: { membre: Member; priority?: 
 }
 
 export default async function Bureau() {
-  const { executif, commissions } = await getBureau();
+  const { dateElection, executif, commissions } = await getBureau();
 
   return (
     <>
       <PageHeader
         title="Bureau et commissions"
-        intro="Élu le 22 septembre 2024 pour redynamiser l'amicale"
+        intro={dateElection ? `Élu le ${formatDate(dateElection)} pour redynamiser l'amicale` : "Les femmes et les hommes qui font vivre l'amicale"}
         illustration="helmet"
       />
 

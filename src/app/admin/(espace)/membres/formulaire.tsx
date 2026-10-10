@@ -13,8 +13,8 @@ import type { MembreAdmin } from "@/db/requetes/admin/membres";
 import { creerMembre, enregistrerMembre, supprimerMembreAction } from "@/lib/admin/membres";
 import type { Resultat } from "@/lib/admin/resultat";
 
-type EtapeSaisie = { periode: string; poste: string; organisation: string; description: string };
-type RealisationSaisie = { titre: string; annee: string; description: string };
+type EtapeFormulaire = { periode: string; poste: string; organisation: string; description: string };
+type RealisationFormulaire = { titre: string; annee: string; description: string };
 
 const lienStyle = "inline-flex min-h-11 items-center px-2 font-bold underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-moutarde";
 
@@ -82,7 +82,7 @@ export function FormulaireMembre({ membre, messageInitial }: { membre?: MembreAd
         erreurs={erreurs?.bio}
       />
       <ChampMedia libelle="Portrait" name="photoId" valeurInitiale={membre?.photo ?? null} erreurs={erreurs?.photoId} />
-      <ListeEditable<EtapeSaisie>
+      <ListeEditable<EtapeFormulaire>
         libelle="Parcours"
         name="parcours"
         valeurInitiale={(membre?.parcours ?? []).map((e) => ({ ...e, description: e.description ?? "" }))}
@@ -109,7 +109,7 @@ export function FormulaireMembre({ membre, messageInitial }: { membre?: MembreAd
           <Champ id={`${idElement}-nom`} label="Compétence" name={`${idElement}-nom`} form="" value={c.nom} onChange={(ev) => modifier({ nom: ev.target.value })} />
         )}
       />
-      <ListeEditable<RealisationSaisie>
+      <ListeEditable<RealisationFormulaire>
         libelle="Réalisations"
         name="realisations"
         valeurInitiale={(membre?.realisations ?? []).map((r) => ({ titre: r.titre, annee: r.annee ?? "", description: r.description }))}

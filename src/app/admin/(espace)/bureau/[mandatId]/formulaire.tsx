@@ -51,7 +51,7 @@ export function FormulaireMandat({
             <Champ id={`${idElement}-fonction`} label="Fonction" name={`${idElement}-fonction`} form="" value={p.fonction} onChange={(e) => modifier({ fonction: e.target.value })} aide="Ex. : Président, Trésorière." />
             <label className="flex min-h-11 items-center gap-3 font-bold sm:col-span-2">
               <input type="checkbox" form="" checked={p.executif} onChange={(e) => modifier({ executif: e.target.checked })} className="size-5 accent-brun" />
-              Bureau exécutif (affiché en tête de la page Bureau)
+              Bureau exécutif (seuls ces postes figurent sur la page Bureau)
             </label>
           </div>
         )}

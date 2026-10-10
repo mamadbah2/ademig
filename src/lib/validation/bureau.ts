@@ -3,8 +3,8 @@ import { caseACocher, champJson } from "./commun";
 
 const libelle = z.string().trim().min(1, "Nommez le mandat (ex. : Bureau 2024).").max(80, "80 caractères au plus.");
 const dateElection = z.iso.date({ error: "Indiquez la date de l'élection." });
-const idMembre = z.uuid({ error: "Choisissez un membre." });
-const sansDoublon = (valeurs: string[]) => new Set(valeurs).size === valeurs.length;
+const idMembre = z.uuid({ error: "Choisissez un membre." }).transform((v) => v.toLowerCase());
+const sansDoublon = (valeurs: string[]) => new Set(valeurs.map((v) => v.toLowerCase())).size === valeurs.length;
 
 export const schemaNouveauMandat = z.object({ libelle, dateElection, reprendreCommissions: caseACocher });
 
