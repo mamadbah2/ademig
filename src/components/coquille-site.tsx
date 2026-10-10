@@ -1,5 +1,7 @@
+import { draftMode } from "next/headers";
 import type { ReactNode } from "react";
 import { Animations } from "@/components/animations";
+import { BandeauApercu } from "@/components/bandeau-apercu";
 import { Chargement } from "@/components/chargement";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -13,6 +15,7 @@ const amorceAnimations = `(function(){var d=document.documentElement;if(matchMed
 
 // En-tête, pied de page, données structurées et animations du site public.
 export async function CoquilleSite({ children }: { children: ReactNode }) {
+  const apercu = (await draftMode()).isEnabled;
   const { contact, reseaux } = await getReglages();
   const organisation = {
     "@context": "https://schema.org",
@@ -58,6 +61,7 @@ export async function CoquilleSite({ children }: { children: ReactNode }) {
       </main>
       <SiteFooter />
       <Animations />
+      {apercu && <BandeauApercu />}
     </>
   );
 }

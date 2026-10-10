@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Galerie, PhotoCadre } from "@/components/photos";
 import { Cadre, DateTexte, Etiquette, JsonLd, LienSouligne, SectionTitle } from "@/components/ui";
 import { Videos } from "@/components/video-youtube";
-import { getActualite, getActualites } from "@/lib/content/actualites";
+import { getActualitePourPage, getActualites } from "@/lib/content/actualites";
 import { absoluteUrl, site } from "@/lib/site";
 
 export async function generateStaticParams() {
@@ -13,7 +13,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/actualites/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const a = await getActualite(slug);
+  const a = await getActualitePourPage(slug);
   if (!a) return {};
   return {
     title: a.titre,
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<"/actualites/[slug]
 
 export default async function Article({ params }: PageProps<"/actualites/[slug]">) {
   const { slug } = await params;
-  const a = await getActualite(slug);
+  const a = await getActualitePourPage(slug);
   if (!a) notFound();
 
   return (
