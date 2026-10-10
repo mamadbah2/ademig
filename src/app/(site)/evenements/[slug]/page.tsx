@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Galerie } from "@/components/photos";
 import { Cadre, DateTexte, Etiquette, JsonLd, LienSouligne, SectionTitle } from "@/components/ui";
 import { Videos } from "@/components/video-youtube";
-import { getEvenement, getEvenements } from "@/lib/content/evenements";
+import { getEvenementPourPage, getEvenements } from "@/lib/content/evenements";
 import { absoluteUrl } from "@/lib/site";
 
 export async function generateStaticParams() {
@@ -14,7 +14,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/evenements/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const e = await getEvenement(slug);
+  const e = await getEvenementPourPage(slug);
   if (!e) return {};
   return {
     title: e.titre,
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps<"/evenements/[slug]
 
 export default async function PageEvenement({ params }: PageProps<"/evenements/[slug]">) {
   const { slug } = await params;
-  const e = await getEvenement(slug);
+  const e = await getEvenementPourPage(slug);
   if (!e) notFound();
 
   return (

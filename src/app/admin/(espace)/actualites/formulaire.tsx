@@ -62,10 +62,10 @@ export function FormulaireActualite({ actualite, messageInitial }: { actualite?:
         nouvelElement={() => ({ label: "", url: "" })}
         libelleAjout="Ajouter une source"
         erreurs={erreurs?.sources}
-        rendu={(s, modifier, i) => (
+        rendu={(s, modifier, i, idElement) => (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Champ id={`source-${i}-label`} label="Nom de la source" name={`source-${i}-label`} form="" value={s.label} onChange={(e) => modifier({ label: e.target.value })} />
-            <Champ id={`source-${i}-url`} label="Adresse" name={`source-${i}-url`} form="" type="url" value={s.url} onChange={(e) => modifier({ url: e.target.value })} />
+            <Champ id={`${idElement}-label`} label="Nom de la source" name={`${idElement}-label`} form="" value={s.label} onChange={(e) => modifier({ label: e.target.value })} />
+            <Champ id={`${idElement}-url`} label="Adresse" name={`${idElement}-url`} form="" type="url" value={s.url} onChange={(e) => modifier({ url: e.target.value })} />
           </div>
         )}
       />
@@ -76,10 +76,10 @@ export function FormulaireActualite({ actualite, messageInitial }: { actualite?:
         nouvelElement={() => ({ id: "", titre: "" })}
         libelleAjout="Ajouter une vidéo"
         erreurs={erreurs?.videos}
-        rendu={(v, modifier, i) => (
+        rendu={(v, modifier, i, idElement) => (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Champ id={`video-${i}-id`} label="Adresse ou identifiant YouTube" name={`video-${i}-id`} form="" value={v.id} onChange={(e) => modifier({ id: e.target.value })} />
-            <Champ id={`video-${i}-titre`} label="Titre de la vidéo" name={`video-${i}-titre`} form="" value={v.titre} onChange={(e) => modifier({ titre: e.target.value })} />
+            <Champ id={`${idElement}-id`} label="Adresse ou identifiant YouTube" name={`${idElement}-id`} form="" value={v.id} onChange={(e) => modifier({ id: e.target.value })} />
+            <Champ id={`${idElement}-titre`} label="Titre de la vidéo" name={`${idElement}-titre`} form="" value={v.titre} onChange={(e) => modifier({ titre: e.target.value })} />
           </div>
         )}
       />

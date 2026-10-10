@@ -52,3 +52,10 @@ export function resultatDErreur(erreur: unknown): Resultat<never> | null {
   }
   return null;
 }
+
+// Retire les champs de contrôle du formulaire qui ne sont pas des colonnes.
+export function sansMeta<T extends { modifierSlug: boolean; version?: string }>({ modifierSlug, version, ...champs }: T) {
+  void modifierSlug;
+  void version;
+  return champs;
+}

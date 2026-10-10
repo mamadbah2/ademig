@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { caseACocher, champJson, champSlug, extraireIdYoutube, htmlRiche, intention, urlWeb } from "./commun";
+import { caseACocher, champJson, champSlug, extraireIdYoutube, htmlRiche, idMediaFacultatif, intention, urlWeb } from "./commun";
 
 describe("champJson", () => {
   const schema = champJson(z.array(z.object({ label: z.string() })));
@@ -77,5 +77,17 @@ describe("intention et caseACocher", () => {
   it("lit une case HTML", () => {
     expect(caseACocher.parse("on")).toBe(true);
     expect(caseACocher.parse(undefined)).toBe(false);
+  });
+});
+
+describe("idMediaFacultatif", () => {
+  it("vaut null quand rien n'est choisi", () => {
+    expect(idMediaFacultatif.parse("")).toBeNull();
+    expect(idMediaFacultatif.parse(undefined)).toBeNull();
+  });
+  it("garde un uuid et refuse le reste", () => {
+    const id = crypto.randomUUID();
+    expect(idMediaFacultatif.parse(id)).toBe(id);
+    expect(idMediaFacultatif.safeParse("pas-un-uuid").success).toBe(false);
   });
 });

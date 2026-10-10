@@ -70,3 +70,20 @@ export const intention = z.enum(["enregistrer", "publier", "depublier"]).default
 
 // Une case cochée envoie « on » ; décochée, elle n'envoie rien.
 export const caseACocher = z.preprocess((v) => v === "on" || v === "true" || v === "1", z.boolean());
+
+const video = z.object({ id: idYoutube, titre: z.string().trim().min(1, "Donnez un titre à chaque vidéo.") });
+export const listeVideos = champJson(z.array(video).max(10, "10 vidéos au plus."));
+
+export const listePhotos = champJson(
+  z
+    .array(z.uuid())
+    .max(30, "30 photos au plus.")
+    .refine((ids) => new Set(ids).size === ids.length, "Une photo figure deux fois."),
+);
+
+// Champ caché d'une image unique (affiche, logo, portrait) : vide quand aucune n'est choisie.
+export const idMediaFacultatif = z
+  .string()
+  .optional()
+  .transform((v) => v || null)
+  .pipe(z.uuid({ error: "Image inattendue : choisissez-la de nouveau." }).nullable());

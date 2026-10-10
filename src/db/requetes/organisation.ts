@@ -33,7 +33,7 @@ export async function lireBureau(db: Db): Promise<Bureau> {
 export async function listerPartenaires(db: Db): Promise<Partenaire[]> {
   const lignes = await db.query.partenaires.findMany({
     where: (p, { eq }) => eq(p.visible, true),
-    orderBy: (p, { asc }) => [asc(p.ordre)],
+    orderBy: (p, { asc }) => [asc(p.ordre), asc(p.nom)],
     with: { logo: true },
   });
   return lignes.map((p) => ({

@@ -16,11 +16,13 @@ export function SelecteurMedia({
   multiple = false,
   valeur,
   onChange,
+  idBouton,
 }: {
   libelle: string;
   multiple?: boolean;
   valeur: MediaChoisi[];
   onChange: (medias: MediaChoisi[]) => void;
+  idBouton?: string;
 }) {
   const dialogue = useRef<HTMLDialogElement>(null);
   const [medias, setMedias] = useState<Media[]>([]);
@@ -76,7 +78,7 @@ export function SelecteurMedia({
 
   return (
     <>
-      <Bouton type="button" variante="secondaire" onClick={ouvrir}>
+      <Bouton type="button" variante="secondaire" id={idBouton} onClick={ouvrir}>
         {libelle}
         {valeur.length > 0 && ` (${valeur.length})`}
       </Bouton>

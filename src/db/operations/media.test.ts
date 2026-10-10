@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { photos } from "@/db/donnees-initiales/photos";
-import { actualites } from "@/db/schema";
+import { actualites, evenements, partenaires } from "@/db/schema";
 import { seed } from "@/db/seed";
 import { creerDbTest } from "@/test/db";
 import { ErreurMetier } from "./erreurs";
@@ -57,15 +57,23 @@ describe("médiathèque", () => {
     await seed(db);
     const image = (await listerMedias(db)).find((m) => m.url === photos.journeeOfficiels.src)!;
     const [actu] = await db.select({ id: actualites.id }).from(actualites).where(eq(actualites.slug, "journee-nationale-contenu-local-2026"));
+    const [evt] = await db.select({ id: evenements.id }).from(evenements).where(eq(evenements.slug, "journee-nationale-contenu-local-2026"));
     const usages = await usagesMedia(db, image.id);
     expect(usages.map((u) => u.lien)).toEqual(
       expect.arrayContaining([
         `/admin/actualites/${actu.id}`,
-        "/evenements/journee-nationale-contenu-local-2026",
+        `/admin/evenements/${evt.id}`,
       ]),
     );
     const portrait = (await listerMedias(db)).find((m) => m.url === "/membres/ibrahima-diao.jpg")!;
     expect(await usagesMedia(db, portrait.id)).toEqual([{ libelle: "Fiche de Dr Ibrahima Diao", lien: "/membres/ibrahima-diao" }]);
+  });
+
+  it("renvoie le lien d'édition du partenaire pour un logo", async () => {
+    const db = await creerDbTest();
+    await seed(db);
+    const [p] = await db.select({ id: partenaires.id, nom: partenaires.nom, logoId: partenaires.logoId }).from(partenaires).where(isNotNull(partenaires.logoId)).limit(1);
+    expect(await usagesMedia(db, p.logoId!)).toContainEqual({ libelle: `Logo du partenaire ${p.nom}`, lien: `/admin/partenaires/${p.id}` });
   });
 
   it("refuse de supprimer une image utilisée", async () => {

@@ -7,7 +7,7 @@ import { db } from "@/db";
 import * as operations from "@/db/operations/actualites";
 import { CONFLIT, type Intention } from "@/db/operations/commun";
 import { action } from "@/lib/admin/action";
-import { erreursDe, type Resultat } from "@/lib/admin/resultat";
+import { erreursDe, type Resultat, sansMeta } from "@/lib/admin/resultat";
 import { TAGS } from "@/lib/content/tags";
 import { schemaEnvoiActualite } from "@/lib/validation/actualites";
 
@@ -28,13 +28,6 @@ function invalider(id?: string) {
 
 function lire(donnees: FormData) {
   return schemaEnvoiActualite.safeParse(Object.fromEntries(donnees));
-}
-
-// Retire les champs de contrôle du formulaire qui ne sont pas des colonnes.
-function sansMeta<T extends { modifierSlug: boolean; version?: string }>({ modifierSlug, version, ...champs }: T) {
-  void modifierSlug;
-  void version;
-  return champs;
 }
 
 export async function creerActualite(_etat: ResultatActualite | null, donnees: FormData): Promise<ResultatActualite> {

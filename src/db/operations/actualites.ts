@@ -1,8 +1,8 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { actualitePhotos, actualites } from "@/db/schema";
 import type { Db, Tx } from "@/db/types";
 import type { Source, Video } from "@/lib/content/types";
-import { CONFLIT, type Intention, memeVersion } from "./commun";
+import { CONFLIT, exigerSlugModifiable, type Intention, memeVersion, publication, verifierSlugLibre } from "./commun";
 import { ErreurMetier } from "./erreurs";
 
 export type DonneesActualite = {
@@ -19,15 +19,8 @@ export type DonneesActualite = {
 
 const INTROUVABLE = "Actualité introuvable.";
 
-async function verifierSlugLibre(tx: Tx, slug: string, saufId?: string) {
-  const memeSlug = eq(actualites.slug, slug);
-  const [autre] = await tx
-    .select({ id: actualites.id })
-    .from(actualites)
-    .where(saufId ? and(memeSlug, ne(actualites.id, saufId)) : memeSlug)
-    .limit(1);
-  if (autre) throw new ErreurMetier("Ce lien est déjà utilisé par une autre actualité.", "slug");
-}
+const COLONNES_SLUG = { table: actualites, id: actualites.id, slug: actualites.slug };
+const SLUG_PRIS = "Ce lien est déjà utilisé par une autre actualité.";
 
 async function remplacerPhotos(tx: Tx, actualiteId: string, photos: string[]) {
   await tx.delete(actualitePhotos).where(eq(actualitePhotos.actualiteId, actualiteId));
@@ -38,12 +31,11 @@ async function remplacerPhotos(tx: Tx, actualiteId: string, photos: string[]) {
 
 export async function creerActualite(db: Db, d: DonneesActualite, intention: Intention): Promise<{ id: string }> {
   return db.transaction(async (tx) => {
-    await verifierSlugLibre(tx, d.slug);
+    await verifierSlugLibre(tx, COLONNES_SLUG, d.slug, SLUG_PRIS);
     const { photos, ...champs } = d;
-    const publier = intention === "publier";
     const [ligne] = await tx
       .insert(actualites)
-      .values({ ...champs, statut: publier ? "publie" : "brouillon", publieLe: publier ? new Date() : null })
+      .values({ ...champs, ...publication(intention, null) })
       .returning({ id: actualites.id });
     await remplacerPhotos(tx, ligne.id, photos);
     return ligne;
@@ -62,19 +54,14 @@ export async function modifierActualite(
       columns: { slug: true, statut: true, publieLe: true },
     });
     if (!actuelle) throw new ErreurMetier(INTROUVABLE);
-    if (d.slug !== actuelle.slug) {
-      // Un lien déjà publié a pu être partagé : on ne le change que sur demande explicite.
-      if (actuelle.publieLe && !o.modifierSlug) {
-        throw new ErreurMetier("Cette actualité a déjà été publiée : cliquez sur « Modifier le lien » pour changer son adresse.", "slug");
-      }
-      await verifierSlugLibre(tx, d.slug, id);
+    const message = "Cette actualité a déjà été publiée : cliquez sur « Modifier le lien » pour changer son adresse.";
+    if (exigerSlugModifiable(actuelle, d.slug, o.modifierSlug, message)) {
+      await verifierSlugLibre(tx, COLONNES_SLUG, d.slug, SLUG_PRIS, id);
     }
-    const statut = o.intention === "publier" ? "publie" : o.intention === "depublier" ? "brouillon" : actuelle.statut;
-    const publieLe = actuelle.publieLe ?? (statut === "publie" ? new Date() : null);
     const { photos, ...champs } = d;
     const [maj] = await tx
       .update(actualites)
-      .set({ ...champs, statut, publieLe })
+      .set({ ...champs, ...publication(o.intention, actuelle) })
       .where(and(eq(actualites.id, id), memeVersion(actualites.majLe, o.version)))
       .returning({ majLe: actualites.majLe });
     if (!maj) throw new ErreurMetier(CONFLIT);
