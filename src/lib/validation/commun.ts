@@ -87,3 +87,20 @@ export const idMediaFacultatif = z
   .optional()
   .transform((v) => v || null)
   .pipe(z.uuid({ error: "Image inattendue : choisissez-la de nouveau." }).nullable());
+
+export const texteFacultatif = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `${max} caractères au plus.`)
+    .optional()
+    .transform((v) => v || null);
+
+// Texte riche facultatif (biographie) : nettoyé, et null s'il n'a aucun texte visible.
+export const htmlRicheFacultatif = z
+  .string()
+  .optional()
+  .transform((v) => {
+    const html = nettoyerHtml(v ?? "");
+    return texteDe(html).length > 0 ? html : null;
+  });

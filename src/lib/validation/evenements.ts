@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { depuisDateLocale } from "@/lib/admin/dates";
-import { caseACocher, champJson, champSlug, htmlRiche, idMediaFacultatif, intention, listePhotos, listeVideos } from "./commun";
+import { caseACocher, champJson, champSlug, htmlRiche, idMediaFacultatif, intention, listePhotos, listeVideos, texteFacultatif } from "./commun";
 
 function dateHeure(message: string) {
   return z.string().transform((v, ctx) => {
@@ -12,14 +12,6 @@ function dateHeure(message: string) {
     return date;
   });
 }
-
-const texteFacultatif = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max, `${max} caractères au plus.`)
-    .optional()
-    .transform((v) => v || null);
 
 const partenaires = champJson(
   z
