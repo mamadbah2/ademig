@@ -1,5 +1,7 @@
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { photos } from "@/db/donnees-initiales/photos";
+import { actualites } from "@/db/schema";
 import { seed } from "@/db/seed";
 import { creerDbTest } from "@/test/db";
 import { ErreurMetier } from "./erreurs";
@@ -54,10 +56,11 @@ describe("médiathèque", () => {
     const db = await creerDbTest();
     await seed(db);
     const image = (await listerMedias(db)).find((m) => m.url === photos.journeeOfficiels.src)!;
+    const [actu] = await db.select({ id: actualites.id }).from(actualites).where(eq(actualites.slug, "journee-nationale-contenu-local-2026"));
     const usages = await usagesMedia(db, image.id);
     expect(usages.map((u) => u.lien)).toEqual(
       expect.arrayContaining([
-        "/actualites/journee-nationale-contenu-local-2026",
+        `/admin/actualites/${actu.id}`,
         "/evenements/journee-nationale-contenu-local-2026",
       ]),
     );
