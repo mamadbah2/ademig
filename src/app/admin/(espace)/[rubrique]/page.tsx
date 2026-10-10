@@ -4,7 +4,6 @@ import { EtatVide, TitrePage } from "@/components/admin/ui";
 import { exigerSession } from "@/lib/session";
 
 const rubriques: Record<string, string> = {
-  bureau: "Bureau et commissions",
   reglages: "Réglages",
 };
 
