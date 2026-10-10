@@ -74,15 +74,15 @@ export async function usagesMedia(db: Db, id: string): Promise<UsageMedia[]> {
       .innerJoin(evenements, eq(evenements.id, evenementPhotos.evenementId))
       .where(eq(evenementPhotos.mediaId, id)),
     db.select({ id: evenements.id, titre: evenements.titre }).from(evenements).where(eq(evenements.afficheId, id)),
-    db.select({ nom: membres.nom, slug: membres.slug }).from(membres).where(eq(membres.photoId, id)),
+    db.select({ id: membres.id, nom: membres.nom }).from(membres).where(eq(membres.photoId, id)),
     db.select({ id: partenaires.id, nom: partenaires.nom }).from(partenaires).where(eq(partenaires.logoId, id)),
   ]);
-  // Actualités et événements ont leur écran d'édition (un brouillon n'a pas de page publique) ; les autres contenus suivront.
+  // Chaque contenu a son écran d'édition (un brouillon ou une fiche masquée n'a pas de page publique).
   return [
     ...photosActualites.map((a) => ({ libelle: `Actualité « ${a.titre} »`, lien: `/admin/actualites/${a.id}` })),
     ...photosEvenements.map((e) => ({ libelle: `Événement « ${e.titre} » (photo)`, lien: `/admin/evenements/${e.id}` })),
     ...affiches.map((e) => ({ libelle: `Événement « ${e.titre} » (affiche)`, lien: `/admin/evenements/${e.id}` })),
-    ...portraits.map((m) => ({ libelle: `Fiche de ${m.nom}`, lien: `/membres/${m.slug}` })),
+    ...portraits.map((m) => ({ libelle: `Fiche de ${m.nom}`, lien: `/admin/membres/${m.id}` })),
     ...logos.map((p) => ({ libelle: `Logo du partenaire ${p.nom}`, lien: `/admin/partenaires/${p.id}` })),
   ];
 }

@@ -1,7 +1,7 @@
 import { eq, isNotNull } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { photos } from "@/db/donnees-initiales/photos";
-import { actualites, evenements, partenaires } from "@/db/schema";
+import { actualites, evenements, membres, partenaires } from "@/db/schema";
 import { seed } from "@/db/seed";
 import { creerDbTest } from "@/test/db";
 import { ErreurMetier } from "./erreurs";
@@ -58,6 +58,7 @@ describe("médiathèque", () => {
     const image = (await listerMedias(db)).find((m) => m.url === photos.journeeOfficiels.src)!;
     const [actu] = await db.select({ id: actualites.id }).from(actualites).where(eq(actualites.slug, "journee-nationale-contenu-local-2026"));
     const [evt] = await db.select({ id: evenements.id }).from(evenements).where(eq(evenements.slug, "journee-nationale-contenu-local-2026"));
+    const [diao] = await db.select({ id: membres.id }).from(membres).where(eq(membres.slug, "ibrahima-diao"));
     const usages = await usagesMedia(db, image.id);
     expect(usages.map((u) => u.lien)).toEqual(
       expect.arrayContaining([
@@ -66,7 +67,7 @@ describe("médiathèque", () => {
       ]),
     );
     const portrait = (await listerMedias(db)).find((m) => m.url === "/membres/ibrahima-diao.jpg")!;
-    expect(await usagesMedia(db, portrait.id)).toEqual([{ libelle: "Fiche de Dr Ibrahima Diao", lien: "/membres/ibrahima-diao" }]);
+    expect(await usagesMedia(db, portrait.id)).toEqual([{ libelle: "Fiche de Dr Ibrahima Diao", lien: `/admin/membres/${diao.id}` }]);
   });
 
   it("renvoie le lien d'édition du partenaire pour un logo", async () => {
