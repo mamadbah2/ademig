@@ -45,6 +45,19 @@ test("un éditeur rédige, prévisualise puis supprime une actualité", async ({
   await expect(page).toHaveURL(/\/admin\/actualites\/[0-9a-f-]{36}\?cree=1$/);
   await expect(page.getByRole("status").filter({ hasText: "Actualité créée." })).toBeVisible();
 
+  // Deux enregistrements successifs : la version renvoyée par le serveur suit, sans faux conflit.
+  const version = page.locator('input[type="hidden"][name="version"]');
+  const enregistre = page.getByRole("status").filter({ hasText: "Modifications enregistrées." });
+  for (const resume of ["Un résumé de test, modifié.", "Un résumé de test, modifié deux fois."]) {
+    const avant = await version.inputValue();
+    await page.getByLabel("Résumé").fill(resume);
+    await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
+    await expect(version).not.toHaveValue(avant);
+    await expect(enregistre).toBeVisible();
+    await expect(page.locator("form").getByRole("alert")).toHaveCount(0);
+    await expect(page.getByLabel("Résumé")).toHaveValue(resume);
+  }
+
   // Invisible sur le site public.
   const reponse = await page.request.get(`/actualites/${SLUG}`);
   expect(reponse.status()).toBe(404);
