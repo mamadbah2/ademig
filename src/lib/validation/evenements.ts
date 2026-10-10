@@ -35,8 +35,16 @@ const champs = z.object({
   fin: z
     .string()
     .optional()
-    .transform((v) => v?.trim() || "")
-    .pipe(z.union([z.literal("").transform(() => null), dateHeure("Date de fin invalide.")])),
+    .transform((v, ctx) => {
+      const texte = v?.trim() ?? "";
+      if (!texte) return null;
+      const date = depuisDateLocale(texte);
+      if (!date) {
+        ctx.addIssue({ code: "custom", message: "Date de fin invalide." });
+        return z.NEVER;
+      }
+      return date;
+    }),
   lieuNom: z.string().trim().min(1, "Indiquez le lieu.").max(200, "200 caractères au plus."),
   lieuVille: z.string().trim().min(1, "Indiquez la ville.").max(100, "100 caractères au plus."),
   theme: texteFacultatif(300),

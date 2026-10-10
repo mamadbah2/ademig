@@ -66,6 +66,16 @@ describe("schemaEvenement", () => {
     expect(r.error?.issues[0]).toMatchObject({ path: ["fin"], message: "La fin doit être après le début." });
   });
 
+  it("signale une date de fin invalide en français", () => {
+    const r = schemaEvenement.safeParse({ ...valide, fin: "demain" });
+    expect(r.error?.issues.find((i) => i.path[0] === "fin")).toMatchObject({ path: ["fin"], message: "Date de fin invalide." });
+  });
+
+  it("refuse une fin égale au début", () => {
+    const r = schemaEvenement.safeParse({ ...valide, fin: valide.debut });
+    expect(r.error?.issues[0]).toMatchObject({ path: ["fin"], message: "La fin doit être après le début." });
+  });
+
   it.each([
     ["debut", { debut: "" }],
     ["fin", { fin: "demain" }],
