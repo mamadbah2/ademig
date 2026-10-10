@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { photos } from "@/db/donnees-initiales/photos";
-import { actualites } from "@/db/schema";
+import { actualites, evenements } from "@/db/schema";
 import { seed } from "@/db/seed";
 import { creerDbTest } from "@/test/db";
 import { ErreurMetier } from "./erreurs";
@@ -57,11 +57,12 @@ describe("médiathèque", () => {
     await seed(db);
     const image = (await listerMedias(db)).find((m) => m.url === photos.journeeOfficiels.src)!;
     const [actu] = await db.select({ id: actualites.id }).from(actualites).where(eq(actualites.slug, "journee-nationale-contenu-local-2026"));
+    const [evt] = await db.select({ id: evenements.id }).from(evenements).where(eq(evenements.slug, "journee-nationale-contenu-local-2026"));
     const usages = await usagesMedia(db, image.id);
     expect(usages.map((u) => u.lien)).toEqual(
       expect.arrayContaining([
         `/admin/actualites/${actu.id}`,
-        "/evenements/journee-nationale-contenu-local-2026",
+        `/admin/evenements/${evt.id}`,
       ]),
     );
     const portrait = (await listerMedias(db)).find((m) => m.url === "/membres/ibrahima-diao.jpg")!;

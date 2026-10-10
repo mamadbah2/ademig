@@ -4,7 +4,6 @@ import { EtatVide, TitrePage } from "@/components/admin/ui";
 import { exigerSession } from "@/lib/session";
 
 const rubriques: Record<string, string> = {
-  evenements: "Événements",
   membres: "Membres",
   bureau: "Bureau et commissions",
   partenaires: "Partenaires",
