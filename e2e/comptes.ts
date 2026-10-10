@@ -1,6 +1,5 @@
 import { type Page, expect } from "@playwright/test";
 
-
 export const COMPTES = {
   superadmin: { email: "e2e-superadmin@ademig.test", nom: "E2E Super-admin", role: "superadmin" },
   editeur: { email: "e2e-editeur@ademig.test", nom: "E2E Éditeur", role: "editeur" },

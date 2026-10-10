@@ -34,7 +34,9 @@ test("un éditeur rédige, prévisualise puis supprime une actualité", async ({
   // Choix d'une photo dans le sélecteur de médias (fenêtre rendue dans un portail).
   await page.getByRole("button", { name: "Choisir les photos" }).click();
   const fenetre = page.getByRole("dialog");
-  await fenetre.locator("button[aria-pressed]").first().click();
+  const premiereImage = fenetre.locator("button[aria-pressed]").first();
+  await expect(premiereImage, "La médiathèque doit contenir au moins une image (seed).").toBeVisible();
+  await premiereImage.click();
   await fenetre.getByRole("button", { name: /^Valider/ }).click();
   await expect(page.getByText("Vignette", { exact: false }).first()).toBeVisible();
   await expect(page.locator("strong", { hasText: "Vignette" })).toHaveCount(1);
