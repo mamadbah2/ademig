@@ -73,7 +73,8 @@ export async function modifierMembre(
 // Les postes et commissions partiraient en cascade : on refuse pour garder l'historique des bureaux.
 export async function supprimerMembre(db: Db, id: string): Promise<void> {
   await db.transaction(async (tx) => {
-    const actuel = await tx.query.membres.findFirst({ where: eq(membres.id, id), columns: { id: true } });
+    // Verrou : un enregistrement de mandat concurrent attend ici au lieu de voir ses postes effacés en cascade.
+    const [actuel] = await tx.select({ id: membres.id }).from(membres).where(eq(membres.id, id)).for("update");
     if (!actuel) throw new ErreurMetier(INTROUVABLE);
     const postes = await tx.$count(postesBureau, eq(postesBureau.membreId, id));
     const places = await tx.$count(commissionMembres, eq(commissionMembres.membreId, id));

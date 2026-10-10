@@ -19,11 +19,6 @@ const version = async (db: Db, id: string) => (await lireMandatAdmin(db, id))!.v
 const actifs = async (db: Db) => (await db.select().from(mandats).where(eq(mandats.actif, true))).map((m) => m.libelle);
 
 describe("bureau", () => {
-  it("DonneesMandat est exactement la sortie de schemaMandat", () => {
-    expectTypeOf<z.output<typeof schemaMandat>>().toExtend<DonneesMandat>();
-    expectTypeOf<DonneesMandat>().toExtend<z.output<typeof schemaMandat>>();
-  });
-
 
   let db: Db;
   let a: string;
@@ -136,6 +131,7 @@ describe("bureau", () => {
     expect(await db.select().from(commissions).where(eq(commissions.mandatId, id))).toHaveLength(0);
     await expect(supprimerMandat(db, id)).rejects.toThrow("Mandat introuvable.");
     await expect(activerMandat(db, id)).rejects.toThrow("Mandat introuvable.");
+    expect(await actifs(db)).toEqual(["Bureau 2024"]);
   });
 
   it("liste les mandats, le plus récent d'abord, avec leur nombre de postes", async () => {
@@ -145,5 +141,12 @@ describe("bureau", () => {
       ["Bureau 2024", true, 1],
     ]);
     expect(await db.select().from(postesBureau)).toHaveLength(1);
+  });
+});
+
+describe("types du bureau", () => {
+  it("DonneesMandat est exactement la sortie de schemaMandat", () => {
+    expectTypeOf<z.output<typeof schemaMandat>>().toExtend<DonneesMandat>();
+    expectTypeOf<DonneesMandat>().toExtend<z.output<typeof schemaMandat>>();
   });
 });

@@ -39,7 +39,7 @@ export async function creerMandat(
 async function verifierMembres(tx: Tx, ids: string[]) {
   const uniques = [...new Set(ids)];
   if (uniques.length === 0) return;
-  const trouves = await tx.select({ id: membres.id }).from(membres).where(inArray(membres.id, uniques));
+  const trouves = await tx.select({ id: membres.id }).from(membres).where(inArray(membres.id, uniques)).for("share");
   if (trouves.length !== uniques.length) throw new ErreurMetier("Un membre choisi n'existe plus : rechargez la page.");
 }
 
@@ -77,7 +77,8 @@ export async function enregistrerMandat(db: Db, id: string, d: DonneesMandat, o:
 
 export async function activerMandat(db: Db, id: string): Promise<void> {
   await db.transaction(async (tx) => {
-    const mandat = await tx.query.mandats.findFirst({ where: eq(mandats.id, id), columns: { actif: true } });
+    // Verrou : une suppression ou un enregistrement concurrent attend la fin de l'activation.
+    const [mandat] = await tx.select({ actif: mandats.actif }).from(mandats).where(eq(mandats.id, id)).for("update");
     if (!mandat) throw new ErreurMetier(INTROUVABLE);
     if (mandat.actif) return;
     if ((await tx.$count(postesBureau, eq(postesBureau.mandatId, id))) === 0) {
@@ -86,7 +87,12 @@ export async function activerMandat(db: Db, id: string): Promise<void> {
     // majLe est recopié : activer ne doit pas invalider la version d'un formulaire ouvert.
     // L'index unique partiel refuse un second mandat actif si deux activations se croisent.
     await tx.update(mandats).set({ actif: false, majLe: sql`${mandats.majLe}` }).where(eq(mandats.actif, true));
-    await tx.update(mandats).set({ actif: true, majLe: sql`${mandats.majLe}` }).where(eq(mandats.id, id));
+    const activés = await tx
+      .update(mandats)
+      .set({ actif: true, majLe: sql`${mandats.majLe}` })
+      .where(eq(mandats.id, id))
+      .returning({ id: mandats.id });
+    if (activés.length === 0) throw new ErreurMetier(INTROUVABLE);
   });
 }
 
