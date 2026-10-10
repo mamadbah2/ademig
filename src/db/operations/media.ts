@@ -75,7 +75,7 @@ export async function usagesMedia(db: Db, id: string): Promise<UsageMedia[]> {
       .where(eq(evenementPhotos.mediaId, id)),
     db.select({ id: evenements.id, titre: evenements.titre }).from(evenements).where(eq(evenements.afficheId, id)),
     db.select({ nom: membres.nom, slug: membres.slug }).from(membres).where(eq(membres.photoId, id)),
-    db.select({ nom: partenaires.nom }).from(partenaires).where(eq(partenaires.logoId, id)),
+    db.select({ id: partenaires.id, nom: partenaires.nom }).from(partenaires).where(eq(partenaires.logoId, id)),
   ]);
   // Actualités et événements ont leur écran d'édition (un brouillon n'a pas de page publique) ; les autres contenus suivront.
   return [
@@ -83,7 +83,7 @@ export async function usagesMedia(db: Db, id: string): Promise<UsageMedia[]> {
     ...photosEvenements.map((e) => ({ libelle: `Événement « ${e.titre} » (photo)`, lien: `/admin/evenements/${e.id}` })),
     ...affiches.map((e) => ({ libelle: `Événement « ${e.titre} » (affiche)`, lien: `/admin/evenements/${e.id}` })),
     ...portraits.map((m) => ({ libelle: `Fiche de ${m.nom}`, lien: `/membres/${m.slug}` })),
-    ...logos.map((p) => ({ libelle: `Logo du partenaire ${p.nom}`, lien: "/partenaires" })),
+    ...logos.map((p) => ({ libelle: `Logo du partenaire ${p.nom}`, lien: `/admin/partenaires/${p.id}` })),
   ];
 }
 

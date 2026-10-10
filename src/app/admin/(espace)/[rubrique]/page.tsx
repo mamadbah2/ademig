@@ -6,7 +6,6 @@ import { exigerSession } from "@/lib/session";
 const rubriques: Record<string, string> = {
   membres: "Membres",
   bureau: "Bureau et commissions",
-  partenaires: "Partenaires",
   reglages: "Réglages",
 };
 
