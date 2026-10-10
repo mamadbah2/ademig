@@ -76,7 +76,7 @@ export default async function Article({ params }: PageProps<"/actualites/[slug]"
           <p className="mt-12 text-sm">
             Sources :{" "}
             {a.sources.map((s, i) => (
-              <span key={s.url}>
+              <span key={i}>
                 {i > 0 && ", "}
                 <a href={s.url} className="underline underline-offset-4" rel="noopener">
                   {s.label}

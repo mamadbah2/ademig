@@ -9,6 +9,10 @@ describe("lireFiltre", () => {
     expect(lireFiltre({ q: ["a", "b"], statut: "supprime", page: "-2" })).toEqual({ q: "", statut: undefined, page: 1 });
     expect(lireFiltre({ page: "abc" }).page).toBe(1);
   });
+  it("plafonne la page", () => {
+    expect(lireFiltre({ page: "99999999999" }).page).toBe(10000);
+    expect(lireFiltre({ page: "1e300" }).page).toBe(10000);
+  });
 });
 
 describe("urlListe", () => {

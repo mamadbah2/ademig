@@ -18,6 +18,12 @@ export function ChampSlug({
 }) {
   const [saisie, setSaisie] = useState<string | null>(valeurInitiale || null);
   const [deverrouille, setDeverrouille] = useState(false);
+  // Après un enregistrement, l'état sauvegardé change : le lien se reverrouille (ajustement pendant le rendu).
+  const [enregistre, setEnregistre] = useState({ valeurInitiale, verrouille });
+  if (enregistre.valeurInitiale !== valeurInitiale || enregistre.verrouille !== verrouille) {
+    setEnregistre({ valeurInitiale, verrouille });
+    setDeverrouille(false);
+  }
   const valeur = saisie ?? slugifier(titre);
   const bloque = verrouille && !deverrouille;
 
