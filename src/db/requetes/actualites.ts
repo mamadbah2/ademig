@@ -29,9 +29,10 @@ export async function listerActualites(db: Db): Promise<Actualite[]> {
   return lignes.map(versActualite);
 }
 
-export async function trouverActualite(db: Db, slug: string): Promise<Actualite | undefined> {
+// `brouillons` n'est utilisé que pour l'aperçu, après contrôle de la session (src/lib/apercu.ts).
+export async function trouverActualite(db: Db, slug: string, o: { brouillons?: boolean } = {}): Promise<Actualite | undefined> {
   const ligne = await db.query.actualites.findFirst({
-    where: (a, { and, eq }) => and(eq(a.slug, slug), eq(a.statut, "publie")),
+    where: (a, { and, eq }) => (o.brouillons ? eq(a.slug, slug) : and(eq(a.slug, slug), eq(a.statut, "publie"))),
     with: { photos: { with: { media: true }, orderBy: (p, { asc }) => [asc(p.ordre)] } },
   });
   return ligne && versActualite(ligne);

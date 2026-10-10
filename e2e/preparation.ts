@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { eq, like } from "drizzle-orm";
 import { db } from "../src/db";
 import { creerCompteAvecMotDePasse } from "../src/db/operations/comptes";
-import { user } from "../src/db/schema";
+import { actualites, user } from "../src/db/schema";
 import { COMPTES } from "./comptes";
 
 // Repart de comptes de test neufs à chaque lancement (la cascade supprime sessions et mots de passe).
@@ -13,6 +13,8 @@ export default async function preparation() {
         "Lancez `E2E_AUTORISE=1 npm run test:e2e`, uniquement contre une base de développement.",
     );
   }
+  // Contenus créés par les tests : leur lien commence toujours par « e2e- ».
+  await db.delete(actualites).where(like(actualites.slug, "e2e-%"));
   // Mot de passe propre à ce lancement, transmis aux tests par l'environnement.
   const motDePasse = randomBytes(18).toString("base64url");
   process.env.E2E_MOT_DE_PASSE = motDePasse;

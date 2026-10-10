@@ -64,7 +64,7 @@ export async function modifierMedia(db: Db, id: string, donnees: { alt: string; 
 export async function usagesMedia(db: Db, id: string): Promise<UsageMedia[]> {
   const [photosActualites, photosEvenements, affiches, portraits, logos] = await Promise.all([
     db
-      .select({ titre: actualites.titre, slug: actualites.slug })
+      .select({ id: actualites.id, titre: actualites.titre })
       .from(actualitePhotos)
       .innerJoin(actualites, eq(actualites.id, actualitePhotos.actualiteId))
       .where(eq(actualitePhotos.mediaId, id)),
@@ -77,8 +77,9 @@ export async function usagesMedia(db: Db, id: string): Promise<UsageMedia[]> {
     db.select({ nom: membres.nom, slug: membres.slug }).from(membres).where(eq(membres.photoId, id)),
     db.select({ nom: partenaires.nom }).from(partenaires).where(eq(partenaires.logoId, id)),
   ]);
+  // Les actualités ont leur écran d'édition (un brouillon n'a pas de page publique) ; les autres contenus suivront.
   return [
-    ...photosActualites.map((a) => ({ libelle: `Actualité « ${a.titre} »`, lien: `/actualites/${a.slug}` })),
+    ...photosActualites.map((a) => ({ libelle: `Actualité « ${a.titre} »`, lien: `/admin/actualites/${a.id}` })),
     ...photosEvenements.map((e) => ({ libelle: `Événement « ${e.titre} » (photo)`, lien: `/evenements/${e.slug}` })),
     ...affiches.map((e) => ({ libelle: `Événement « ${e.titre} » (affiche)`, lien: `/evenements/${e.slug}` })),
     ...portraits.map((m) => ({ libelle: `Fiche de ${m.nom}`, lien: `/membres/${m.slug}` })),

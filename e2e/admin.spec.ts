@@ -1,18 +1,5 @@
-import { type Page, expect, test } from "@playwright/test";
-import { COMPTES, motDePasseE2E } from "./comptes";
-
-async function seConnecter(page: Page, email: string, motDePasse = motDePasseE2E()) {
-  await page.goto("/admin/connexion");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Mot de passe").fill(motDePasse);
-  await page.getByRole("button", { name: "Se connecter" }).click();
-}
-
-// Attend la fin de la connexion avant toute navigation (sinon le goto interrompt la requête).
-async function seConnecterEtAttendre(page: Page, email: string) {
-  await seConnecter(page, email);
-  await expect(page.getByRole("heading", { name: /Bonjour/ })).toBeVisible();
-}
+import { expect, test } from "@playwright/test";
+import { COMPTES, seConnecter, seConnecterEtAttendre } from "./comptes";
 
 test("sans session, l'admin renvoie vers la connexion", async ({ page }) => {
   await page.goto("/admin/comptes");
