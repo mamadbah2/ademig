@@ -74,6 +74,36 @@ export function Champ({
   );
 }
 
+// Texte de plusieurs lignes (résumé, description, mission), avec aide et erreur annoncées.
+export function ZoneTexte({
+  label,
+  name,
+  aide,
+  erreurs,
+  className = "",
+  rows = 3,
+  ...props
+}: ComponentProps<"textarea"> & { label: string; name: string; aide?: string; erreurs?: string[] }) {
+  const id = props.id ?? `champ-${name}`;
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="block font-bold">
+        {label}
+      </label>
+      <textarea
+        {...props}
+        id={id}
+        name={name}
+        rows={rows}
+        aria-invalid={erreurs && erreurs.length > 0 ? true : undefined}
+        aria-describedby={decritPar(id, aide, erreurs)}
+        className={styleSaisie}
+      />
+      <MessagesChamp id={id} aide={aide} erreurs={erreurs} />
+    </div>
+  );
+}
+
 export function Selection({
   label,
   name,

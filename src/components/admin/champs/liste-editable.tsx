@@ -7,7 +7,7 @@ import { useFocusDiffere } from "./use-focus-differe";
 
 type Element<T> = { cle: number; valeur: T };
 
-// Liste d'éléments saisis dans le formulaire, envoyée en JSON dans un champ caché.
+// Liste d'éléments saisis dans le formulaire, envoyée en JSON dans un champ caché (sans `name`, pas de champ : liste imbriquée).
 export function ListeEditable<T>({
   libelle,
   name,
@@ -16,14 +16,16 @@ export function ListeEditable<T>({
   rendu,
   libelleAjout,
   erreurs,
+  onChange,
 }: {
   libelle: string;
-  name: string;
+  name?: string;
   valeurInitiale: T[];
   nouvelElement: () => T;
   rendu: (element: T, modifier: (patch: Partial<T>) => void, index: number, idElement: string) => ReactNode;
   libelleAjout: string;
   erreurs?: string[];
+  onChange?: (valeurs: T[]) => void;
 }) {
   const id = useId();
   const compteur = useRef(valeurInitiale.length);
@@ -31,20 +33,26 @@ export function ListeEditable<T>({
 
   const focaliser = useFocusDiffere(elements);
 
+  // Toute modification passe par ici : une liste imbriquée remonte sa valeur à la liste parente.
+  function changer(suivante: Element<T>[]) {
+    setElements(suivante);
+    onChange?.(suivante.map((e) => e.valeur));
+  }
+
   function agir(action: "monter" | "descendre" | "retirer", i: number) {
     const suivante = action === "retirer" ? retirer(elements, i) : deplacer(elements, i, action === "monter" ? -1 : 1);
     const cible = cibleFocusApres(action, i, elements.length);
     focaliser(cible === "ajout" ? `${id}-ajout` : `${id}-${suivante[cible.index].cle}-${cible.bouton}`);
-    setElements(suivante);
+    changer(suivante);
   }
 
   const modifier = (index: number) => (patch: Partial<T>) =>
-    setElements((l) => l.map((e, i) => (i === index ? { ...e, valeur: { ...e.valeur, ...patch } } : e)));
+    changer(elements.map((e, i) => (i === index ? { ...e, valeur: { ...e.valeur, ...patch } } : e)));
 
   return (
     <fieldset aria-describedby={erreurs?.length ? `${id}-erreur` : undefined} className="border-[1.5px] border-encre p-4">
       <legend className="px-1 font-bold">{libelle}</legend>
-      <input type="hidden" name={name} value={JSON.stringify(elements.map((e) => e.valeur))} />
+      {name && <input type="hidden" name={name} value={JSON.stringify(elements.map((e) => e.valeur))} />}
       <ol className="space-y-4">
         {elements.map((e, i) => (
           <li key={e.cle} className="border-b border-encre/30 pb-4">
@@ -68,7 +76,7 @@ export function ListeEditable<T>({
         variante="secondaire"
         id={`${id}-ajout`}
         className="mt-4"
-        onClick={() => setElements((l) => [...l, { cle: compteur.current++, valeur: nouvelElement() }])}
+        onClick={() => changer([...elements, { cle: compteur.current++, valeur: nouvelElement() }])}
       >
         {libelleAjout}
       </Bouton>

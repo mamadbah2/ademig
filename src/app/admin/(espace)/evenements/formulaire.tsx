@@ -8,7 +8,7 @@ import { ChampSlug } from "@/components/admin/champs/champ-slug";
 import { EditeurRiche } from "@/components/admin/champs/editeur-riche";
 import { ListeEditable } from "@/components/admin/champs/liste-editable";
 import { useFormulaire } from "@/components/admin/champs/use-formulaire";
-import { Alerte, Champ } from "@/components/admin/ui";
+import { Alerte, Champ, ZoneTexte } from "@/components/admin/ui";
 import type { EvenementAdmin } from "@/db/requetes/admin/evenements";
 import { creerEvenement, enregistrerEvenement, supprimerEvenementAction } from "@/lib/admin/evenements";
 import type { Resultat } from "@/lib/admin/resultat";
@@ -49,24 +49,7 @@ export function FormulaireEvenement({
         <Champ label="Ville" name="lieuVille" defaultValue={evenement?.lieuVille} erreurs={erreurs?.lieuVille} />
       </div>
       <Champ label="Thème" name="theme" defaultValue={evenement?.theme} erreurs={erreurs?.theme} />
-      <div>
-        <label htmlFor="champ-resume" className="block font-bold">
-          Résumé
-        </label>
-        <textarea
-          id="champ-resume"
-          name="resume"
-          rows={3}
-          defaultValue={evenement?.resume}
-          aria-invalid={erreurs?.resume ? true : undefined}
-          aria-describedby="champ-resume-aide"
-          className="mt-1 block w-full border-[1.5px] border-encre bg-white px-3 py-2 aria-invalid:border-rouge focus-visible:outline-3 focus-visible:outline-moutarde"
-        />
-        <p id="champ-resume-aide" className="mt-1 text-sm">
-          Deux ou trois phrases, affichées dans les listes et en tête de la page.
-        </p>
-        {erreurs?.resume && <p className="mt-1 border-l-4 border-rouge pl-2 text-sm font-bold">{erreurs.resume.join(" ")}</p>}
-      </div>
+      <ZoneTexte label="Résumé" name="resume" defaultValue={evenement?.resume} aide="Deux ou trois phrases, affichées dans les listes et en tête de la page." erreurs={erreurs?.resume} />
       <EditeurRiche libelle="Présentation" name="corps" valeurInitiale={evenement?.corps ?? ""} erreurs={erreurs?.corps} />
       <ChampMedia libelle="Affiche" name="afficheId" valeurInitiale={evenement?.affiche ?? null} erreurs={erreurs?.afficheId} />
       <GaleriePhotos libelle="Photos" name="photos" valeurInitiale={evenement?.photos ?? []} erreurs={erreurs?.photos} />
