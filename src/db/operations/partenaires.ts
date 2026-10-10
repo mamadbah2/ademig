@@ -60,18 +60,20 @@ export async function supprimerPartenaire(db: Db, id: string): Promise<void> {
 // Échange avec le voisin puis renumérote 0..n-1 : répare au passage les ordres en double ou troués.
 export async function deplacerPartenaire(db: Db, id: string, sens: -1 | 1): Promise<void> {
   await db.transaction(async (tx) => {
+    // Verrou d'abord, lecture ensuite : sous READ COMMITTED, un ORDER BY … FOR UPDATE peut renvoyer un ordre périmé.
+    await tx.select({ id: partenaires.id }).from(partenaires).for("update");
     const lignes = await tx
       .select({ id: partenaires.id, ordre: partenaires.ordre })
       .from(partenaires)
-      .orderBy(asc(partenaires.ordre), asc(partenaires.nom))
-      .for("update");
+      .orderBy(asc(partenaires.ordre), asc(partenaires.nom));
     const index = lignes.findIndex((l) => l.id === id);
     if (index === -1) throw new ErreurMetier(INTROUVABLE);
     const cible = index + sens;
     if (cible < 0 || cible >= lignes.length) return;
     [lignes[index], lignes[cible]] = [lignes[cible], lignes[index]];
     for (const [ordre, ligne] of lignes.entries()) {
-      if (ligne.ordre !== ordre) await tx.update(partenaires).set({ ordre }).where(eq(partenaires.id, ligne.id));
+      // majLe est recopié : renuméroter ne doit pas invalider la version d'un formulaire ouvert.
+      if (ligne.ordre !== ordre) await tx.update(partenaires).set({ ordre, majLe: sql`${partenaires.majLe}` }).where(eq(partenaires.id, ligne.id));
     }
   });
 }

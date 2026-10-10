@@ -79,4 +79,26 @@ describe("partenaires", () => {
     await expect(supprimerPartenaire(db, crypto.randomUUID())).rejects.toThrow("Partenaire introuvable.");
     await expect(deplacerPartenaire(db, crypto.randomUUID(), 1)).rejects.toThrow("Partenaire introuvable.");
   });
+
+  it("renuméroter un voisin ne change pas la version d'un partenaire", async () => {
+    const a = await creerPartenaire(db, p("A"));
+    const b = await creerPartenaire(db, p("B"));
+    const ancienne = (await lirePartenaireAdmin(db, a.id))!.version;
+    await new Promise((r) => setTimeout(r, 10));
+    await deplacerPartenaire(db, b.id, -1);
+    expect(await noms(db)).toEqual(["B", "A"]);
+    expect((await lirePartenaireAdmin(db, a.id))!.version).toBe(ancienne);
+    await expect(modifierPartenaire(db, a.id, { ...p("A"), visible: false }, { version: ancienne })).resolves.toBeDefined();
+  });
+
+  it("autorise de renommer un partenaire avec une autre casse", async () => {
+    const { id } = await creerPartenaire(db, p("Petrosen"));
+    const v = (await lirePartenaireAdmin(db, id))!.version;
+    await modifierPartenaire(db, id, p("PETROSEN"), { version: v });
+    expect(await noms(db)).toEqual(["PETROSEN"]);
+  });
+
+  it("signale la modification d'un partenaire introuvable", async () => {
+    await expect(modifierPartenaire(db, crypto.randomUUID(), p("A"), { version: new Date().toISOString() })).rejects.toThrow("Partenaire introuvable.");
+  });
 });
