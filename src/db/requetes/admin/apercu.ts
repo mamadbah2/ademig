@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { actualites, evenements } from "@/db/schema";
+import { actualites, evenements, membres } from "@/db/schema";
 import type { Db } from "@/db/types";
 
-export type TypeApercu = "actualite" | "evenement";
+export type TypeApercu = "actualite" | "evenement" | "membre";
 
 // Le chemin vient de la base, jamais de la requête : pas de redirection ouverte.
 export async function cheminApercu(db: Db, type: TypeApercu, id: string): Promise<string | null> {
@@ -13,6 +13,10 @@ export async function cheminApercu(db: Db, type: TypeApercu, id: string): Promis
   if (type === "evenement") {
     const e = await db.query.evenements.findFirst({ where: eq(evenements.id, id), columns: { slug: true } });
     return e ? `/evenements/${e.slug}` : null;
+  }
+  if (type === "membre") {
+    const m = await db.query.membres.findFirst({ where: eq(membres.id, id), columns: { slug: true } });
+    return m ? `/membres/${m.slug}` : null;
   }
   return null;
 }
