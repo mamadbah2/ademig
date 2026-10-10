@@ -56,19 +56,21 @@ export default function ZoneTiptap({
   });
   const etat = useEditorState({
     editor: editeur,
-    selector: ({ editor }) =>
-      editor && {
-        paragraphe: editor.isActive("paragraph"),
-        h2: editor.isActive("heading", { level: 2 }),
-        h3: editor.isActive("heading", { level: 3 }),
-        gras: editor.isActive("bold"),
-        italique: editor.isActive("italic"),
-        puces: editor.isActive("bulletList"),
-        numeros: editor.isActive("orderedList"),
-        citation: editor.isActive("blockquote"),
-        lien: editor.isActive("link"),
-        annuler: editor.can().undo(),
-        retablir: editor.can().redo(),
+    // L'instantané de useEditorState garde l'éditeur null du premier rendu jusqu'à la première transaction
+    // (immediatelyRender: false) : on lit donc l'éditeur courant, sinon la barre ne s'affiche jamais.
+    selector: () =>
+      editeur && {
+        paragraphe: editeur.isActive("paragraph"),
+        h2: editeur.isActive("heading", { level: 2 }),
+        h3: editeur.isActive("heading", { level: 3 }),
+        gras: editeur.isActive("bold"),
+        italique: editeur.isActive("italic"),
+        puces: editeur.isActive("bulletList"),
+        numeros: editeur.isActive("orderedList"),
+        citation: editeur.isActive("blockquote"),
+        lien: editeur.isActive("link"),
+        annuler: editeur.can().undo(),
+        retablir: editeur.can().redo(),
       },
   });
 
