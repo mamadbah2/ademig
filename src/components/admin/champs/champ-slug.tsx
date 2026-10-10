@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { slugifier } from "@/lib/admin/slug";
 import { Bouton, Champ } from "../ui";
 
@@ -24,12 +24,14 @@ export function ChampSlug({
     setEnregistre({ valeurInitiale, verrouille });
     setDeverrouille(false);
   }
+  const champ = useRef<HTMLInputElement>(null);
   const valeur = saisie ?? slugifier(titre);
   const bloque = verrouille && !deverrouille;
 
   return (
     <div>
       <Champ
+        ref={champ}
         label="Lien de la page"
         name="slug"
         value={valeur}
@@ -47,7 +49,10 @@ export function ChampSlug({
       />
       {deverrouille && <input type="hidden" name="modifierSlug" value="on" />}
       {bloque && (
-        <Bouton type="button" variante="secondaire" className="mt-2" onClick={() => setDeverrouille(true)}>
+        <Bouton type="button" variante="secondaire" className="mt-2" onClick={() => {
+            setDeverrouille(true);
+            champ.current?.focus();
+          }}>
           Modifier le lien
         </Bouton>
       )}

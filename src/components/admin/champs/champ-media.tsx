@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useId, useState } from "react";
 import type { MediaChoisi } from "@/db/requetes/admin/commun";
-import { deplacer, retirer } from "@/lib/admin/liste";
+import { cibleFocusApres, deplacer, retirer } from "@/lib/admin/liste";
 import { SelecteurMedia } from "../selecteur-media";
 import { Bouton } from "../ui";
+import { useFocusDiffere } from "./use-focus-differe";
 
 function Vignette({ media }: { media: MediaChoisi }) {
   return (
@@ -87,6 +88,14 @@ export function GaleriePhotos({
 }) {
   const id = useId();
   const [photos, setPhotos] = useState(valeurInitiale);
+  const focaliser = useFocusDiffere(photos);
+
+  function agir(action: "monter" | "descendre" | "retirer", i: number) {
+    const suivante = action === "retirer" ? retirer(photos, i) : deplacer(photos, i, action === "monter" ? -1 : 1);
+    const cible = cibleFocusApres(action, i, photos.length);
+    focaliser(cible === "ajout" ? `${id}-ajout` : `${id}-${suivante[cible.index].id}-${cible.bouton}`);
+    setPhotos(suivante);
+  }
   return (
     <fieldset aria-describedby={erreurs?.length ? id : undefined} className="border-[1.5px] border-encre p-4">
       <legend className="px-1 font-bold">{libelle}</legend>
@@ -107,8 +116,9 @@ export function GaleriePhotos({
                   type="button"
                   variante="secondaire"
                   disabled={i === 0}
-                  onClick={() => setPhotos((l) => deplacer(l, i, -1))}
-                  aria-label={`Monter la photo ${i + 1}`}
+                  id={`${id}-${p.id}-haut`}
+                  onClick={() => agir("monter", i)}
+                  aria-label={`${libelle} : monter la photo ${i + 1}`}
                 >
                   ↑
                 </Bouton>
@@ -116,16 +126,18 @@ export function GaleriePhotos({
                   type="button"
                   variante="secondaire"
                   disabled={i === photos.length - 1}
-                  onClick={() => setPhotos((l) => deplacer(l, i, 1))}
-                  aria-label={`Descendre la photo ${i + 1}`}
+                  id={`${id}-${p.id}-bas`}
+                  onClick={() => agir("descendre", i)}
+                  aria-label={`${libelle} : descendre la photo ${i + 1}`}
                 >
                   ↓
                 </Bouton>
                 <Bouton
                   type="button"
                   variante="danger"
-                  onClick={() => setPhotos((l) => retirer(l, i))}
-                  aria-label={`Retirer la photo ${i + 1}`}
+                  id={`${id}-${p.id}-retirer`}
+                  onClick={() => agir("retirer", i)}
+                  aria-label={`${libelle} : retirer la photo ${i + 1}`}
                 >
                   Retirer
                 </Bouton>
@@ -134,7 +146,7 @@ export function GaleriePhotos({
           ))}
         </ol>
       )}
-      <SelecteurMedia libelle="Choisir les photos" multiple valeur={photos} onChange={setPhotos} />
+      <SelecteurMedia libelle="Choisir les photos" idBouton={`${id}-ajout`} multiple valeur={photos} onChange={setPhotos} />
       <Erreurs id={id} erreurs={erreurs} />
     </fieldset>
   );

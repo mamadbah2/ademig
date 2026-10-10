@@ -2,7 +2,7 @@
 
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Bouton } from "../ui";
 
 const PROTOCOLES = /^(https?:\/\/|mailto:)/i;
@@ -38,6 +38,7 @@ export default function ZoneTiptap({
 }) {
   const [lien, setLien] = useState<string | null>(null);
   const [erreurLien, setErreurLien] = useState("");
+  const boutonLien = useRef<HTMLButtonElement>(null);
   const editeur = useEditor({
     extensions,
     content: valeurInitiale,
@@ -88,6 +89,12 @@ export default function ZoneTiptap({
     { libelle: "Citation", actif: etat.citation, faire: () => chaine().toggleBlockquote().run() },
   ];
 
+  function fermerLien() {
+    setLien(null);
+    setErreurLien("");
+    boutonLien.current?.focus();
+  }
+
   function appliquerLien() {
     const adresse = (lien ?? "").trim();
     if (adresse === "") {
@@ -114,6 +121,7 @@ export default function ZoneTiptap({
           </button>
         ))}
         <button
+          ref={boutonLien}
           type="button"
           aria-pressed={etat.lien}
           aria-expanded={lien !== null}
@@ -134,10 +142,18 @@ export default function ZoneTiptap({
           <label className="min-w-0 flex-1 font-bold">
             Adresse du lien
             <input
-              type="url"
+              type="text"
+              inputMode="url"
               value={lien}
-              onChange={(e) => setLien(e.target.value)}
+              onChange={(e) => {
+                setLien(e.target.value);
+                setErreurLien("");
+              }}
               onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  fermerLien();
+                }
                 if (e.key === "Enter") {
                   e.preventDefault();
                   appliquerLien();
@@ -150,7 +166,7 @@ export default function ZoneTiptap({
           <Bouton type="button" onClick={appliquerLien}>
             Appliquer
           </Bouton>
-          <Bouton type="button" variante="secondaire" onClick={() => setLien(null)}>
+          <Bouton type="button" variante="secondaire" onClick={fermerLien}>
             Fermer
           </Bouton>
           {erreurLien && (
