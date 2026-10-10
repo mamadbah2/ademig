@@ -70,6 +70,11 @@ export function FormulaireEvenement({
       <EditeurRiche libelle="Présentation" name="corps" valeurInitiale={evenement?.corps ?? ""} erreurs={erreurs?.corps} />
       <ChampMedia libelle="Affiche" name="afficheId" valeurInitiale={evenement?.affiche ?? null} erreurs={erreurs?.afficheId} />
       <GaleriePhotos libelle="Photos" name="photos" valeurInitiale={evenement?.photos ?? []} erreurs={erreurs?.photos} />
+      <datalist id="suggestions-partenaires">
+        {suggestions.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
       <ListeEditable<{ nom: string }>
         libelle="Partenaires de l'événement"
         name="partenaires"
@@ -78,22 +83,15 @@ export function FormulaireEvenement({
         libelleAjout="Ajouter un partenaire"
         erreurs={erreurs?.partenaires}
         rendu={(p, modifier, i, idElement) => (
-          <>
-            <Champ
-              id={`${idElement}-nom`}
-              label="Nom du partenaire"
-              name={`${idElement}-nom`}
-              form=""
-              list={`${idElement}-suggestions`}
-              value={p.nom}
-              onChange={(e) => modifier({ nom: e.target.value })}
-            />
-            <datalist id={`${idElement}-suggestions`}>
-              {suggestions.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
-          </>
+          <Champ
+            id={`${idElement}-nom`}
+            label="Nom du partenaire"
+            name={`${idElement}-nom`}
+            form=""
+            list="suggestions-partenaires"
+            value={p.nom}
+            onChange={(e) => modifier({ nom: e.target.value })}
+          />
         )}
       />
       <ListeEditable<Video>

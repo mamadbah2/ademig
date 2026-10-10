@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useFocusDiffere } from "@/components/admin/champs/use-focus-differe";
 import { Alerte, Badge, Bouton } from "@/components/admin/ui";
 import type { LignePartenaireAdmin } from "@/db/requetes/admin/partenaires";
@@ -13,6 +13,14 @@ export function ListePartenaires({ lignes }: { lignes: LignePartenaireAdmin[] })
   const [erreur, setErreur] = useState<Resultat | null>(null);
   const [enCours, demarrer] = useTransition();
   const focaliser = useFocusDiffere(lignes);
+  // Échec : la liste ne change pas, donc on rend le focus au bouton cliqué dès qu'il est de nouveau actif.
+  const apresEchec = useRef<string | null>(null);
+  useEffect(() => {
+    if (!enCours && apresEchec.current) {
+      document.getElementById(apresEchec.current)?.focus();
+      apresEchec.current = null;
+    }
+  }, [enCours]);
 
   function deplacer(index: number, sens: -1 | 1) {
     const { id } = lignes[index];
@@ -24,6 +32,7 @@ export function ListePartenaires({ lignes }: { lignes: LignePartenaireAdmin[] })
       const r = await deplacerPartenaireAction(id, sens);
       setErreur(r.ok ? null : r);
       if (r.ok) focaliser(`partenaire-${id}-${bouton}`);
+      else apresEchec.current = `partenaire-${id}-${sens === -1 ? "haut" : "bas"}`;
     });
   }
 
