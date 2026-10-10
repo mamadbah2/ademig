@@ -20,3 +20,11 @@ export function nettoyerHtml(html: string): string {
     },
   });
 }
+
+// Texte visible d'un HTML : sert à refuser un contenu qui n'a que des balises vides.
+export function texteDe(html: string): string {
+  return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}

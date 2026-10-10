@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { echapperHtml, nettoyerHtml, paragraphesEnHtml } from "./html";
+import { echapperHtml, nettoyerHtml, paragraphesEnHtml, texteDe } from "./html";
 
 describe("echapperHtml", () => {
   it("échappe les caractères spéciaux sans toucher aux guillemets français", () => {
@@ -46,5 +46,14 @@ describe("nettoyerHtml", () => {
   it("laisse intact le HTML produit par paragraphesEnHtml", () => {
     const html = paragraphesEnHtml(["« Je commencerai par adresser mes remerciements » & merci."]);
     expect(nettoyerHtml(html)).toBe(html);
+  });
+});
+
+describe("texteDe", () => {
+  it("garde le texte visible et normalise les espaces", () => {
+    expect(texteDe("<p>Un <strong>texte</strong></p><p>  suivi </p>")).toBe("Un texte suivi");
+  });
+  it("renvoie une chaîne vide pour des balises vides", () => {
+    expect(texteDe("<p></p><p><br></p>")).toBe("");
   });
 });
