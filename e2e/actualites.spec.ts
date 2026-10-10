@@ -23,9 +23,16 @@ test("un éditeur rédige, prévisualise puis supprime une actualité", async ({
   const texte = page.getByRole("textbox", { name: "Texte" });
   await texte.click();
   await page.keyboard.type("Un texte ");
-  await page.getByRole("button", { name: "Gras" }).click();
+  // Tiptap rend le focus à l'éditeur à l'image suivante (requestAnimationFrame) : sans attendre,
+  // les premières touches iraient au bouton « Gras » (et une espace le réactiverait).
+  const gras = page.getByRole("button", { name: "Gras" });
+  await gras.click();
+  await expect(gras).toHaveAttribute("aria-pressed", "true");
+  await expect(texte).toBeFocused();
   await page.keyboard.type("important");
-  await page.getByRole("button", { name: "Gras" }).click();
+  await gras.click();
+  await expect(gras).toHaveAttribute("aria-pressed", "false");
+  await expect(texte).toBeFocused();
   await page.keyboard.type(" avec un lien : ");
   await page.getByRole("button", { name: "Lien" }).click();
   await page.getByLabel("Adresse du lien").fill("https://ensmg.ucad.sn/");
