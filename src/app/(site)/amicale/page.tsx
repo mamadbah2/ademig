@@ -33,8 +33,8 @@ export default async function Amicale() {
         <div>
           <SectionTitle id="ecole">Une école, un réseau</SectionTitle>
           <div className="texte-long mt-6">
-            <p>{t["amicale.ecole.paragraphe1"]}</p>
-            <p>{t["amicale.ecole.paragraphe2"]}</p>
+            <p className="whitespace-pre-line">{t["amicale.ecole.paragraphe1"]}</p>
+            <p className="whitespace-pre-line">{t["amicale.ecole.paragraphe2"]}</p>
           </div>
         </div>
         <Illustration name="mine-block" className="mx-auto w-72" />
@@ -64,7 +64,7 @@ export default async function Amicale() {
               <IconeCarre icone={m.icone} ton={m.ton} taille="sm" />
               <div>
                 <h3 className="font-titre text-2xl leading-tight">{t[m.titre]}</h3>
-                <p className="mt-2 leading-relaxed">{t[m.texte]}</p>
+                <p className="mt-2 leading-relaxed whitespace-pre-line">{t[m.texte]}</p>
               </div>
             </li>
           ))}

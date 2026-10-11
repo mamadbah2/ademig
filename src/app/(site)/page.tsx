@@ -152,7 +152,7 @@ export default async function Accueil() {
             >
               <IconeCarre icone={d.icone} ton={ordreTons[i]} />
               <h3 className="font-titre mt-4 text-2xl">{d.verbe}</h3>
-              <p className="mt-2 max-w-xs leading-relaxed">{t[d.texte]}</p>
+              <p className="mt-2 max-w-xs leading-relaxed whitespace-pre-line">{t[d.texte]}</p>
             </div>
           ))}
         </div>
@@ -211,7 +211,7 @@ export default async function Accueil() {
             texte={t["accueil.valeur.candidats.texte"]}
           />
         </div>
-        <p className="mt-10 text-center text-sm">{t["accueil.valeur.source"]}</p>
+        <p className="mt-10 text-center text-sm whitespace-pre-line">{t["accueil.valeur.source"]}</p>
       </Cadre>
 
       <Cadre aria-labelledby="actualites">

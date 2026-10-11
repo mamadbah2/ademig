@@ -42,6 +42,7 @@ test("un texte du site se corrige, se rétablit et reste dans sa limite", async 
   const intro = page.getByRole("textbox", { name: "En-tête : introduction" });
   const rétablir = page.getByRole("button", { name: "Rétablir le texte d'origine : En-tête : introduction" });
 
+  // Cette étape change maj_le en production : un éditeur ayant les réglages ouverts au même moment verra un conflit (sans perte de données).
   // Enregistrer sans rien changer : aucun texte n'est modifié, mais le formulaire réel passe la validation stricte.
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Textes enregistrés." })).toBeVisible();

@@ -49,7 +49,7 @@ function ChampTexte({ cle, valeur, erreurs, onChange }: { cle: CleTexte; valeur:
   const texte = normaliserTexte(cle, valeur);
   const etat = texte === defaut ? "origine" : texte === "" ? "vide" : "modifie";
   const aide = [
-    `Jusqu'à ${max} caractères.`,
+    `${texte.length} / ${max} caractères.`,
     etat === "modifie" && `Texte d'origine : ${defaut}`,
     etat === "vide" && "Laissé vide, le texte d'origine sera affiché.",
   ]
@@ -70,7 +70,11 @@ function ChampTexte({ cle, valeur, erreurs, onChange }: { cle: CleTexte; valeur:
           type="button"
           variante="secondaire"
           disabled={etat === "origine"}
-          onClick={() => onChange(defaut)}
+          onClick={() => {
+            onChange(defaut);
+            // Le bouton se désactive : le focus passe au champ pour ne pas retomber sur <body>.
+            document.getElementById(id)?.focus();
+          }}
           aria-label={`Rétablir le texte d'origine : ${libelle}`}
         >
           Rétablir le texte d&apos;origine
