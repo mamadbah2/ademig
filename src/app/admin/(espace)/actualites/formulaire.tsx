@@ -8,7 +8,7 @@ import { ChampSlug } from "@/components/admin/champs/champ-slug";
 import { EditeurRiche } from "@/components/admin/champs/editeur-riche";
 import { ListeEditable } from "@/components/admin/champs/liste-editable";
 import { useFormulaire } from "@/components/admin/champs/use-formulaire";
-import { Alerte, Champ } from "@/components/admin/ui";
+import { Alerte, Champ, ZoneTexte } from "@/components/admin/ui";
 import type { ActualiteAdmin } from "@/db/requetes/admin/actualites";
 import { creerActualite, enregistrerActualite, supprimerActualiteAction } from "@/lib/admin/actualites";
 import type { Resultat } from "@/lib/admin/resultat";
@@ -35,24 +35,7 @@ export function FormulaireActualite({ actualite, messageInitial }: { actualite?:
       <Champ label="Titre" name="titre" value={titre} onChange={(e) => setTitre(e.target.value)} erreurs={erreurs?.titre} required />
       <ChampSlug titre={titre} valeurInitiale={actualite?.slug ?? ""} verrouille={actualite?.dejaPubliee ?? false} erreurs={erreurs?.slug} />
       <Champ label="Date" name="date" type="date" defaultValue={actualite?.date ?? aujourdhui()} erreurs={erreurs?.date} required className="max-w-xs" />
-      <div>
-        <label htmlFor="champ-resume" className="block font-bold">
-          Résumé
-        </label>
-        <textarea
-          id="champ-resume"
-          name="resume"
-          rows={3}
-          defaultValue={actualite?.resume}
-          aria-invalid={erreurs?.resume ? true : undefined}
-          aria-describedby="champ-resume-aide"
-          className="mt-1 block w-full border-[1.5px] border-encre bg-white px-3 py-2 aria-invalid:border-rouge focus-visible:outline-3 focus-visible:outline-moutarde"
-        />
-        <p id="champ-resume-aide" className="mt-1 text-sm">
-          Deux ou trois phrases, affichées dans les listes et en tête de l&apos;article.
-        </p>
-        {erreurs?.resume && <p className="mt-1 border-l-4 border-rouge pl-2 text-sm font-bold">{erreurs.resume.join(" ")}</p>}
-      </div>
+      <ZoneTexte label="Résumé" name="resume" defaultValue={actualite?.resume} aide="Deux ou trois phrases, affichées dans les listes et en tête de l&apos;article." erreurs={erreurs?.resume} />
       <EditeurRiche libelle="Texte" name="corps" valeurInitiale={actualite?.corps ?? ""} erreurs={erreurs?.corps} />
       <GaleriePhotos libelle="Photos" name="photos" valeurInitiale={actualite?.photos ?? []} erreurs={erreurs?.photos} />
       <ListeEditable<Source>

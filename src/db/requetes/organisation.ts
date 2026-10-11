@@ -2,7 +2,7 @@ import type { Db } from "@/db/types";
 import type { Commission, Member, Partenaire } from "@/lib/content/types";
 import { membresVisibles } from "./membres";
 
-export type Bureau = { executif: Member[]; commissions: (Commission & { membres: Member[] })[] };
+export type Bureau = { dateElection?: string; executif: Member[]; commissions: (Commission & { membres: Member[] })[] };
 
 export async function lireBureau(db: Db): Promise<Bureau> {
   const mandat = await db.query.mandats.findFirst({
@@ -21,6 +21,7 @@ export async function lireBureau(db: Db): Promise<Bureau> {
   const trouver = (ids: string[]) => ids.map((id) => parId.get(id)).filter((m): m is Member => !!m);
 
   return {
+    dateElection: mandat.dateElection,
     executif: trouver(mandat.postes.filter((p) => p.executif).map((p) => p.membreId)),
     commissions: mandat.commissions.map((c) => ({
       nom: c.nom,

@@ -27,7 +27,7 @@ function versMembre(r: Ligne, fonction: string | undefined): Member {
   };
 }
 
-async function postesDuMandatActif(db: Db) {
+export async function postesDuMandatActif(db: Db) {
   const postes = await db
     .select({ membreId: postesBureau.membreId, fonction: postesBureau.fonction, ordre: postesBureau.ordre })
     .from(postesBureau)
@@ -50,6 +50,13 @@ export async function listerMembres(db: Db): Promise<Member[]> {
   return (await membresVisibles(db)).map((m) => m.membre);
 }
 
-export async function trouverMembre(db: Db, slug: string): Promise<Member | undefined> {
-  return (await listerMembres(db)).find((m) => m.slug === slug);
+// `masques` n'est utilisé que pour l'aperçu, après contrôle de la session (src/lib/apercu.ts).
+export async function trouverMembre(db: Db, slug: string, o: { masques?: boolean } = {}): Promise<Member | undefined> {
+  const r = await db.query.membres.findFirst({
+    where: (m, { and, eq }) => (o.masques ? eq(m.slug, slug) : and(eq(m.slug, slug), eq(m.visible, true))),
+    with: { photo: true },
+  });
+  if (!r) return undefined;
+  const postes = await postesDuMandatActif(db);
+  return versMembre(r, postes.get(r.id)?.fonction);
 }

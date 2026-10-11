@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
-import { eq, like } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import { db } from "../src/db";
 import { creerCompteAvecMotDePasse } from "../src/db/operations/comptes";
-import { actualites, evenements, partenaires, user } from "../src/db/schema";
+import { actualites, evenements, mandats, membres, partenaires, user } from "../src/db/schema";
 import { COMPTES } from "./comptes";
 
 // Repart de comptes de test neufs à chaque lancement (la cascade supprime sessions et mots de passe).
@@ -13,6 +13,9 @@ export default async function preparation() {
         "Lancez `E2E_AUTORISE=1 npm run test:e2e`, uniquement contre une base de développement.",
     );
   }
+  // Jamais le mandat en place : seuls des mandats de test inactifs sont supprimés.
+  await db.delete(mandats).where(and(like(mandats.libelle, "E2E %"), eq(mandats.actif, false)));
+  await db.delete(membres).where(like(membres.slug, "e2e-%"));
   // Contenus créés par les tests : leur lien commence toujours par « e2e- ».
   await db.delete(actualites).where(like(actualites.slug, "e2e-%"));
   await db.delete(evenements).where(like(evenements.slug, "e2e-%"));

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Portrait } from "@/components/portrait";
 import { IconeCarre, ordreTons, type IconeName } from "@/components/illustration";
 import { Cadre, Etiquette, JsonLd, LienSouligne, SectionTitle } from "@/components/ui";
-import { getMembre, getMembres } from "@/lib/content/membres";
+import { getMembrePourPage, getMembres } from "@/lib/content/membres";
 import { absoluteUrl } from "@/lib/site";
 
 const iconesParcours: IconeName[] = ["pic", "strates", "casque"];
@@ -15,7 +15,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/membres/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const membre = await getMembre(slug);
+  const membre = await getMembrePourPage(slug);
   if (!membre) return {};
   return {
     title: `${membre.nom}, ${membre.titre}`,
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps<"/membres/[slug]">)
 
 export default async function ProfilMembre({ params }: PageProps<"/membres/[slug]">) {
   const { slug } = await params;
-  const m = await getMembre(slug);
+  const m = await getMembrePourPage(slug);
   if (!m) notFound();
 
   const personne = {
@@ -91,25 +91,27 @@ export default async function ProfilMembre({ params }: PageProps<"/membres/[slug
             </div>
           )}
 
-          <section aria-labelledby="parcours" className="mt-14">
-            <SectionTitle id="parcours">Parcours</SectionTitle>
-            <ol className="mt-8">
-              {m.parcours.map((e, i) => (
-                <li key={`${e.periode}-${e.poste}`} className="relative flex gap-5 pb-8 last:pb-0">
-                  {i < m.parcours.length - 1 && (
-                    <span aria-hidden className="absolute top-12 bottom-0 left-6 w-px bg-encre" />
-                  )}
-                  <IconeCarre icone={iconesParcours[i % 3]} ton={ordreTons[i % 3]} taille="sm" />
-                  <div>
-                    <p className="font-titre text-2xl leading-tight text-brun">{e.periode}</p>
-                    <p className="mt-1 text-lg font-bold">{e.poste}</p>
-                    <p>{e.organisation}</p>
-                    {e.description && <p className="mt-2 max-w-xl leading-relaxed">{e.description}</p>}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
+          {m.parcours.length > 0 && (
+            <section aria-labelledby="parcours" className="mt-14">
+              <SectionTitle id="parcours">Parcours</SectionTitle>
+              <ol className="mt-8">
+                {m.parcours.map((e, i) => (
+                  <li key={`${e.periode}-${e.poste}`} className="relative flex gap-5 pb-8 last:pb-0">
+                    {i < m.parcours.length - 1 && (
+                      <span aria-hidden className="absolute top-12 bottom-0 left-6 w-px bg-encre" />
+                    )}
+                    <IconeCarre icone={iconesParcours[i % 3]} ton={ordreTons[i % 3]} taille="sm" />
+                    <div>
+                      <p className="font-titre text-2xl leading-tight text-brun">{e.periode}</p>
+                      <p className="mt-1 text-lg font-bold">{e.poste}</p>
+                      <p>{e.organisation}</p>
+                      {e.description && <p className="mt-2 max-w-xl leading-relaxed">{e.description}</p>}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
 
           {m.realisations && m.realisations.length > 0 && (
             <section aria-labelledby="realisations" className="mt-14">

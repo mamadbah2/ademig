@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { CONFLIT } from "@/db/operations/commun";
 import * as operations from "@/db/operations/partenaires";
 import { action } from "@/lib/admin/action";
-import { erreursDe, type Resultat } from "@/lib/admin/resultat";
+import { lireFormulaire, type Resultat } from "@/lib/admin/resultat";
 import { TAGS } from "@/lib/content/tags";
 import { schemaEnvoiPartenaire } from "@/lib/validation/partenaires";
 
@@ -21,14 +21,10 @@ function invalider(id?: string) {
   if (id) revalidatePath(`/admin/partenaires/${id}`);
 }
 
-function lire(donnees: FormData) {
-  return schemaEnvoiPartenaire.safeParse(Object.fromEntries(donnees));
-}
-
 export async function creerPartenaire(_etat: ResultatPartenaire | null, donnees: FormData): Promise<ResultatPartenaire> {
   const resultat = await action<{ id: string }>("editeur", async () => {
-    const saisie = lire(donnees);
-    if (!saisie.success) return erreursDe(saisie.error);
+    const saisie = lireFormulaire(schemaEnvoiPartenaire, donnees);
+    if (!saisie.ok) return saisie.resultat;
     const { version, ...champs } = saisie.data;
     void version;
     const { id } = await operations.creerPartenaire(db, champs);
@@ -47,8 +43,8 @@ export async function enregistrerPartenaire(
 ): Promise<ResultatPartenaire> {
   return action<{ version: string }>("editeur", async () => {
     if (!z.uuid().safeParse(id).success) return INTROUVABLE;
-    const saisie = lire(donnees);
-    if (!saisie.success) return erreursDe(saisie.error);
+    const saisie = lireFormulaire(schemaEnvoiPartenaire, donnees);
+    if (!saisie.ok) return saisie.resultat;
     const { version, ...champs } = saisie.data;
     if (!version) return { ok: false, message: CONFLIT };
     const r = await operations.modifierPartenaire(db, id, champs, { version });

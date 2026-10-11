@@ -10,11 +10,13 @@ export function ChampSlug({
   valeurInitiale,
   verrouille,
   erreurs,
+  aideVerrouille = "Ce contenu a déjà été publié : son lien a pu être partagé.",
 }: {
   titre: string;
   valeurInitiale: string;
   verrouille: boolean;
   erreurs?: string[];
+  aideVerrouille?: string;
 }) {
   const [saisie, setSaisie] = useState<string | null>(valeurInitiale || null);
   const [deverrouille, setDeverrouille] = useState(false);
@@ -39,7 +41,7 @@ export function ChampSlug({
         onChange={(e) => setSaisie(e.target.value)}
         aide={
           bloque
-            ? "Ce contenu a déjà été publié : son lien a pu être partagé."
+            ? aideVerrouille
             : deverrouille
               ? "Attention : l'ancien lien ne fonctionnera plus."
               : "Lettres minuscules, chiffres et tirets. Proposé à partir du titre."

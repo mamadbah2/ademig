@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { ChampMedia } from "@/components/admin/champs/champ-media";
 import { useFormulaire } from "@/components/admin/champs/use-formulaire";
 import { BoutonConfirmation } from "@/components/admin/confirmation";
-import { Alerte, Bouton, Champ, Selection } from "@/components/admin/ui";
+import { Alerte, Bouton, Champ, Selection, ZoneTexte } from "@/components/admin/ui";
 import type { PartenaireAdmin } from "@/db/requetes/admin/partenaires";
 import { creerPartenaire, enregistrerPartenaire, supprimerPartenaireAction } from "@/lib/admin/partenaires";
 import type { Resultat } from "@/lib/admin/resultat";
@@ -29,24 +29,7 @@ export function FormulairePartenaire({ partenaire, messageInitial }: { partenair
       {version && <input type="hidden" name="version" value={version} />}
       <Champ label="Nom" name="nom" defaultValue={partenaire?.nom} erreurs={erreurs?.nom} required />
       <Selection label="Catégorie" name="categorie" options={CATEGORIES} defaultValue={partenaire?.categorie ?? "Institution"} erreurs={erreurs?.categorie} />
-      <div>
-        <label htmlFor="champ-description" className="block font-bold">
-          Description
-        </label>
-        <textarea
-          id="champ-description"
-          name="description"
-          rows={3}
-          defaultValue={partenaire?.description}
-          aria-invalid={erreurs?.description ? true : undefined}
-          aria-describedby="champ-description-aide"
-          className="mt-1 block w-full border-[1.5px] border-encre bg-white px-3 py-2 aria-invalid:border-rouge focus-visible:outline-3 focus-visible:outline-moutarde"
-        />
-        <p id="champ-description-aide" className="mt-1 text-sm">
-          Une ou deux phrases, affichées sur la page Partenaires.
-        </p>
-        {erreurs?.description && <p className="mt-1 border-l-4 border-rouge pl-2 text-sm font-bold">{erreurs.description.join(" ")}</p>}
-      </div>
+      <ZoneTexte label="Description" name="description" defaultValue={partenaire?.description} aide="Une ou deux phrases, affichées sur la page Partenaires." erreurs={erreurs?.description} />
       <Champ label="Site web" name="url" type="url" defaultValue={partenaire?.url} aide="Facultatif. Adresse complète, avec https://." erreurs={erreurs?.url} />
       <ChampMedia libelle="Logo" name="logoId" valeurInitiale={partenaire?.logo ?? null} erreurs={erreurs?.logoId} />
       <label className="flex min-h-11 items-center gap-3 font-bold">
