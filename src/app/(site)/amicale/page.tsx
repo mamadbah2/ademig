@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { IconeCarre, Illustration, type IconeName, type Ton } from "@/components/illustration";
 import { Bouton, Cadre, Etiquette, PageHeader, SectionTitle } from "@/components/ui";
+import { getReglages } from "@/lib/content/reglages";
+import { type CleTexte, fusionnerTextes } from "@/lib/content/textes";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -10,43 +12,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/amicale" },
 };
 
-const missions: { titre: string; texte: string; icone: IconeName; ton: Ton }[] = [
-  {
-    titre: "Soutenir l'ENSMG",
-    icone: "mineur",
-    ton: "ocre",
-    texte:
-      "Encadrement des stagiaires, cours et séminaires donnés par des ingénieurs en activité, aides matérielles et financières à l'école.",
-  },
-  {
-    titre: "Ouvrir les portes de l'emploi",
-    icone: "partage",
-    ton: "moutarde",
-    texte:
-      "Mise en relation des jeunes diplômés avec les entreprises, comme lors du forum de recrutement minier du SIM Sénégal 2025.",
-  },
-  {
-    titre: "Éclairer le débat public",
-    icone: "lampe",
-    ton: "brun",
-    texte:
-      "Des prises de position fondées sur la science, pour que les décisions sur les ressources naturelles reposent sur des faits géologiques exacts.",
-  },
-  {
-    titre: "Faire vivre le contenu local",
-    icone: "lingots",
-    ton: "ocre",
-    texte:
-      "Des propositions pour que les compétences, les entreprises et le financement sénégalais prennent toute leur place dans le secteur extractif.",
-  },
+const missions: { titre: CleTexte; texte: CleTexte; icone: IconeName; ton: Ton }[] = [
+  { titre: "amicale.mission1.titre", texte: "amicale.mission1.texte", icone: "mineur", ton: "ocre" },
+  { titre: "amicale.mission2.titre", texte: "amicale.mission2.texte", icone: "partage", ton: "moutarde" },
+  { titre: "amicale.mission3.titre", texte: "amicale.mission3.texte", icone: "lampe", ton: "brun" },
+  { titre: "amicale.mission4.titre", texte: "amicale.mission4.texte", icone: "lingots", ton: "ocre" },
 ];
 
-export default function Amicale() {
+export default async function Amicale() {
+  const t = fusionnerTextes((await getReglages()).textes);
   return (
     <>
       <PageHeader
         title="L'Amicale"
-        intro="Les ingénieurs formés à Dakar aux métiers des mines et de la géologie"
+        intro={t["amicale.intro"]}
         illustration="mountain"
       />
 
@@ -54,20 +33,8 @@ export default function Amicale() {
         <div>
           <SectionTitle id="ecole">Une école, un réseau</SectionTitle>
           <div className="texte-long mt-6">
-            <p>
-              L&apos;École nationale supérieure des mines et de la géologie (ENSMG) de
-              l&apos;Université Cheikh Anta Diop forme depuis des décennies les cadres du Sénégal et
-              de la sous-région dans l&apos;ingénierie et la géologie. Elle est l&apos;héritière de
-              l&apos;Institut des sciences de la Terre (IST), devenu école nationale supérieure par
-              décrets en 2021 et 2022.
-            </p>
-            <p>
-              Ses diplômés travaillent dans l&apos;exploration et l&apos;exploitation minière, le
-              pétrole et le gaz, l&apos;hydrogéologie, le génie civil, l&apos;environnement et
-              l&apos;administration. L&apos;ADEMIG les réunit pour entretenir la solidarité entre
-              promotions, soutenir l&apos;école et peser, par l&apos;expertise, sur l&apos;avenir du
-              secteur extractif sénégalais.
-            </p>
+            <p>{t["amicale.ecole.paragraphe1"]}</p>
+            <p>{t["amicale.ecole.paragraphe2"]}</p>
           </div>
         </div>
         <Illustration name="mine-block" className="mx-auto w-72" />
@@ -96,8 +63,8 @@ export default function Amicale() {
             <li key={m.titre} className="flex gap-5">
               <IconeCarre icone={m.icone} ton={m.ton} taille="sm" />
               <div>
-                <h3 className="font-titre text-2xl leading-tight">{m.titre}</h3>
-                <p className="mt-2 leading-relaxed">{m.texte}</p>
+                <h3 className="font-titre text-2xl leading-tight">{t[m.titre]}</h3>
+                <p className="mt-2 leading-relaxed">{t[m.texte]}</p>
               </div>
             </li>
           ))}

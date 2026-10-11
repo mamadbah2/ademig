@@ -25,27 +25,14 @@ import { getActualites } from "@/lib/content/actualites";
 import { getEvenements } from "@/lib/content/evenements";
 import { getMembres } from "@/lib/content/membres";
 import { getPartenaires } from "@/lib/content/organisation";
+import { getReglages } from "@/lib/content/reglages";
+import { type CleTexte, fusionnerTextes } from "@/lib/content/textes";
 import { site } from "@/lib/site";
 
-const devise: { verbe: string; icone: IconeName; texte: string }[] = [
-  {
-    verbe: "Réfléchir",
-    icone: "lampe",
-    texte:
-      "Des journées de réflexion sur le contenu local, la souveraineté sur les ressources et le transfert de compétences.",
-  },
-  {
-    verbe: "Proposer",
-    icone: "partage",
-    texte:
-      "Des recommandations remises aux autorités et une parole d'experts dans le débat public.",
-  },
-  {
-    verbe: "Agir",
-    icone: "casque",
-    texte:
-      "L'encadrement des stagiaires de l'ENSMG, l'appui à l'école et l'emploi des jeunes diplômés.",
-  },
+const devise: { verbe: string; icone: IconeName; texte: CleTexte }[] = [
+  { verbe: "Réfléchir", icone: "lampe", texte: "accueil.devise.reflechir" },
+  { verbe: "Proposer", icone: "partage", texte: "accueil.devise.proposer" },
+  { verbe: "Agir", icone: "casque", texte: "accueil.devise.agir" },
 ];
 
 const diapositives = [
@@ -72,13 +59,15 @@ const diapositives = [
 const iconesActualites: IconeName[] = ["strates", "mineur", "minerai"];
 
 export default async function Accueil() {
-  const [actualites, evenements, membres, partenaires] = await Promise.all([
+  const [actualites, evenements, membres, partenaires, reglages] = await Promise.all([
     getActualites(),
     getEvenements(),
     getMembres(),
     getPartenaires(),
+    getReglages(),
   ]);
   const dernierEvenement = evenements[0];
+  const t = fusionnerTextes(reglages.textes);
 
   return (
     <>
@@ -115,7 +104,7 @@ export default async function Accueil() {
               data-hero="titre"
               className="font-titre text-[2.9rem] leading-[1.02] text-balance sm:text-7xl xl:text-[5.5rem]"
             >
-              Les ingénieurs des mines et de la géologie du Sénégal
+              {t["accueil.accroche"]}
             </h1>
             <Etiquette className="mt-6 sm:text-lg">{site.fullName}</Etiquette>
             <div data-hero="boutons" className="mt-8 flex flex-wrap gap-3">
@@ -163,7 +152,7 @@ export default async function Accueil() {
             >
               <IconeCarre icone={d.icone} ton={ordreTons[i]} />
               <h3 className="font-titre mt-4 text-2xl">{d.verbe}</h3>
-              <p className="mt-2 max-w-xs leading-relaxed">{d.texte}</p>
+              <p className="mt-2 max-w-xs leading-relaxed">{t[d.texte]}</p>
             </div>
           ))}
         </div>
@@ -177,13 +166,11 @@ export default async function Accueil() {
           { name: "gold", className: "-bottom-5 left-[44%]" },
         ]}
       >
-        <SectionTitle id="forum">
-          Le forum de recrutement 2025 en chiffres
-        </SectionTitle>
+        <SectionTitle id="forum">{t["accueil.forum.titre"]}</SectionTitle>
         <div className="relative mt-10 grid gap-10 md:grid-cols-3">
-          <GrandChiffre valeur={1000} legende="candidatures reçues, et plus" />
-          <GrandChiffre valeur={188} legende="postes proposés" />
-          <GrandChiffre valeur={16} legende="entreprises présentes" />
+          <GrandChiffre valeur={1000} legende={t["accueil.forum.candidatures"]} />
+          <GrandChiffre valeur={188} legende={t["accueil.forum.postes"]} />
+          <GrandChiffre valeur={16} legende={t["accueil.forum.entreprises"]} />
         </div>
         <Illustration
           name="mountain"
@@ -192,9 +179,7 @@ export default async function Accueil() {
       </Cadre>
 
       <Cadre aria-labelledby="valeur">
-        <SectionTitle id="valeur">
-          Contenu local : où va la valeur extraite ?
-        </SectionTitle>
+        <SectionTitle id="valeur">{t["accueil.valeur.titre"]}</SectionTitle>
         <div className="mt-10">
           <Camembert
             titre="86,4 % de la valeur de la production extractive quitte le Sénégal, 13,6 % y reste"
@@ -217,19 +202,16 @@ export default async function Accueil() {
         <div className="mt-14 grid gap-10 md:grid-cols-2">
           <BarrePourcentage
             pourcentage={50}
-            titre="Achats locaux"
-            texte="Plus de la moitié des volumes d'achats du secteur vont à des fournisseurs sénégalais, soit 1 100 milliards de FCFA."
+            titre={t["accueil.valeur.achats.titre"]}
+            texte={t["accueil.valeur.achats.texte"]}
           />
           <BarrePourcentage
             pourcentage={10}
-            titre="Candidats retenus"
-            texte="Une centaine de jeunes diplômés, sur plus de 1 000 candidats, ont rencontré les recruteurs au SIM Sénégal 2025."
+            titre={t["accueil.valeur.candidats.titre"]}
+            texte={t["accueil.valeur.candidats.texte"]}
           />
         </div>
-        <p className="mt-10 text-center text-sm">
-          Chiffres présentés lors de la Journée nationale sur le contenu local,
-          le 12 septembre 2026.
-        </p>
+        <p className="mt-10 text-center text-sm">{t["accueil.valeur.source"]}</p>
       </Cadre>
 
       <Cadre aria-labelledby="actualites">

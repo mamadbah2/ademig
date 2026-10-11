@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CLES_TEXTES, fusionnerTextes, normaliserTexte, TEXTES, textesAEnregistrer } from "./textes";
 
@@ -59,5 +60,18 @@ describe("textesAEnregistrer", () => {
 
   it("une saisie vide ou remise à l'origine vide toutes les clés", () => {
     expect(textesAEnregistrer({})).toEqual({});
+  });
+});
+
+// Chaque texte du catalogue doit être lu par sa page, sinon le modifier dans l'admin n'aurait aucun effet.
+const PAGES = { Accueil: "src/app/(site)/page.tsx", "L'Amicale": "src/app/(site)/amicale/page.tsx" } as const;
+
+describe("pages du site", () => {
+  it("chaque texte est lu par sa page, qui n'en garde plus de copie", () => {
+    for (const cle of CLES_TEXTES) {
+      const source = readFileSync(PAGES[TEXTES[cle].groupe], "utf8");
+      expect(source, cle).toContain(`"${cle}"`);
+      expect(source, cle).not.toContain(TEXTES[cle].defaut);
+    }
   });
 });
