@@ -4,6 +4,7 @@ import { db } from "../src/db";
 import { creerCompteAvecMotDePasse } from "../src/db/operations/comptes";
 import { actualites, evenements, mandats, membres, partenaires, user } from "../src/db/schema";
 import { COMPTES } from "./comptes";
+import { retirerTextesDeTest } from "./nettoyage";
 
 // Repart de comptes de test neufs à chaque lancement (la cascade supprime sessions et mots de passe).
 export default async function preparation() {
@@ -20,6 +21,7 @@ export default async function preparation() {
   await db.delete(actualites).where(like(actualites.slug, "e2e-%"));
   await db.delete(evenements).where(like(evenements.slug, "e2e-%"));
   await db.delete(partenaires).where(like(partenaires.nom, "E2E %"));
+  await retirerTextesDeTest();
   // Mot de passe propre à ce lancement, transmis aux tests par l'environnement.
   const motDePasse = randomBytes(18).toString("base64url");
   process.env.E2E_MOT_DE_PASSE = motDePasse;
