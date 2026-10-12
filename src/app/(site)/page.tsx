@@ -102,11 +102,11 @@ export default async function Accueil() {
           <div data-cadre="hero" data-hero="texte" className="max-w-3xl">
             <h1
               data-hero="titre"
-              className="font-titre text-[2.9rem] leading-[1.02] text-balance sm:text-7xl xl:text-[5.5rem]"
+              className="font-titre text-[2.2rem] leading-[1.05] text-balance sm:text-5xl xl:text-6xl"
             >
               {t["accueil.accroche"]}
             </h1>
-            <Etiquette className="mt-6 sm:text-lg">{site.fullName}</Etiquette>
+            <Etiquette className="mt-6 sm:text-lg">{site.name}</Etiquette>
             <div data-hero="boutons" className="mt-8 flex flex-wrap gap-3">
               <Bouton href="/membres">Découvrir les membres</Bouton>
               <Bouton href="/amicale" variante="contour">

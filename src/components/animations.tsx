@@ -322,7 +322,12 @@ function animerHero(nettoyages: (() => void)[]) {
   // 4. Au défilement : le paysage descend moins vite que la page, le titre s'efface.
   const scrub = { trigger: scene, start: "top top", end: "bottom top", scrub: 0.6 };
   gsap.to(diapos, { yPercent: 12, ease: "none", scrollTrigger: scrub });
-  gsap.to(texte, { yPercent: -30, opacity: 0.1, ease: "none", scrollTrigger: scrub });
+  // Départ explicite : le texte est à opacité 0 en CSS avant l'entrée, et le tween la mémoriserait.
+  gsap.fromTo(
+    texte,
+    { yPercent: 0, opacity: 1 },
+    { yPercent: -30, opacity: 0.1, ease: "none", immediateRender: false, scrollTrigger: scrub },
+  );
 }
 
 function animerObjetsReactifs(nettoyages: (() => void)[]) {

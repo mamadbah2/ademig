@@ -16,7 +16,8 @@ export const TEXTES = {
     libelle: "Titre principal",
     forme: "ligne",
     max: 120,
-    defaut: "Les ingénieurs des mines et de la géologie du Sénégal",
+    defaut:
+      "Amicale des ingénieurs diplômés de l'École nationale supérieure des mines et de la géologie (ex-IST)",
   },
   "accueil.devise.reflechir": {
     groupe: "Accueil",
