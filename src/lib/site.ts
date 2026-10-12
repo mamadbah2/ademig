@@ -5,7 +5,7 @@
 export const site = {
   name: "ADEMIG",
   fullName:
-    "Amicale des ingénieurs diplômés de l'École nationale supérieure des mines et de la géologie",
+    "Amicale des ingénieurs diplômés de l'École nationale supérieure des mines et de la géologie (ex-IST)",
   shortDescription: "Amicale des ingénieurs diplômés de l'ENSMG",
   description:
     "L'ADEMIG réunit les ingénieurs diplômés de l'École nationale supérieure des mines et de la géologie (ENSMG) de Dakar. Elle contribue à un secteur extractif sénégalais plus inclusif et durable.",

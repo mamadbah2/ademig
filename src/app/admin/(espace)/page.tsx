@@ -9,6 +9,12 @@ export const metadata: Metadata = { title: "Tableau de bord" };
 export default async function TableauDeBord() {
   const session = await exigerSession();
   const raccourcis = [
+    { href: "/admin/actualites", titre: "Actualités", texte: "Écrire, publier et dépublier les articles." },
+    { href: "/admin/evenements", titre: "Événements", texte: "Annoncer les rencontres et garder leurs photos." },
+    { href: "/admin/membres", titre: "Membres", texte: "Tenir à jour les fiches de l'annuaire." },
+    { href: "/admin/bureau", titre: "Bureau", texte: "Préparer puis activer les mandats du bureau." },
+    { href: "/admin/partenaires", titre: "Partenaires", texte: "Ajouter, ordonner ou masquer les partenaires." },
+    { href: "/admin/reglages", titre: "Réglages", texte: "Coordonnées, réseaux sociaux et textes clés du site." },
     { href: "/admin/medias", titre: "Médiathèque", texte: "Envoyer des images et décrire celles du site." },
     { href: "/admin/mon-compte", titre: "Mon compte", texte: "Changer votre nom ou votre mot de passe." },
     ...(aLeRole(session.role, "superadmin")
@@ -31,10 +37,6 @@ export default async function TableauDeBord() {
           </li>
         ))}
       </ul>
-      <p className="mt-10 max-w-2xl">
-        Les actualités, les événements, les membres, le bureau, les partenaires et les réglages seront modifiables
-        ici dans la prochaine étape du back office.
-      </p>
     </>
   );
 }

@@ -39,7 +39,7 @@ export function BarrePourcentage({
         />
       </div>
       <h3 className="font-titre mt-5 text-2xl">{titre}</h3>
-      <p className="mx-auto mt-2 max-w-xs leading-relaxed">{texte}</p>
+      <p className="mx-auto mt-2 max-w-xs leading-relaxed whitespace-pre-line">{texte}</p>
     </div>
   );
 }
