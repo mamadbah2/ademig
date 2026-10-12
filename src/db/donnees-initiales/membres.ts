@@ -29,7 +29,7 @@ export const membres: MembreInitial[] = [
   },
   {
     slug: "sokhna-khadidjatou-thioye",
-    nom: "Sokhna Khadidjatou Thioye",
+    nom: "Sokhna Khadidjatou Thioye Sakho",
     fonction: "Vice-présidente",
     titre: "Chef de projet",
     organisation: "PETROSEN",

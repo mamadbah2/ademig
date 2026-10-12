@@ -136,6 +136,110 @@ export const TEXTES = {
     defaut:
       "Ses diplômés travaillent dans l'exploration et l'exploitation minière, le pétrole et le gaz, l'hydrogéologie, le génie civil, l'environnement et l'administration. L'ADEMIG les réunit pour entretenir la solidarité entre promotions, soutenir l'école et peser, par l'expertise, sur l'avenir du secteur extractif sénégalais.",
   },
+  "amicale.histoire.repere1.date": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 1, date",
+    forme: "ligne",
+    max: 40,
+    defaut:
+      "1992",
+  },
+  "amicale.histoire.repere1.texte": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 1, texte",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Une trentaine d'ingénieurs fondent, à l'Institut des sciences de la Terre (IST), l'Amicale des ingénieurs géologues de l'IST (AIGIST). Dr Moussa Sylla, de la première promotion (1986), en est le premier président.",
+  },
+  "amicale.histoire.repere2.date": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 2, date",
+    forme: "ligne",
+    max: 40,
+    defaut:
+      "1995 – 2004",
+  },
+  "amicale.histoire.repere2.texte": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 2, texte",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Trois présidents se succèdent : Macky Sall (3e promotion), élu en 1995 et réélu en 1998 ; Ousmane Cissé (11e promotion), élu en 2001 lorsque Macky Sall devient ministre des Mines, de l'Énergie et de l'Hydraulique ; puis Ibrahima Diaw (9e promotion), élu en 2004.",
+  },
+  "amicale.histoire.repere3.date": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 3, date",
+    forme: "ligne",
+    max: 40,
+    defaut:
+      "2004 – 2024",
+  },
+  "amicale.histoire.repere3.texte": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 3, texte",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Avec le Code minier de 2003, les découvertes de pétrole et de gaz en mer et les grands chantiers d'infrastructures, le métier d'ingénieur géologue gagne en reconnaissance. L'IST forme davantage d'ingénieurs : l'amicale en réunit aujourd'hui près de 500, à des postes clés au Sénégal comme à l'étranger.",
+  },
+  "amicale.histoire.repere4.date": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 4, date",
+    forme: "ligne",
+    max: 40,
+    defaut:
+      "Août 2024",
+  },
+  "amicale.histoire.repere4.texte": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 4, texte",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "À l'initiative de membres décidés à relancer l'amicale, un comité ad hoc présidé par Dr Moussa Sylla prépare une assemblée générale de renouvellement. L'amicale se dote de nouveaux statuts et d'un règlement intérieur, qui limitent la durée des mandats et créent un comité des sages chargé du conseil, de la médiation et de la régulation.",
+  },
+  "amicale.histoire.repere5.date": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 5, date",
+    forme: "ligne",
+    max: 40,
+    defaut:
+      "22 septembre 2024",
+  },
+  "amicale.histoire.repere5.texte": {
+    groupe: "L'Amicale",
+    libelle: "Notre histoire : repère 5, texte",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Réunie à l'Université Cheikh Anta Diop, l'assemblée générale constitutive transforme l'AIGIST en ADEMIG et élit son premier bureau, présidé par Dr Ibrahima Diao, pour 2024-2027.",
+  },
+  "amicale.vision": {
+    groupe: "L'Amicale",
+    libelle: "Notre vision",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Devenir d'ici 2030 un réseau influent et dynamique d'ingénieurs géologues au Sénégal, puis en Afrique et dans le monde, reconnu pour son expertise, son engagement dans le développement durable et son impact sur les industries extractives, l'environnement et les autres domaines des géosciences.",
+  },
+  "amicale.objectif": {
+    groupe: "L'Amicale",
+    libelle: "Notre objectif",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Fédérer la communauté issue de l'ENSMG (ex-IST) et constituer une force de proposition sur les questions ayant trait aux géosciences, pour une meilleure gestion des ressources naturelles au service du développement économique et social du Sénégal et de l'Afrique.",
+  },
+  "amicale.valeurs": {
+    groupe: "L'Amicale",
+    libelle: "Nos valeurs (une par ligne)",
+    forme: "paragraphe",
+    max: 400,
+    defaut:
+      "Intégrité et éthique professionnelle\nExpertise\nSolidarité\nRespect\nTransparence\nVisibilité et ouverture",
+  },
   "amicale.mission1.titre": {
     groupe: "L'Amicale",
     libelle: "Mission 1 : titre",
@@ -149,14 +253,14 @@ export const TEXTES = {
     forme: "paragraphe",
     max: 320,
     defaut:
-      "Encadrement des stagiaires, cours et séminaires donnés par des ingénieurs en activité, aides matérielles et financières à l'école.",
+      "Contribuer au rayonnement de l'école et à un meilleur cadre d'apprentissage pour les élèves-ingénieurs : logiciels, stages, choix des sujets de mémoire.",
   },
   "amicale.mission2.titre": {
     groupe: "L'Amicale",
     libelle: "Mission 2 : titre",
     forme: "ligne",
     max: 80,
-    defaut: "Ouvrir les portes de l'emploi",
+    defaut: "Accompagner l'insertion",
   },
   "amicale.mission2.texte": {
     groupe: "L'Amicale",
@@ -164,7 +268,7 @@ export const TEXTES = {
     forme: "paragraphe",
     max: 320,
     defaut:
-      "Mise en relation des jeunes diplômés avec les entreprises, comme lors du forum de recrutement minier du SIM Sénégal 2025.",
+      "Un cadre de suivi et de facilitation de l'insertion des jeunes diplômés, comme lors du forum de recrutement minier du SIM Sénégal 2025.",
   },
   "amicale.mission3.titre": {
     groupe: "L'Amicale",
@@ -179,14 +283,14 @@ export const TEXTES = {
     forme: "paragraphe",
     max: 320,
     defaut:
-      "Des prises de position fondées sur la science, pour que les décisions sur les ressources naturelles reposent sur des faits géologiques exacts.",
+      "Être une force de proposition pour une meilleure gouvernance des ressources naturelles, avec des prises de position fondées sur la science.",
   },
   "amicale.mission4.titre": {
     groupe: "L'Amicale",
     libelle: "Mission 4 : titre",
     forme: "ligne",
     max: 80,
-    defaut: "Faire vivre le contenu local",
+    defaut: "Servir le développement du pays",
   },
   "amicale.mission4.texte": {
     groupe: "L'Amicale",
@@ -194,7 +298,119 @@ export const TEXTES = {
     forme: "paragraphe",
     max: 320,
     defaut:
-      "Des propositions pour que les compétences, les entreprises et le financement sénégalais prennent toute leur place dans le secteur extractif.",
+      "Promouvoir la participation au développement socio-économique du Sénégal et de l'Afrique, notamment par un contenu local qui fasse toute sa place aux compétences sénégalaises.",
+  },
+  "amicale.mission5.titre": {
+    groupe: "L'Amicale",
+    libelle: "Mission 5 : titre",
+    forme: "ligne",
+    max: 80,
+    defaut:
+      "Unir et représenter les diplômés",
+  },
+  "amicale.mission5.texte": {
+    groupe: "L'Amicale",
+    libelle: "Mission 5 : texte",
+    forme: "paragraphe",
+    max: 320,
+    defaut:
+      "Des liens de solidarité et d'entraide entre diplômés, élèves-ingénieurs et enseignants de l'ENSMG, pour représenter les diplômés et défendre l'image de la profession.",
+  },
+  "amicale.mission6.titre": {
+    groupe: "L'Amicale",
+    libelle: "Mission 6 : titre",
+    forme: "ligne",
+    max: 80,
+    defaut:
+      "Promouvoir les géosciences",
+  },
+  "amicale.mission6.texte": {
+    groupe: "L'Amicale",
+    libelle: "Mission 6 : texte",
+    forme: "paragraphe",
+    max: 320,
+    defaut:
+      "Vulgariser les géosciences, encourager la recherche et les publications scientifiques, et inciter les jeunes à choisir les filières scientifiques.",
+  },
+  "amicale.axe1.titre": {
+    groupe: "L'Amicale",
+    libelle: "Axe 1 : titre",
+    forme: "ligne",
+    max: 120,
+    defaut:
+      "Renforcement de la solidarité et du réseautage",
+  },
+  "amicale.axe1.objectifs": {
+    groupe: "L'Amicale",
+    libelle: "Axe 1 : objectifs (un par ligne)",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Créer des liens solides entre les diplômés\nCréer une passerelle entre les diplômés et les élèves-ingénieurs",
+  },
+  "amicale.axe2.titre": {
+    groupe: "L'Amicale",
+    libelle: "Axe 2 : titre",
+    forme: "ligne",
+    max: 120,
+    defaut:
+      "Soutien à l'ENSMG et promotion de ses activités",
+  },
+  "amicale.axe2.objectifs": {
+    groupe: "L'Amicale",
+    libelle: "Axe 2 : objectifs (un par ligne)",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Créer un cadre de collaboration fructueuse entre l'ADEMIG et l'ENSMG\nContribuer au renforcement des capacités de l'ENSMG et à son rayonnement scientifique, pédagogique et institutionnel",
+  },
+  "amicale.axe3.titre": {
+    groupe: "L'Amicale",
+    libelle: "Axe 3 : titre",
+    forme: "ligne",
+    max: 120,
+    defaut:
+      "Appui à l'insertion professionnelle et à la carrière des jeunes diplômés",
+  },
+  "amicale.axe3.objectifs": {
+    groupe: "L'Amicale",
+    libelle: "Axe 3 : objectifs (un par ligne)",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Identifier régulièrement les diplômés en recherche de stage ou d'emploi et renforcer leurs capacités\nFaciliter leur insertion professionnelle par le lobbying et les partenariats",
+  },
+  "amicale.axe4.titre": {
+    groupe: "L'Amicale",
+    libelle: "Axe 4 : titre",
+    forme: "ligne",
+    max: 120,
+    defaut:
+      "Promotion des géosciences et contribution au développement du Sénégal et de l'Afrique",
+  },
+  "amicale.axe4.objectifs": {
+    groupe: "L'Amicale",
+    libelle: "Axe 4 : objectifs (un par ligne)",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Vulgariser les géosciences et promouvoir les carrières scientifiques\nPrendre part au débat sur les ressources naturelles et la construction du pays et du continent\nŒuvrer pour la préservation de l'environnement et le développement durable",
+  },
+  "amicale.axe5.titre": {
+    groupe: "L'Amicale",
+    libelle: "Axe 5 : titre",
+    forme: "ligne",
+    max: 120,
+    defaut:
+      "Gouvernance et mobilisation des partenaires",
+  },
+  "amicale.axe5.objectifs": {
+    groupe: "L'Amicale",
+    libelle: "Axe 5 : objectifs (un par ligne)",
+    forme: "paragraphe",
+    max: 600,
+    defaut:
+      "Instaurer une gouvernance transparente de l'association et de ses ressources\nNouer des partenariats mutuellement gagnants pour des actions collectives et impactantes",
   },
 } as const satisfies Record<string, DefinitionTexte>;
 

@@ -64,7 +64,7 @@ describe("seed", () => {
     const db = await creerDbTest();
     await seed(db);
     const mandat = await db.query.mandats.findFirst({ with: { postes: { with: { membre: true } } } });
-    expect(mandat?.libelle).toBe("Bureau 2024");
+    expect(mandat?.libelle).toBe("Bureau 2024-2027");
     expect(mandat?.actif).toBe(true);
     const executif = mandat!.postes.filter((p) => p.executif).sort((a, b) => a.ordre - b.ordre);
     expect(executif.map((p) => p.membre.slug)).toEqual(ordreBureau);

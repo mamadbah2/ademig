@@ -170,7 +170,7 @@ async function seedBureau(tx: Tx) {
   if (await tx.query.mandats.findFirst({ columns: { id: true } })) return;
   const [mandat] = await tx
     .insert(t.mandats)
-    .values({ libelle: "Bureau 2024", dateElection: "2024-09-22", actif: true })
+    .values({ libelle: "Bureau 2024-2027", dateElection: "2024-09-22", actif: true })
     .returning({ id: t.mandats.id });
   const lignes = await tx.select({ id: t.membres.id, slug: t.membres.slug }).from(t.membres);
   const idMembre = new Map(lignes.map((l) => [l.slug, l.id]));
