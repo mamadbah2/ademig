@@ -70,7 +70,7 @@ export function CoquilleAdmin({ nom, role, children }: { nom: string; role: Role
                     href={l.href}
                     aria-current={actif ? "page" : undefined}
                     onClick={() => setOuvert(false)}
-                    className={`${lienStyle} ${actif ? "bg-brun text-papier" : "hover:bg-papier"}`}
+                    className={`${lienStyle} ${actif ? "bg-marine text-papier" : "hover:bg-papier"}`}
                   >
                     {l.libelle}
                   </Link>

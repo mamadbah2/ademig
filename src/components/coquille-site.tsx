@@ -50,7 +50,7 @@ export async function CoquilleSite({ children }: { children: ReactNode }) {
       <Chargement />
       <a
         href="#contenu"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-brun focus:px-4 focus:py-2 focus:text-papier"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-marine focus:px-4 focus:py-2 focus:text-papier"
       >
         Aller au contenu
       </a>

@@ -83,7 +83,7 @@ export function SiteHeader({ email }: { email: string }) {
       >
         <div
           className={`transition-[background-color,box-shadow] duration-300 ${
-            decolle || ouvert ? "bg-papier shadow-[0_1.5px_0_var(--color-encre)]" : ""
+            decolle || ouvert ? "bg-papier shadow-[0_1.5px_0_var(--color-marine)]" : ""
           }`}
         >
           <div className="flex items-center justify-between gap-6 px-5 py-3 sm:px-10 lg:px-16 lg:py-4 2xl:px-24">
@@ -116,7 +116,7 @@ export function SiteHeader({ email }: { email: string }) {
               {ouvert ? "Fermer" : "Menu"}
             </button>
 
-            <nav aria-label="Navigation principale" className="hidden lg:block">
+            <nav aria-label="Navigation principale" className="hidden text-marine lg:block">
               <ul className="flex gap-1">
                 {navigation.slice(1).map((item) => (
                   <li key={item.href}>
@@ -145,13 +145,13 @@ export function SiteHeader({ email }: { email: string }) {
           data-lenis-prevent
           className="fixed inset-0 z-40 overflow-hidden lg:hidden"
         >
-          <span aria-hidden data-menu-strate className="absolute inset-0 bg-brun" />
+          <span aria-hidden data-menu-strate className="absolute inset-0 bg-marine" />
           <span aria-hidden data-menu-strate className="absolute inset-0 bg-moutarde" />
           <div
             data-menu-strate
             className="absolute inset-0 flex flex-col overflow-y-auto bg-papier bg-[url(/illustrations/paper.webp)] bg-[length:1400px_auto] px-5 pt-24 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
           >
-            <nav aria-label="Navigation principale">
+            <nav aria-label="Navigation principale" className="text-marine">
               <ul>
                 {navigation.map((item) => (
                   <li key={item.href} className="overflow-hidden py-0.5">

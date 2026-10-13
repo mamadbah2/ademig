@@ -18,7 +18,7 @@ const chargementFini = new Promise<void>((resolve) => {
   leverLeRideau = resolve;
 });
 
-const COULEURS_ECLATS = ["#e3ad46", "#ebcb91", "#bd9b68", "#5d4433", "#e3ad46"];
+const COULEURS_ECLATS = ["#d9a441", "#ebcb91", "#bd9b68", "#16415d", "#d9a441"];
 const FORMES_ECLATS = [
   "polygon(50% 0, 100% 40%, 80% 100%, 15% 90%, 0 35%)",
   "polygon(20% 0, 90% 10%, 100% 70%, 45% 100%, 0 60%)",

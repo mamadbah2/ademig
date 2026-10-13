@@ -10,7 +10,7 @@ export async function SiteFooter() {
   const { contact, reseaux } = await getReglages();
   const { address, email } = contact;
   return (
-    <footer className="pb-16">
+    <footer className="pb-16 text-marine">
       <Cadre
         as="div"
         className="mt-16 text-center"
@@ -48,7 +48,7 @@ export async function SiteFooter() {
               <a
                 href={r.url}
                 rel="me noopener"
-                className="inline-block border-[1.5px] border-encre bg-brun px-4 py-2 font-bold text-papier transition-[background-color,scale] hover:bg-encre active:scale-95"
+                className="inline-block border-[1.5px] border-encre bg-marine px-4 py-2 font-bold text-papier transition-[background-color,scale] hover:bg-encre active:scale-95"
               >
                 {r.label}
               </a>

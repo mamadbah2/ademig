@@ -9,7 +9,7 @@ export function Chargement() {
   return (
     <div id="chargement" role="status" aria-label="Chargement du site">
       {/* Strates découvertes une à une à la sortie. */}
-      <span aria-hidden className="chargement-strate bg-brun" />
+      <span aria-hidden className="chargement-strate bg-marine" />
       <span aria-hidden className="chargement-strate bg-moutarde" />
       <span aria-hidden className="chargement-strate bg-ocre" />
 

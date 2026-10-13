@@ -46,8 +46,9 @@ export function BarrePourcentage({
 
 type Part = { label: string; detail: string; pourcentage: number; couleur: "moutarde" | "ocre" | "brun" };
 
-const couleurs = { moutarde: "#e3ad46", ocre: "#bd9b68", brun: "#5d4433" };
-const couleursTexte = { moutarde: "text-moutarde", ocre: "text-ocre", brun: "text-brun" };
+const couleurs = { moutarde: "var(--color-moutarde)", ocre: "var(--color-ocre)", brun: "var(--color-brun)" };
+// Les grands chiffres dorés prennent l'or du logo : la moutarde est trop claire sur le papier.
+const couleursTexte = { moutarde: "text-or", ocre: "text-ocre", brun: "text-brun" };
 
 // Camembert à aplats, avec la légende chiffrée à gauche.
 export function Camembert({ parts, titre }: { parts: Part[]; titre: string }) {
