@@ -68,7 +68,14 @@ export default async function Annuaire({ searchParams }: PageProps<"/espace-memb
       </form>
 
       {fiches.length === 0 ? (
-        <p className="mt-8 font-bold">Aucun membre ne correspond à votre recherche.</p>
+        <div className="mt-8">
+          <p className="font-bold">Aucun membre ne correspond à votre recherche.</p>
+          {filtre.page > 1 && total > 0 && (
+            <Link href={urlAnnuaire(filtre, 1)} className="mt-3 inline-flex min-h-11 items-center underline">
+              Revenir à la première page
+            </Link>
+          )}
+        </div>
       ) : (
         <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {fiches.map((f) => (
@@ -87,7 +94,7 @@ export default async function Annuaire({ searchParams }: PageProps<"/espace-memb
                   <a
                     href={f.linkedin}
                     target="_blank"
-                    rel="noopener"
+                    rel="noopener noreferrer"
                     className="mt-3 inline-flex min-h-11 items-center border-[1.5px] border-encre bg-papier px-3 text-sm font-bold hover:bg-sable focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-moutarde"
                   >
                     LinkedIn

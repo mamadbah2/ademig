@@ -3,8 +3,8 @@ import { texteFacultatif } from "@/lib/validation/commun";
 import { estUrlBlob } from "@/lib/validation/media";
 import { VISIBILITES } from "./visibilite";
 
-const LINKEDIN = /^https:\/\/(www\.)?linkedin\.com\/in\/[^/\s?#]+\/?$/;
-const MESSAGE_LINKEDIN = "Collez l'adresse de votre profil LinkedIn (https://www.linkedin.com/in/…).";
+export const LINKEDIN = /^https:\/\/(www\.)?linkedin\.com\/in\/[^/\s?#]+\/?$/;
+export const MESSAGE_LINKEDIN = "Collez l'adresse de votre profil LinkedIn (https://www.linkedin.com/in/…).";
 
 // Un champ numérique facultatif arrive en texte depuis le formulaire : vide donne null.
 function entierFacultatif(min: number, max: number, message: string) {

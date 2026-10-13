@@ -110,4 +110,11 @@ describe("listerAnnuaire", () => {
     const p2 = await listerAnnuaire(db, { ...tous, promotion: 1999, page: 2 });
     expect(p2.fiches.map((f) => f.nom)).toEqual(["Page 24"]);
   });
+
+  it("ne rend jamais une adresse LinkedIn qui n'en est pas une", async () => {
+    await fiche("mauvais", "Zed Mauvais", { visible: true, promotion: 1998, liens: { linkedin: "javascript:alert(1)" } });
+    await fiche("http", "Zed Http", { visible: true, promotion: 1998, liens: { linkedin: "http://linkedin.com/in/x" } });
+    const r = await listerAnnuaire(db, { ...tous, q: "Zed" });
+    expect(r.fiches.map((f) => f.linkedin)).toEqual([null, null]);
+  });
 });
