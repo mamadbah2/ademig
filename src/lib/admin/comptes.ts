@@ -17,7 +17,7 @@ const EMAILS_NON_CONFIGURES: Resultat = {
 };
 
 // Limite connue : Better Auth envoie l'email dans une tâche de fond et en avale les erreurs,
-// donc une panne de Resend n'est pas visible ici (d'où le contrôle préalable emailsConfigures).
+// donc une panne du service d'email n'est pas visible ici (d'où le contrôle préalable emailsConfigures).
 // Renvoie false si l'envoi échoue (journalisé sans lien ni jeton).
 async function envoyerLien(email: string): Promise<boolean> {
   try {

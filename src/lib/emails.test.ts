@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { contenuEmailMotDePasse, emailsConfigures, envoyerEmailMotDePasse } from "./emails";
+import { contenuEmailMotDePasse, contenuInvitationMembre, emailsConfigures, envoyerEmailMotDePasse } from "./emails";
 
 const url = "https://www.ademig.sn/api/auth/reset-password/abc?callbackURL=%2Fadmin%2Freinitialiser";
 
@@ -42,11 +42,13 @@ describe("envoyerEmailMotDePasse sans clé Resend", () => {
 
   it.each(["production", "test"])("refuse hors développement (%s) et n'écrit pas le lien", async (env) => {
     vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("GMAIL_USER", "");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "");
     vi.stubEnv("NODE_ENV", env);
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     await expect(envoyerEmailMotDePasse(p)).rejects.toThrow(
-      "Envoi d'email impossible : RESEND_API_KEY n'est pas configurée.",
+      "Envoi d'email impossible : aucun service d'email n'est configuré.",
     );
     for (const spy of [info, log]) {
       expect(spy.mock.calls.flat().join(" ")).not.toContain(url);
@@ -54,11 +56,40 @@ describe("envoyerEmailMotDePasse sans clé Resend", () => {
   });
 });
 
+describe("contenuInvitationMembre", () => {
+  const p = { prenomNom: "Awa Ndiaye", url: "https://www.ademig.sn/invitation/abc?x=1&y=2" };
+
+  it("rédige l'invitation avec le lien échappé", () => {
+    const { sujet, html } = contenuInvitationMembre(p);
+    expect(sujet).toBe("Votre espace membre ADEMIG");
+    expect(html).toContain("https://www.ademig.sn/invitation/abc?x=1&amp;y=2");
+    expect(html).toContain("Activer mon compte");
+    expect(html).toContain("valable 30 jours");
+    expect(html).toContain("#16415D");
+  });
+
+  it("échappe le nom", () => {
+    const { html } = contenuInvitationMembre({ ...p, prenomNom: "<script>alert(1)</script>" });
+    expect(html).toContain("&lt;script&gt;");
+    expect(html).not.toContain("<script>");
+  });
+});
+
 describe("emailsConfigures", () => {
   afterEach(() => vi.unstubAllEnvs());
 
+  it("est vrai hors développement avec Gmail", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("GMAIL_USER", "ademig@gmail.com");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "mot-de-passe-test");
+    expect(emailsConfigures()).toBe(true);
+  });
+
   it("est vrai hors développement avec la clé et l'expéditeur", () => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("GMAIL_USER", "");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "");
     vi.stubEnv("RESEND_API_KEY", "re_test");
     vi.stubEnv("EMAIL_EXPEDITEUR", "ADEMIG <contact@ademig.sn>");
     expect(emailsConfigures()).toBe(true);
@@ -66,6 +97,8 @@ describe("emailsConfigures", () => {
 
   it("est faux en production sans expéditeur", () => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("GMAIL_USER", "");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "");
     vi.stubEnv("RESEND_API_KEY", "re_test");
     vi.stubEnv("EMAIL_EXPEDITEUR", "");
     expect(emailsConfigures()).toBe(false);
@@ -73,6 +106,8 @@ describe("emailsConfigures", () => {
 
   it("est faux en production sans clé", () => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("GMAIL_USER", "");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "");
     vi.stubEnv("RESEND_API_KEY", "");
     vi.stubEnv("EMAIL_EXPEDITEUR", "ADEMIG <contact@ademig.sn>");
     expect(emailsConfigures()).toBe(false);
