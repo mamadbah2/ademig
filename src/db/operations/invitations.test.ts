@@ -1,7 +1,7 @@
 import { verifyPassword } from "better-auth/crypto";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { account, emailsFile, invitations, membres, user } from "@/db/schema";
+import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
 import { creerCompte, creerCompteAvecMotDePasse } from "./comptes";
@@ -15,6 +15,8 @@ async function membreAvecCompte(db: Db, n: number) {
   await db.insert(membres).values({ slug: `membre-${n}`, nom: `Membre ${n}`, titre: "T", specialite: "S", resume: "R", userId: id });
   return id;
 }
+
+const jetonDe = (html: string) => /jeton=([\w-]+)/.exec(html)![1];
 
 describe("invitations", () => {
   it("un jeton créé est valide", async () => {
@@ -94,6 +96,16 @@ describe("activerCompte", () => {
     expect((await verifierJeton(db, jeton)).ok).toBe(true);
   });
 
+  it("refuse un mot de passe de plus de 128 caractères", async () => {
+    const db = await creerDbTest();
+    const id = await membreAvecCompte(db, 1);
+    const { jeton } = await creerInvitation(db, id);
+    const erreur = await activerCompte(db, jeton, "a".repeat(129)).catch((e) => e);
+    expect(erreur).toBeInstanceOf(ErreurMetier);
+    expect(erreur.message).toBe("128 caractères au maximum.");
+    expect(erreur.champ).toBe("motDePasse");
+  });
+
   it("refuse un jeton inconnu ou expiré", async () => {
     const db = await creerDbTest();
     const id = await membreAvecCompte(db, 1);
@@ -110,8 +122,10 @@ describe("activerCompte", () => {
     const { id } = await creerCompteAvecMotDePasse(db, {
       nom: "Admin", email: "e2e-admin@ademig.test", role: "superadmin", motDePasse: "ancien-mot-de-passe",
     });
+    await db.insert(session).values({ id: "s1", userId: id, token: "t1", expiresAt: new Date(Date.now() + 1e6) });
     const { jeton } = await creerInvitation(db, id);
     await activerCompte(db, jeton, "nouveau-mot-de-passe");
+    expect(await db.select().from(session).where(eq(session.userId, id))).toHaveLength(0);
     const comptes = await db.select().from(account).where(eq(account.userId, id));
     expect(comptes).toHaveLength(1);
     expect(await verifyPassword({ hash: comptes[0].password!, password: "nouveau-mot-de-passe" })).toBe(true);
@@ -126,6 +140,19 @@ describe("inviterParEmail", () => {
     const [email] = await db.select().from(emailsFile);
     expect(email).toMatchObject({ type: "invitation", destinataire: "e2e-1@ademig.test", userId: id, statut: "a_envoyer" });
     expect(email.html).toContain("https://exemple.test/activer?jeton=");
+    expect((await verifierJeton(db, jetonDe(email.html))).ok).toBe(true);
+  });
+
+  it("« Renvoyer » deux fois avant le cron ne laisse qu'un email en file, au lien valable", async () => {
+    const db = await creerDbTest();
+    const id = await membreAvecCompte(db, 1);
+    const url = (j: string) => `https://exemple.test/activer?jeton=${j}`;
+    await inviterParEmail(db, id, url);
+    await inviterParEmail(db, id, url);
+    const file = await db.select().from(emailsFile).where(eq(emailsFile.statut, "a_envoyer"));
+    expect(file).toHaveLength(1);
+    expect((await verifierJeton(db, jetonDe(file[0].html))).ok).toBe(true);
+    expect(await db.select().from(invitations).where(eq(invitations.userId, id))).toHaveLength(1);
   });
 });
 

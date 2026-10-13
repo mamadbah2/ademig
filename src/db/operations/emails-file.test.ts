@@ -65,4 +65,13 @@ describe("viderFile", () => {
     const [ligne] = await db.select().from(emailsFile);
     expect(ligne.erreur).toHaveLength(500);
   });
+
+  it("s'arrête quand le budget de temps est dépassé et laisse le reste en file", async () => {
+    const db = await creerDbTest();
+    await remplir(db, 4);
+    const envoyer = vi.fn(() => new Promise<void>((r) => setTimeout(r, 30)));
+    const bilan = await viderFile(db, { max: 10, envoyer, pauseMs: 0, budgetMs: 20 });
+    expect(bilan.envoyes).toBe(1);
+    expect(bilan.restants).toBe(3);
+  });
 });

@@ -19,7 +19,7 @@ export async function mettreEnFile(db: Db, e: EmailEnFile): Promise<void> {
 
 export async function viderFile(
   db: Db,
-  { max, envoyer, pauseMs }: { max: number; envoyer: (e: Email) => Promise<void>; pauseMs: number },
+  { max, envoyer, pauseMs, budgetMs }: { max: number; envoyer: (e: Email) => Promise<void>; pauseMs: number; budgetMs?: number },
 ): Promise<{ envoyes: number; echecs: number; restants: number }> {
   const aTraiter = await db
     .select()
@@ -28,9 +28,12 @@ export async function viderFile(
     .orderBy(asc(emailsFile.creeLe))
     .limit(max);
 
+  const debut = Date.now();
   let envoyes = 0;
   let echecs = 0;
   for (const [i, ligne] of aTraiter.entries()) {
+    // Budget de temps (fonction serverless) : les emails restants partiront au prochain passage.
+    if (budgetMs !== undefined && Date.now() - debut > budgetMs) break;
     if (i > 0) await new Promise((r) => setTimeout(r, pauseMs));
     try {
       await envoyer({ a: ligne.destinataire, sujet: ligne.sujet, html: ligne.html });

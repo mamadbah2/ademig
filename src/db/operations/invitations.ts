@@ -1,6 +1,6 @@
 import { hashPassword } from "better-auth/crypto";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
-import { account, emailsFile, invitations, membres, user } from "@/db/schema";
+import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { contenuInvitationMembre } from "@/lib/emails";
 import { hacherJeton, nouveauJeton } from "@/lib/membres/jetons";
@@ -13,10 +13,13 @@ export const DUREE_INVITATION_JOURS = 30;
 export async function creerInvitation(db: Db, userId: string, maintenant = new Date()): Promise<{ jeton: string }> {
   const { jeton, hash } = nouveauJeton();
   const expireLe = new Date(maintenant.getTime() + DUREE_INVITATION_JOURS * 24 * 3600 * 1000);
-  await db.transaction(async (tx) => {
+  const ecrire = async (tx: Db) => {
     await tx.delete(invitations).where(and(eq(invitations.userId, userId), isNull(invitations.utiliseeLe)));
     await tx.insert(invitations).values({ userId, jetonHash: hash, expireLe, creeLe: maintenant });
-  });
+  };
+  // Déjà dans une transaction (`Tx` est un `Db`) : on écrit directement, sinon on en ouvre une.
+  if ("rollback" in db) await ecrire(db);
+  else await db.transaction(ecrire);
   return { jeton };
 }
 
@@ -25,9 +28,15 @@ export async function inviterParEmail(db: Db, userId: string, urlActivation: (je
   const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { email: true, name: true } });
   if (!compte) throw new ErreurMetier("Compte introuvable.");
   const fiche = await db.query.membres.findFirst({ where: eq(membres.userId, userId), columns: { nom: true } });
-  const { jeton } = await creerInvitation(db, userId);
-  const { sujet, html } = contenuInvitationMembre({ prenomNom: fiche?.nom ?? compte.name, url: urlActivation(jeton) });
-  await mettreEnFile(db, { destinataire: compte.email, sujet, html, type: "invitation", userId });
+  await db.transaction(async (tx) => {
+    // « Renvoyer » : l'ancien email encore en file porterait un lien désormais mort.
+    await tx
+      .delete(emailsFile)
+      .where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
+    const { jeton } = await creerInvitation(tx, userId);
+    const { sujet, html } = contenuInvitationMembre({ prenomNom: fiche?.nom ?? compte.name, url: urlActivation(jeton) });
+    await mettreEnFile(tx, { destinataire: compte.email, sujet, html, type: "invitation", userId });
+  });
 }
 
 export type EtatJeton =
@@ -59,6 +68,7 @@ export async function activerCompte(
     if (inv.utiliseeLe) throw new ErreurMetier(DEJA_SERVI);
     if (inv.expireLe < maintenant) throw new ErreurMetier("Ce lien a expiré : demandez-en un nouveau au bureau.");
     if (motDePasse.length < 12) throw new ErreurMetier("12 caractères au minimum.", "motDePasse");
+    if (motDePasse.length > 128) throw new ErreurMetier("128 caractères au maximum.", "motDePasse");
     // Verrou : deux clics simultanés ne consomment pas deux fois le jeton.
     const [pris] = await tx
       .update(invitations)
@@ -70,8 +80,11 @@ export async function activerCompte(
     const existant = await tx.query.account.findFirst({
       where: and(eq(account.userId, inv.userId), eq(account.providerId, "credential")),
     });
-    if (existant) await tx.update(account).set({ password: hash }).where(eq(account.id, existant.id));
-    else {
+    if (existant) {
+      await tx.update(account).set({ password: hash }).where(eq(account.id, existant.id));
+      // Un mot de passe remplacé coupe les sessions ouvertes avec l'ancien.
+      await tx.delete(session).where(eq(session.userId, inv.userId));
+    } else {
       // Même forme que creerCompteAvecMotDePasse (comptes.ts).
       await tx.insert(account).values({
         id: crypto.randomUUID(),

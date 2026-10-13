@@ -225,7 +225,11 @@ export const invitations = pgTable(
     utiliseeLe: timestamp("utilisee_le", { withTimezone: true }),
     creeLe: timestamp("cree_le", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index("invitations_user").on(t.userId)],
+  (t) => [
+    index("invitations_user").on(t.userId),
+    // Au plus une invitation non utilisée par compte, même si deux « Renvoyer » se croisent.
+    uniqueIndex("invitations_une_active").on(t.userId).where(sql`${t.utiliseeLe} is null`),
+  ],
 );
 
 export const emailsFile = pgTable(
