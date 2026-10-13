@@ -1,14 +1,23 @@
 @import "tailwindcss";
 
-/* Identité reprise de docs/ref-design.pptx (thème, polices, illustrations). */
+/* Identité reprise de docs/ref-design.pptx (thème, polices, illustrations),
+   accordée aux couleurs du logo (public/logo/ademig.png, valeurs échantillonnées). */
 @theme {
   --color-encre: #333233;
+  /* Bleu marine des lettres D-E-M-G : titres, boutons principaux, zones sombres. */
+  --color-marine: #16415d;
+  /* Bleu de l'eau du logo : accents discrets (texte marine ou encre par-dessus). */
+  --color-eau: #8caebc;
   --color-papier: #f3f0e7;
   --color-brun: #5d4433;
-  --color-moutarde: #e3ad46;
+  /* Rapprochée de l'or du logo (#ab8230), en gardant l'encre lisible dessus (5,7:1). */
+  --color-moutarde: #d9a441;
+  /* Or du logo, pour les grands chiffres posés sur le papier (3,1:1, texte de grande taille). */
+  --color-or: #ab8230;
   --color-sable: #ebcb91;
   --color-ocre: #bd9b68;
-  --color-rouge: #d45943;
+  /* Orange de la flamme du logo. */
+  --color-rouge: #e1552a;
   --color-vert: #92b159;
 
   --font-sans: var(--font-lato), system-ui, sans-serif;
@@ -34,8 +43,17 @@ body {
   color: var(--color-encre);
 }
 
+/* Titres en bleu marine, comme les lettres du logo ; le texte courant reste à l'encre. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    color: var(--color-marine);
+  }
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-brun);
+  outline: 2px solid var(--color-marine);
   outline-offset: 3px;
 }
 
@@ -268,14 +286,14 @@ body {
 }
 .chargement-mot-fond {
   color: transparent;
-  -webkit-text-stroke: 1.5px var(--color-encre);
+  -webkit-text-stroke: 1.5px var(--color-marine);
 }
 /* Le mot se remplit d'or par le bas, comme un wagonnet qu'on charge. */
 .chargement-mot-plein {
   position: absolute;
   inset: 0;
   color: var(--color-moutarde);
-  -webkit-text-stroke: 1.5px var(--color-encre);
+  -webkit-text-stroke: 1.5px var(--color-marine);
   clip-path: inset(calc(100% - var(--progres)) 0 0 0);
 }
 .chargement-rail {
@@ -309,7 +327,7 @@ body {
   bottom: clamp(20px, 4vw, 44px);
   font-size: clamp(2.5rem, 7vw, 6rem);
   line-height: 1;
-  color: var(--color-brun);
+  color: var(--color-marine);
   font-variant-numeric: tabular-nums;
 }
 

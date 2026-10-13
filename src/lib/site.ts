@@ -13,6 +13,8 @@ export const site = {
   // À CONFIRMER : nom de domaine définitif (ademig.org appartient à une autre association, au Niger).
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.ademig.sn",
   locale: "fr_SN",
+  // Site officiel de l'école (vérifié le 13/10/2026).
+  ecole: { nom: "ENSMG", url: "https://ensmg.ucad.sn/" },
 } as const;
 
 export const navigation = [

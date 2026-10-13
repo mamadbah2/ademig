@@ -21,7 +21,7 @@ export default async function Evenements({ searchParams }: PageProps<"/admin/eve
     <>
       <TitrePage
         action={
-          <Link href={`${BASE}/nouveau`} className="inline-flex min-h-11 items-center bg-brun px-4 py-2 font-bold text-papier hover:bg-encre focus-visible:outline-3 focus-visible:outline-moutarde">
+          <Link href={`${BASE}/nouveau`} className="inline-flex min-h-11 items-center bg-marine px-4 py-2 font-bold text-papier hover:bg-encre focus-visible:outline-3 focus-visible:outline-moutarde">
             Nouvel événement
           </Link>
         }

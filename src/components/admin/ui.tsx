@@ -5,9 +5,9 @@ import type { Resultat } from "@/lib/admin/resultat";
 const focus = "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-moutarde";
 
 const variantes = {
-  principal: "bg-brun text-papier hover:bg-encre",
+  principal: "bg-marine text-papier hover:bg-encre",
   secondaire: "border-[1.5px] border-encre bg-papier hover:bg-sable",
-  danger: "border-[1.5px] border-rouge bg-papier text-encre hover:bg-rouge hover:text-papier",
+  danger: "border-[1.5px] border-rouge bg-papier text-encre hover:bg-rouge/15",
 };
 
 export function Bouton({

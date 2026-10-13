@@ -35,6 +35,16 @@ describe("réglages", () => {
     expect(lu.version).toBe(nouveau.version);
   });
 
+  it("garde la FAQ à null (FAQ d'origine) jusqu'au premier enregistrement, puis la lit telle quelle", async () => {
+    const { version } = await modifierReglages(db, { textes: {} }, { version: null });
+    expect((await lireReglages(db)).faq).toBeNull();
+    const faq = [{ question: "Comment adhérer ?", reponse: "Écrivez au bureau." }];
+    const r = await modifierReglages(db, { faq }, { version });
+    expect((await lireReglages(db)).faq).toEqual(faq);
+    await modifierReglages(db, { faq: [] }, { version: r.version });
+    expect((await lireReglages(db)).faq).toEqual([]);
+  });
+
   it("refuse une version périmée sans rien écrire", async () => {
     await modifierReglages(db, { textes: {} }, { version: null });
     const contact = { ...reglagesInitiaux.contact, email: "autre@ademig.sn" };

@@ -1,3 +1,5 @@
+import type { QuestionFaq } from "./faq";
+
 export type Source = { label: string; url: string };
 export type Video = { id: string; titre: string };
 export type Realisation = { titre: string; annee?: string; description: string };
@@ -11,7 +13,8 @@ export type Contact = {
   address: { street: string; postalBox: string; city: string; country: string };
 };
 export type Reseau = { label: string; url: string };
-export type Reglages = { contact: Contact; reseaux: Reseau[]; textes: Record<string, string> };
+// `faq` vaut null tant que le bureau n'a pas enregistré sa FAQ : le site affiche alors celle d'origine.
+export type Reglages = { contact: Contact; reseaux: Reseau[]; textes: Record<string, string>; faq: QuestionFaq[] | null };
 
 export type Etape = {
   periode: string;

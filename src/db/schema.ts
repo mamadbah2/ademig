@@ -15,6 +15,7 @@ import {
 } from "drizzle-orm/pg-core";
 // Chemin relatif : drizzle-kit ne résout pas l'alias `@/`.
 import type { Contact, Etape, Liens, Realisation, Reseau, Source, Video } from "../lib/content/types";
+import type { QuestionFaq } from "../lib/content/faq";
 
 const horodatage = () => ({
   creeLe: timestamp("cree_le", { withTimezone: true }).defaultNow().notNull(),
@@ -279,6 +280,8 @@ export const reglages = pgTable("reglages", {
   contact: jsonb("contact").$type<Contact>().notNull(),
   reseaux: jsonb("reseaux").$type<Reseau[]>().default([]).notNull(),
   textes: jsonb("textes").$type<Record<string, string>>().default({}).notNull(),
+  // Null : FAQ d'origine (src/lib/content/faq.ts) ; liste vide : section masquée.
+  faq: jsonb("faq").$type<QuestionFaq[]>(),
   majLe: timestamp("maj_le", { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())

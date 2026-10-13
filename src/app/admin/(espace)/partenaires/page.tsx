@@ -16,7 +16,7 @@ export default async function Partenaires() {
     <>
       <TitrePage
         action={
-          <Link href="/admin/partenaires/nouveau" className="inline-flex min-h-11 items-center bg-brun px-4 py-2 font-bold text-papier hover:bg-encre focus-visible:outline-3 focus-visible:outline-moutarde">
+          <Link href="/admin/partenaires/nouveau" className="inline-flex min-h-11 items-center bg-marine px-4 py-2 font-bold text-papier hover:bg-encre focus-visible:outline-3 focus-visible:outline-moutarde">
             Nouveau partenaire
           </Link>
         }
