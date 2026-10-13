@@ -6,18 +6,12 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { envoyerEmailMotDePasse } from "@/lib/emails";
+import { urlSite } from "@/lib/membres/url";
 
 const https = (hote?: string) => (hote ? `https://${hote}` : undefined);
 
-// Adresse publique du site : variable explicite, sinon celle fournie par Vercel.
-function urlDuSite() {
-  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
-  if (process.env.VERCEL_ENV === "production") return https(process.env.VERCEL_PROJECT_PRODUCTION_URL)!;
-  return https(process.env.VERCEL_URL) ?? "http://localhost:3000";
-}
-
 export const auth = betterAuth({
-  baseURL: urlDuSite(),
+  baseURL: urlSite(),
   trustedOrigins: [https(process.env.VERCEL_URL), https(process.env.VERCEL_BRANCH_URL)].filter(
     (o): o is string => !!o,
   ),
