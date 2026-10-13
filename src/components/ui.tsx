@@ -49,22 +49,27 @@ export function Bouton({
   href,
   children,
   variante = "plein",
+  externe = false,
 }: {
   href: string;
   children: ReactNode;
   variante?: "plein" | "contour";
+  // Site extérieur : ouvert dans un nouvel onglet, annoncé aux lecteurs d'écran.
+  externe?: boolean;
 }) {
   return (
     <Link
       href={href}
+      {...(externe && { target: "_blank", rel: "noopener" })}
       data-magnet
       className={`inline-block border-[1.5px] border-encre px-5 py-3 font-bold transition-[color,background-color,scale] active:scale-95 ${
         variante === "plein"
-          ? "bg-brun text-papier hover:bg-encre"
+          ? "bg-marine text-papier hover:bg-encre"
           : "bg-papier/60 hover:bg-sable"
       }`}
     >
       {children}
+      {externe && <span className="sr-only"> (nouvel onglet)</span>}
     </Link>
   );
 }

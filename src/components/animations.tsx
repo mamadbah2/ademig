@@ -230,6 +230,9 @@ function animerHero(nettoyages: (() => void)[]) {
   const diapos = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-diapo]"));
   const reperes = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-repere]"));
   const jauges = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-jauge]"));
+  const logo = q("logo");
+  const une = q("une");
+  const legendes = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-une]"));
   const split = SplitText.create(titre, { type: "words,chars" });
 
   // 1. Entrée : le paysage se pose, les lettres tombent comme des blocs et soulèvent des pépites.
@@ -254,6 +257,11 @@ function animerHero(nettoyages: (() => void)[]) {
     }, 0.75)
     .from(etiquette, { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "power3.inOut" }, 0.9)
     .from(boutons, { y: 26, opacity: 0, duration: 0.6, stagger: 0.1 }, 1.15);
+  // Le médaillon du logo se pose en premier, comme un sceau.
+  if (logo) {
+    tl.from(logo, { y: -40, scale: 0.6, rotation: -12, opacity: 0, duration: 0.9, ease: "back.out(2.2)" }, 0);
+  }
+  if (une) tl.from(une, { x: -30, opacity: 0, duration: 0.6 }, 1.35);
   if (reperes.length) tl.from(reperes, { y: 20, opacity: 0, duration: 0.6, stagger: 0.08 }, 1.3);
 
   // 2. Diaporama : chaque univers reste six secondes, avec un lent zoom arrière et un fondu.
@@ -262,6 +270,18 @@ function animerHero(nettoyages: (() => void)[]) {
     let courant = 0;
     const montrer = (i: number, immediat = false) => {
       reperes.forEach((r, k) => gsap.to(r, { opacity: k === i ? 1 : 0.6, duration: 0.4 }));
+      // La légende « À la une » suit la photo ; masquée, elle sort aussi de l'ordre de tabulation.
+      legendes.forEach((l, k) => {
+        const visible = k === i;
+        gsap.to(l, { autoAlpha: visible ? 1 : 0, duration: 0.6, ease: "power2.inOut" });
+        if (visible) {
+          l.removeAttribute("aria-hidden");
+          l.removeAttribute("tabindex");
+        } else {
+          l.setAttribute("aria-hidden", "true");
+          l.setAttribute("tabindex", "-1");
+        }
+      });
       jauges.forEach((j, k) => k !== i && gsap.set(j, { scaleX: 0 }));
       gsap.fromTo(jauges[i], { scaleX: 0 }, { scaleX: 1, duration: DUREE, ease: "none" });
       gsap.fromTo(diapos[i], { scale: 1.12 }, { scale: 1, duration: DUREE + 2, ease: "none" });

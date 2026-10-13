@@ -11,6 +11,7 @@ import {
   ordreTons,
   type IconeName,
 } from "@/components/illustration";
+import { Logo } from "@/components/logo";
 import { Vignette } from "@/components/photos";
 import { Portrait } from "@/components/portrait";
 import {
@@ -18,11 +19,14 @@ import {
   Cadre,
   DateTexte,
   Etiquette,
+  JsonLd,
   LienSouligne,
   SectionTitle,
 } from "@/components/ui";
 import { getActualites } from "@/lib/content/actualites";
 import { getEvenements } from "@/lib/content/evenements";
+import { faqAffichee, jsonLdFaq } from "@/lib/content/faq";
+import { choisirDiaposHero } from "@/lib/content/hero";
 import { getMembres } from "@/lib/content/membres";
 import { getPartenaires } from "@/lib/content/organisation";
 import { getReglages } from "@/lib/content/reglages";
@@ -35,28 +39,10 @@ const devise: { verbe: string; icone: IconeName; texte: CleTexte }[] = [
   { verbe: "Agir", icone: "casque", texte: "accueil.devise.agir" },
 ];
 
-const diapositives = [
-  {
-    src: "/hero/mine-strates.jpg",
-    alt: "Un tombereau au pied du front de taille d'une mine à ciel ouvert, dont les strates sont bien visibles",
-    univers: "Mines",
-    position: "object-[70%_60%]",
-  },
-  {
-    src: "/hero/offshore-plateforme.jpg",
-    alt: "Une plateforme pétrolière en mer, éclairée par le soleil couchant",
-    univers: "Pétrole et gaz",
-    position: "object-[75%_55%]",
-  },
-  {
-    src: "/hero/mine-tombereau.jpg",
-    alt: "Un tombereau chargé de minerai soulève la poussière sur une piste minière",
-    univers: "Géologie",
-    position: "object-[70%_70%]",
-  },
-];
-
 const iconesActualites: IconeName[] = ["strates", "mineur", "minerai"];
+
+// Recalculée chaque heure : un événement passé quitte le hero même sans modification dans l'admin.
+export const revalidate = 3600;
 
 export default async function Accueil() {
   const [actualites, evenements, membres, partenaires, reglages] = await Promise.all([
@@ -68,10 +54,13 @@ export default async function Accueil() {
   ]);
   const dernierEvenement = evenements[0];
   const t = fusionnerTextes(reglages.textes);
+  const diapositives = choisirDiaposHero({ actualites, evenements, maintenant: new Date() });
+  const aLaUne = diapositives.some((d) => d.une);
+  const faq = faqAffichee(reglages.faq);
 
   return (
     <>
-      {/* Hero pleine largeur : trois photos se relaient en fondu lent, une par univers de l'amicale. */}
+      {/* Hero pleine largeur : les photos de l'actualité récente (ou, à défaut, une par univers de l'amicale) se relaient en fondu lent. */}
       <section
         data-hero-scene
         className="relative isolate -mt-20 flex min-h-svh items-center overflow-clip pt-20 sm:-mt-[5.5rem] sm:pt-[5.5rem] lg:-mt-24 lg:pt-24"
@@ -98,8 +87,15 @@ export default async function Accueil() {
           <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-papier to-transparent" />
         </div>
 
-        <div className="w-full px-5 py-14 sm:px-10 lg:px-16 2xl:px-24">
+        <div className="w-full px-5 pt-10 pb-28 sm:px-10 sm:py-14 lg:px-16 2xl:px-24">
           <div data-cadre="hero" data-hero="texte" className="max-w-3xl">
+            {/* Médaillon papier : le logo garde ses couleurs sur n'importe quelle photo. */}
+            <div
+              data-hero="logo"
+              className="mb-5 inline-block rounded-2xl bg-papier px-3 py-2 shadow-[0_8px_24px_-6px_rgb(22_65_93/0.35)] sm:mb-8 sm:px-4 sm:py-3"
+            >
+              <Logo alt="" priority className="h-14 w-auto sm:h-20" />
+            </div>
             <h1
               data-hero="titre"
               className="font-titre text-[2.2rem] leading-[1.05] text-balance sm:text-5xl xl:text-6xl"
@@ -112,7 +108,33 @@ export default async function Accueil() {
               <Bouton href="/amicale" variante="contour">
                 Connaître l&apos;amicale
               </Bouton>
+              <Bouton href={site.ecole.url} variante="contour" externe>
+                Site de l&apos;{site.ecole.nom} <span aria-hidden>↗</span>
+              </Bouton>
             </div>
+            {aLaUne && (
+              // Une légende par photo, superposées : le diaporama montre celle de la photo affichée.
+              <div data-hero="une" className="mt-8 grid grid-cols-[minmax(0,1fr)]">
+                {diapositives.map((d, i) =>
+                  d.une ? (
+                    <Link
+                      key={d.src}
+                      href={d.une.href}
+                      data-hero-une
+                      aria-hidden={i === 0 ? undefined : true}
+                      tabIndex={i === 0 ? undefined : -1}
+                      className={`group inline-flex max-w-full items-center gap-2 justify-self-start border-[1.5px] border-encre bg-papier/90 py-1.5 pr-3 pl-1.5 text-sm [grid-area:1/1] sm:text-base ${i === 0 ? "" : "invisible opacity-0"}`}
+                    >
+                      <span className="shrink-0 bg-eau px-2 py-0.5 font-bold">À la une</span>
+                      <span className="min-w-0 truncate font-bold group-hover:underline">{d.une.titre}</span>
+                      <span aria-hidden>→</span>
+                    </Link>
+                  ) : (
+                    <span key={d.src} data-hero-une aria-hidden className="invisible [grid-area:1/1]" />
+                  ),
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -131,7 +153,7 @@ export default async function Accueil() {
               <span className="block h-[3px] bg-encre/25">
                 <span
                   data-hero-jauge
-                  className="block h-full origin-left scale-x-0 bg-brun"
+                  className="block h-full origin-left scale-x-0 bg-marine"
                 />
               </span>
               <span className="font-titre mt-1.5 block text-sm sm:text-base">
@@ -359,6 +381,34 @@ export default async function Accueil() {
           className="absolute -right-6 -bottom-12 hidden w-40 lg:block"
         />
       </Cadre>
+
+      {faq.length > 0 && (
+        <Cadre aria-labelledby="faq">
+          <JsonLd data={jsonLdFaq(faq)} />
+          <SectionTitle id="faq">Questions fréquentes</SectionTitle>
+          <ul className="mt-8 border-t-[1.5px] border-encre">
+            {faq.map((q) => (
+              <li key={q.question} className="border-b-[1.5px] border-encre">
+                <details className="group">
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 hover:bg-eau/15 focus-visible:outline-offset-[-2px] [&::-webkit-details-marker]:hidden">
+                    <span className="font-titre text-xl leading-snug text-marine sm:text-2xl">{q.question}</span>
+                    <span
+                      aria-hidden
+                      className="flex size-9 shrink-0 items-center justify-center border-[1.5px] border-encre bg-moutarde text-2xl leading-none group-open:bg-eau"
+                    >
+                      <span className="transition-[rotate] duration-300 group-open:rotate-45">+</span>
+                    </span>
+                  </summary>
+                  <p className="max-w-3xl pb-5 leading-relaxed whitespace-pre-line">{q.reponse}</p>
+                </details>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6">
+            Une autre question ? <LienSouligne href="/contact">Écrivez au bureau</LienSouligne>
+          </p>
+        </Cadre>
+      )}
     </>
   );
 }
