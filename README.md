@@ -56,6 +56,26 @@ Resend n'est pas encore configuré (l'intégration de la Marketplace demande un 
 
 Pour l'activer : installer l'intégration Resend avec le domaine vérifié, puis renseigner `RESEND_API_KEY` et `EMAIL_EXPEDITEUR`.
 
+### Espace membre
+
+Les membres de l'association activent un compte (lien d'invitation valable 30 jours), complètent leur profil sur `/espace-membre` et consultent l'annuaire privé. L'espace est en `noindex` et absent du sitemap.
+
+Variables d'environnement (voir `.env.example`) :
+
+| Variable | Rôle |
+|---|---|
+| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Compte Gmail et mot de passe d'application qui envoient les invitations (prioritaires sur Resend). Sans elles, l'import et « Copier le lien » fonctionnent, mais la file reste en attente. |
+| `EMAILS_PAR_JOUR` | Quota quotidien de la file d'envoi (150 par défaut ; pause d'une seconde entre deux emails, 3 tentatives au maximum). |
+| `CRON_SECRET` | Secret du cron Vercel (`openssl rand -hex 32`), à définir en Production et en Preview. |
+
+Cron : `vercel.json` appelle `/api/cron/quotidien` chaque jour à 8 h (UTC) ; il vide la file d'envoi dans la limite du quota. L'appel exige l'en-tête `Authorization: Bearer $CRON_SECRET`.
+
+Import des membres (super-admin) : `/admin/membres/importer`.
+
+1. Choisir un fichier CSV (1 Mo au plus, UTF-8, séparateur `,` ou `;`) aux colonnes `nom`, `prenom`, `email` (obligatoires), `telephone`, `promotion`, `specialite`. Un modèle est téléchargeable sur la page.
+2. Lire l'aperçu (nouveaux, fiches rattachées, comptes liés, déjà membres, lignes refusées), puis confirmer.
+3. Les invitations sont mises en file ; le cron les envoie par lots. Sur la fiche d'un membre (`/admin/membres/[id]`) : « Renvoyer », « Copier le lien » (à transmettre à la main), « Désactiver » et « Réactiver ».
+
 ### Commandes
 
 | Commande | Rôle |

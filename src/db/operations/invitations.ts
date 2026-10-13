@@ -169,6 +169,8 @@ export async function activerCompte(
     if (!inv) throw new ErreurMetier("Ce lien n'est plus valable : demandez-en un nouveau au bureau.");
     if (inv.utiliseeLe) throw new ErreurMetier(DEJA_SERVI);
     if (inv.expireLe < maintenant) throw new ErreurMetier("Ce lien a expiré : demandez-en un nouveau au bureau.");
+    // Verrou sur le compte : un « Désactiver » simultané attend la fin de l'activation, ou est vu ici.
+    await tx.execute(sql`select 1 from ${user} where ${user.id} = ${inv.userId} for update`);
     const cible = await tx.query.user.findFirst({ where: eq(user.id, inv.userId), columns: { desactiveLe: true } });
     if (cible?.desactiveLe) throw new ErreurMetier("Ce compte a été désactivé : contactez le bureau.");
     if (motDePasse.length < 12) throw new ErreurMetier("12 caractères au minimum.", "motDePasse");

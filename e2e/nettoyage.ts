@@ -1,6 +1,6 @@
 import { and, eq, like, sql } from "drizzle-orm";
 import { db } from "../src/db";
-import { actualites, evenements, mandats, membres, partenaires, reglages, user } from "../src/db/schema";
+import { actualites, evenements, emailsFile, mandats, membres, partenaires, reglages, user } from "../src/db/schema";
 
 // Textes de test (« E2E … ») retirés des réglages : le site garde ses textes réels, même après un échec.
 export async function retirerTextesDeTest() {
@@ -22,5 +22,7 @@ export default async function nettoyage() {
   await db.delete(evenements).where(like(evenements.slug, "e2e-%"));
   await db.delete(partenaires).where(like(partenaires.nom, "E2E %"));
   await retirerTextesDeTest();
+  // Emails mis en file par l'import de test (les invitations partent en cascade avec `user`).
+  await db.delete(emailsFile).where(like(emailsFile.destinataire, "%@ademig.test"));
   await db.delete(user).where(like(user.email, "%@ademig.test"));
 }
