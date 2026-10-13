@@ -50,19 +50,22 @@ export function Bouton({
   children,
   variante = "plein",
   externe = false,
+  className = "px-5 py-3",
 }: {
   href: string;
   children: ReactNode;
   variante?: "plein" | "contour";
   // Site extérieur : ouvert dans un nouvel onglet, annoncé aux lecteurs d'écran.
   externe?: boolean;
+  // Remplace les marges intérieures par défaut (boutons compacts du hero sur mobile).
+  className?: string;
 }) {
   return (
     <Link
       href={href}
       {...(externe && { target: "_blank", rel: "noopener" })}
       data-magnet
-      className={`inline-block border-[1.5px] border-encre px-5 py-3 font-bold transition-[color,background-color,scale] active:scale-95 ${
+      className={`inline-block border-[1.5px] border-encre font-bold transition-[color,background-color,scale] active:scale-95 ${className} ${
         variante === "plein"
           ? "bg-marine text-papier hover:bg-encre"
           : "bg-papier/60 hover:bg-sable"
