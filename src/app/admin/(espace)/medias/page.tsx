@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { EnvoiImages } from "@/components/admin/envoi-images";
-import { Bouton, Champ, EtatVide, TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, Bouton, Champ, EtatVide, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { listerMedias } from "@/db/operations/media";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Médiathèque" };
 
 export default async function Medias({ searchParams }: PageProps<"/admin/medias">) {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const { q } = await searchParams;
   const recherche = typeof q === "string" ? q : "";
   const medias = await listerMedias(db, recherche);

@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TitrePage } from "@/components/admin/ui";
-import { db } from "@/db";
-import { ficheDuCompte } from "@/db/requetes/fiche-du-compte";
 import { aLeRole } from "@/lib/roles";
-import { exigerSession } from "@/lib/session";
+import { exigerSession, ficheDeLaSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
 export default async function TableauDeBord() {
   const session = await exigerSession();
-  const aUneFiche = Boolean(await ficheDuCompte(db, session.userId));
+  const aUneFiche = Boolean(await ficheDeLaSession(session.userId));
   // Le trésorier n'a pas encore de page de gestion (la trésorerie arrive au lot 3).
   const sansTresorier = session.role === "tresorier";
   const raccourcis = [

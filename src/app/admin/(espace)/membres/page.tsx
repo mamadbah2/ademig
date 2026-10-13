@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FiltresListe, Pagination } from "@/components/admin/liste";
-import { Badge, EtatVide, TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, Badge, EtatVide, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { listerMembresAdmin } from "@/db/requetes/admin/membres";
 import { lireFiltre } from "@/lib/admin/filtre";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Membres" };
@@ -12,7 +13,8 @@ export const metadata: Metadata = { title: "Membres" };
 const BASE = "/admin/membres";
 
 export default async function Membres({ searchParams }: PageProps<"/admin/membres">) {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const filtre = lireFiltre(await searchParams);
   const { lignes, total } = await listerMembresAdmin(db, filtre);
 

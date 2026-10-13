@@ -3,10 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { lireMedia, usagesMedia } from "@/db/operations/media";
 import { formatOctets } from "@/lib/format";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 import { absoluteUrl } from "@/lib/site";
 import { CopierUrl, FormulaireMedia, ZoneSuppression } from "./actions-media";
@@ -14,7 +15,8 @@ import { CopierUrl, FormulaireMedia, ZoneSuppression } from "./actions-media";
 export const metadata: Metadata = { title: "Image" };
 
 export default async function DetailMedia({ params }: PageProps<"/admin/medias/[id]">) {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
   const media = await lireMedia(db, id);

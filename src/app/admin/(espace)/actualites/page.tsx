@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FiltresListe, Pagination } from "@/components/admin/liste";
-import { Badge, EtatVide, TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, Badge, EtatVide, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { listerActualitesAdmin } from "@/db/requetes/admin/actualites";
 import { lireFiltre } from "@/lib/admin/filtre";
 import { formatDate } from "@/components/ui";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Actualités" };
@@ -13,7 +14,8 @@ export const metadata: Metadata = { title: "Actualités" };
 const BASE = "/admin/actualites";
 
 export default async function Actualites({ searchParams }: PageProps<"/admin/actualites">) {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const filtre = lireFiltre(await searchParams);
   const { lignes, total } = await listerActualitesAdmin(db, filtre);
 

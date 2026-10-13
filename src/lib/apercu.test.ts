@@ -22,6 +22,14 @@ describe("apercuAutorise", () => {
     expect(await apercuAutorise()).toBe(false);
   });
 
+  it("refuse un membre ou un trésorier, même avec le cookie d'aperçu", async () => {
+    draftMode.mockResolvedValue({ isEnabled: true });
+    lireSession.mockResolvedValue({ userId: "u2", role: "membre" });
+    expect(await apercuAutorise()).toBe(false);
+    lireSession.mockResolvedValue({ userId: "u3", role: "tresorier" });
+    expect(await apercuAutorise()).toBe(false);
+  });
+
   it("autorise le Draft Mode avec une session admin", async () => {
     draftMode.mockResolvedValue({ isEnabled: true });
     lireSession.mockResolvedValue({ userId: "u1", role: "editeur" });

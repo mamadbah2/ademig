@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { lirePartenaireAdmin } from "@/db/requetes/admin/partenaires";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 import { FormulairePartenaire } from "../formulaire";
 
 export const metadata: Metadata = { title: "Modifier un partenaire" };
 
 export default async function ModifierPartenaire({ params, searchParams }: PageProps<"/admin/partenaires/[id]">) {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
   const partenaire = await lirePartenaireAdmin(db, id);

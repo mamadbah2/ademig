@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EtatVide, TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, EtatVide, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { listerPartenairesAdmin } from "@/db/requetes/admin/partenaires";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 import { ListePartenaires } from "./liste";
 
 export const metadata: Metadata = { title: "Partenaires" };
 
 export default async function Partenaires() {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const lignes = await listerPartenairesAdmin(db);
 
   return (
