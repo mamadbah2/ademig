@@ -96,6 +96,10 @@ export async function envoyerEmail({ a, sujet, html }: Email): Promise<void> {
       port: 465,
       secure: true,
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+      // Un serveur muet ne bloque pas le cron jusqu'à son budget de temps : l'erreur (ETIMEDOUT…) arrête le passage.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
     await transport.sendMail({ from: `ADEMIG <${process.env.GMAIL_USER}>`, to: a, subject: sujet, html });
     return;
