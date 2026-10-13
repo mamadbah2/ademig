@@ -9,6 +9,7 @@ const invitations = vi.hoisted(() => ({
   inviterLesNonInvites: vi.fn(),
   verifierInvitable: vi.fn(),
   desactiverCompteMembre: vi.fn(),
+  reactiverCompteMembre: vi.fn(),
 }));
 const comptes = vi.hoisted(() => ({ changerActivation: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
@@ -96,6 +97,6 @@ describe("desactiverMembre et reactiverMembre", () => {
 
   it("réactive le compte", async () => {
     expect((await reactiverMembre(ID)).ok).toBe(true);
-    expect(comptes.changerActivation).toHaveBeenCalledWith({}, { acteurId: "admin", cibleId: ID, actif: true });
+    expect(invitations.reactiverCompteMembre).toHaveBeenCalledWith({}, ID);
   });
 });

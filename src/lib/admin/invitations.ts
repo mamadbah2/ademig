@@ -3,9 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
-import { changerActivation } from "@/db/operations/comptes";
 import { ErreurMetier } from "@/db/operations/erreurs";
-import { desactiverCompteMembre, genererLienInvitation, inviterLesNonInvites, inviterParEmail, verifierInvitable } from "@/db/operations/invitations";
+import { desactiverCompteMembre, genererLienInvitation, inviterLesNonInvites, inviterParEmail, reactiverCompteMembre, verifierInvitable } from "@/db/operations/invitations";
 import { action } from "@/lib/admin/action";
 import type { Resultat } from "@/lib/admin/resultat";
 import { urlActivation } from "@/lib/membres/url";
@@ -60,8 +59,8 @@ export async function desactiverMembre(userId: string): Promise<Resultat> {
 }
 
 export async function reactiverMembre(userId: string): Promise<Resultat> {
-  return action("superadmin", async (session) => {
-    await changerActivation(db, { acteurId: session.userId, cibleId: lireId(userId), actif: true });
+  return action("superadmin", async () => {
+    await reactiverCompteMembre(db, lireId(userId));
     revalidatePath("/admin/membres");
     return { ok: true, message: "Compte réactivé." };
   });

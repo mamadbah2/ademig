@@ -40,6 +40,8 @@ export const user = pgTable("user", {
     .notNull(),
   role: text("role").default("editeur").notNull(),
   actif: boolean("actif").default(true).notNull(),
+  // Désactivé par un admin (compte membre) : bloque activation et invitations, quel que soit `actif`.
+  desactiveLe: timestamp("desactive_le", { withTimezone: true }),
 });
 
 export const session = pgTable(

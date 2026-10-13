@@ -29,6 +29,13 @@
       "when": 1791891376206,
       "tag": "0003_invitation_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791896346028,
+      "tag": "0004_compte_desactive",
+      "breakpoints": true
     }
   ]
 }

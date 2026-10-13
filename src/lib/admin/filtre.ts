@@ -1,4 +1,4 @@
-export const FILTRES_COMPTE = ["a_inviter", "en_file", "invite", "active", "echec"] as const;
+export const FILTRES_COMPTE = ["a_inviter", "en_file", "invite", "active", "echec", "desactive"] as const;
 export type FiltreCompte = (typeof FILTRES_COMPTE)[number];
 
 export type Filtre = { q: string; statut?: "brouillon" | "publie"; compte?: FiltreCompte; page: number };

@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "desactive_le" timestamp with time zone;

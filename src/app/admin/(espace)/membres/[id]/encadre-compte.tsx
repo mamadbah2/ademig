@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { BadgeCompte } from "@/components/admin/badge-compte";
 import { BoutonConfirmation } from "@/components/admin/confirmation";
-import { Alerte, Badge, Bouton } from "@/components/admin/ui";
+import { Alerte, Bouton } from "@/components/admin/ui";
 import type { CompteDuMembre } from "@/db/requetes/admin/membres";
 import { copierLienInvitation, desactiverMembre, reactiverMembre, renvoyerInvitationMembre } from "@/lib/admin/invitations";
 import type { Resultat } from "@/lib/admin/resultat";
@@ -54,7 +54,6 @@ export function EncadreCompte({ compte, nom }: { compte: CompteDuMembre; nom: st
         </h2>
         <div className="flex flex-wrap gap-2">
           <BadgeCompte suivi={compte.suivi} />
-          {compte.desactive && <Badge ton="rouge">Désactivé</Badge>}
         </div>
       </div>
       <p className="mt-2 break-all">{compte.email}</p>

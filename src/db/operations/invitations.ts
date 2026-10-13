@@ -1,5 +1,5 @@
 import { hashPassword } from "better-auth/crypto";
-import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { contenuInvitationMembre } from "@/lib/emails";
@@ -36,6 +36,7 @@ export async function inviterParEmail(
   if (!compte) throw new ErreurMetier("Compte introuvable.");
   const fiche = await db.query.membres.findFirst({ where: eq(membres.userId, userId), columns: { nom: true } });
   await db.transaction(async (tx) => {
+    await verifierInvitable(tx, userId);
     // « Renvoyer » : l'ancien email encore en file porterait un lien désormais mort.
     await tx
       .delete(emailsFile)
@@ -47,73 +48,70 @@ export async function inviterParEmail(
   });
 }
 
-export type EtatCompte = { actif: boolean; aMotDePasse: boolean; revoquee: boolean; desactive: boolean };
+export type EtatCompte = { actif: boolean; aMotDePasse: boolean; desactive: boolean };
 
-// Un compte jamais activé est « actif = faux » dès l'import : seul un « Désactiver » le distingue, par une
-// invitation « consommée » sans mot de passe (une vraie activation crée toujours un mot de passe).
 export async function etatCompte(db: Db, userId: string): Promise<EtatCompte | null> {
-  const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { actif: true } });
+  const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { actif: true, desactiveLe: true } });
   if (!compte) return null;
   const mdp = await db.query.account.findFirst({
     where: and(eq(account.userId, userId), eq(account.providerId, "credential")),
     columns: { id: true },
   });
-  const consommee = mdp
-    ? undefined
-    : await db.query.invitations.findFirst({
-        where: and(eq(invitations.userId, userId), isNotNull(invitations.utiliseeLe)),
-        columns: { id: true },
-      });
-  const aMotDePasse = Boolean(mdp);
-  const revoquee = Boolean(consommee);
-  return { actif: compte.actif, aMotDePasse, revoquee, desactive: !compte.actif && (aMotDePasse || revoquee) };
+  return { actif: compte.actif, aMotDePasse: Boolean(mdp), desactive: compte.desactiveLe !== null };
 }
 
 // Une invitation active le compte (et le réactive) : on ne l'envoie qu'à un compte jamais activé ni désactivé.
+// Dans une transaction, la ligne du compte est verrouillée : un « Désactiver » simultané attend, puis est vu.
 export async function verifierInvitable(db: Db, userId: string): Promise<void> {
+  if ("rollback" in db) await db.execute(sql`select 1 from ${user} where ${user.id} = ${userId} for update`);
   const etat = await etatCompte(db, userId);
   if (!etat) throw new ErreurMetier("Compte introuvable.");
-  if (etat.aMotDePasse && etat.actif) throw new ErreurMetier("Ce compte est déjà activé.");
-  if (etat.desactive) throw new ErreurMetier("Ce compte est désactivé : réactivez-le avant de renvoyer une invitation.");
+  if (etat.desactive || (etat.aMotDePasse && !etat.actif)) {
+    throw new ErreurMetier("Ce compte est désactivé : réactivez-le avant de renvoyer une invitation.");
+  }
+  if (etat.aMotDePasse) throw new ErreurMetier("Ce compte est déjà activé.");
 }
 
-// Désactive le compte ; pour un compte pas encore activé, l'invitation en cours et l'email en file sont retirés,
+// Désactive le compte (une transaction) : sessions fermées, invitation en cours et email en file retirés,
 // sinon le lien déjà envoyé le réactiverait.
 export async function desactiverCompteMembre(db: Db, p: { acteurId: string; cibleId: string }): Promise<void> {
   await db.transaction(async (tx) => {
     await changerActivation(tx, { ...p, actif: false });
+    await tx.update(user).set({ desactiveLe: new Date() }).where(eq(user.id, p.cibleId));
+    await tx.delete(session).where(eq(session.userId, p.cibleId));
     await tx.delete(invitations).where(and(eq(invitations.userId, p.cibleId), isNull(invitations.utiliseeLe)));
     await tx
       .delete(emailsFile)
       .where(and(eq(emailsFile.userId, p.cibleId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
+  });
+}
+
+// Un compte jamais activé (sans mot de passe) redevient inactif et « à inviter » : il n'entre ni dans
+// l'annuaire ni dans les comptes actifs, et son historique d'envoi est effacé.
+export async function reactiverCompteMembre(db: Db, userId: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    await verifierExiste(tx, userId);
     const mdp = await tx.query.account.findFirst({
-      where: and(eq(account.userId, p.cibleId), eq(account.providerId, "credential")),
+      where: and(eq(account.userId, userId), eq(account.providerId, "credential")),
       columns: { id: true },
     });
+    await tx.update(user).set({ desactiveLe: null, actif: Boolean(mdp) }).where(eq(user.id, userId));
     if (!mdp) {
-      const deja = await tx.query.invitations.findFirst({
-        where: and(eq(invitations.userId, p.cibleId), isNotNull(invitations.utiliseeLe)),
-        columns: { id: true },
-      });
-      if (!deja) {
-        const maintenant = new Date();
-        await tx.insert(invitations).values({
-          userId: p.cibleId,
-          jetonHash: `revoquee-${crypto.randomUUID()}`,
-          expireLe: maintenant,
-          utiliseeLe: maintenant,
-          creeLe: maintenant,
-        });
-      }
+      await tx.delete(emailsFile).where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation")));
+      await tx.delete(invitations).where(and(eq(invitations.userId, userId), isNull(invitations.utiliseeLe)));
     }
   });
 }
 
-// Nouveau lien à transmettre à la main : l'ancien lien meurt et l'email encore en file, qui le porterait, est retiré.
-export async function genererLienInvitation(db: Db, userId: string): Promise<{ jeton: string }> {
+async function verifierExiste(db: Db, userId: string) {
   const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { id: true } });
   if (!compte) throw new ErreurMetier("Compte introuvable.");
+}
+
+// Nouveau lien à transmettre à la main : l'ancien lien meurt et l'email encore en file, qui le porterait, est retiré.
+export async function genererLienInvitation(db: Db, userId: string): Promise<{ jeton: string }> {
   return db.transaction(async (tx) => {
+    await verifierInvitable(tx, userId);
     await tx
       .delete(emailsFile)
       .where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
@@ -121,23 +119,26 @@ export async function genererLienInvitation(db: Db, userId: string): Promise<{ j
   });
 }
 
-// Rattrapage : met en file une invitation pour chaque compte de fiche sans mot de passe et jamais invité.
+// Rattrapage : met en file une invitation pour chaque compte de fiche sans mot de passe, jamais invité et non désactivé.
 export async function inviterLesNonInvites(db: Db, urlActivation: (jeton: string) => string): Promise<number> {
-  const fiches = await db.select({ userId: membres.userId }).from(membres).where(isNotNull(membres.userId));
+  const fiches = await db
+    .select({ userId: membres.userId })
+    .from(membres)
+    .innerJoin(user, eq(user.id, membres.userId))
+    .where(isNull(user.desactiveLe));
   const suivi = await suiviInvitations(db, fiches.map((f) => f.userId!));
-  // Hors comptes déjà dotés d'un mot de passe (désactivés : rubrique Comptes) et hors comptes désactivés par un admin.
-  const avecMotDePasse = new Set(
-    (await db.select({ userId: account.userId }).from(account).where(eq(account.providerId, "credential"))).map((a) => a.userId),
-  );
-  const revoques = new Set(
-    (await db.select({ userId: invitations.userId }).from(invitations).where(isNotNull(invitations.utiliseeLe))).map((i) => i.userId),
-  );
-  const actifs = new Set((await db.select({ id: user.id }).from(user).where(eq(user.actif, true))).map((u) => u.id));
-  const cibles = [...suivi.values()].filter(
-    (s) => s.statut === "a_inviter" && !avecMotDePasse.has(s.userId) && !(revoques.has(s.userId) && !actifs.has(s.userId)),
-  );
-  for (const { userId } of cibles) await inviterParEmail(db, userId, urlActivation);
-  return cibles.length;
+  const cibles = [...suivi.values()].filter((s) => s.statut === "a_inviter");
+  let invites = 0;
+  for (const { userId } of cibles) {
+    try {
+      await inviterParEmail(db, userId, urlActivation);
+      invites++;
+    } catch (e) {
+      // Désactivé ou activé entre-temps : ignoré.
+      if (!(e instanceof ErreurMetier)) throw e;
+    }
+  }
+  return invites;
 }
 
 export type EtatJeton =
@@ -168,6 +169,8 @@ export async function activerCompte(
     if (!inv) throw new ErreurMetier("Ce lien n'est plus valable : demandez-en un nouveau au bureau.");
     if (inv.utiliseeLe) throw new ErreurMetier(DEJA_SERVI);
     if (inv.expireLe < maintenant) throw new ErreurMetier("Ce lien a expiré : demandez-en un nouveau au bureau.");
+    const cible = await tx.query.user.findFirst({ where: eq(user.id, inv.userId), columns: { desactiveLe: true } });
+    if (cible?.desactiveLe) throw new ErreurMetier("Ce compte a été désactivé : contactez le bureau.");
     if (motDePasse.length < 12) throw new ErreurMetier("12 caractères au minimum.", "motDePasse");
     if (motDePasse.length > 128) throw new ErreurMetier("128 caractères au maximum.", "motDePasse");
     // Verrou : deux clics simultanés ne consomment pas deux fois le jeton.
@@ -215,7 +218,7 @@ export async function activerCompte(
 
 export type SuiviInvitation = {
   userId: string;
-  statut: "a_inviter" | "en_file" | "invite" | "echec" | "active";
+  statut: "a_inviter" | "en_file" | "invite" | "echec" | "active" | "desactive";
   le: Date | null;
   erreur: string | null;
 };
@@ -225,7 +228,7 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
   if (userIds.length === 0) return suivi;
 
   const [comptes, credentials, emails, invs] = await Promise.all([
-    db.select({ id: user.id, actif: user.actif }).from(user).where(inArray(user.id, userIds)),
+    db.select({ id: user.id, actif: user.actif, desactiveLe: user.desactiveLe }).from(user).where(inArray(user.id, userIds)),
     db
       .select({ userId: account.userId })
       .from(account)
@@ -241,6 +244,7 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
       .from(invitations)
       .where(and(inArray(invitations.userId, userIds), isNull(invitations.utiliseeLe))),
   ]);
+  const desactives = new Map(comptes.filter((c) => c.desactiveLe).map((c) => [c.id, c.desactiveLe!]));
   const actifs = new Set(comptes.filter((c) => c.actif).map((c) => c.id));
   const avecMotDePasse = new Set(credentials.map((c) => c.userId));
   // Triés du plus récent au plus ancien : le premier email rencontré par compte est le dernier envoyé.
@@ -261,7 +265,8 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
     const email = dernierEmail.get(userId);
     const invitation = derniereInvitation.get(userId);
     let s: SuiviInvitation = { userId, statut: "a_inviter", le: null, erreur: null };
-    if (avecMotDePasse.has(userId) && actifs.has(userId)) s = { userId, statut: "active", le: null, erreur: null };
+    if (desactives.has(userId)) s = { userId, statut: "desactive", le: desactives.get(userId)!, erreur: null };
+    else if (avecMotDePasse.has(userId) && actifs.has(userId)) s = { userId, statut: "active", le: null, erreur: null };
     else if (email?.statut === "a_envoyer") s = { userId, statut: "en_file", le: email.creeLe, erreur: email.erreur };
     else if (email?.statut === "envoye") s = { userId, statut: "invite", le: email.envoyeLe, erreur: null };
     else if (email?.statut === "echec") s = { userId, statut: "echec", le: email.creeLe, erreur: email.erreur };

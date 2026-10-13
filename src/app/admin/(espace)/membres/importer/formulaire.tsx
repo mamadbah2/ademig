@@ -179,6 +179,12 @@ function Import({ recommencer }: { recommencer: () => void }) {
           accept=".csv,text/csv"
           required
           aria-describedby="fichier-aide"
+          onChange={(e) => {
+            // Le navigateur bloque l'envoi et affiche ce message ; le serveur refait la même vérification.
+            const gros = (e.currentTarget.files?.[0]?.size ?? 0) > 1024 * 1024;
+            e.currentTarget.setCustomValidity(gros ? "Ce fichier dépasse 1 Mo : divisez-le en plusieurs fichiers." : "");
+            if (gros) e.currentTarget.reportValidity();
+          }}
           className="mt-1 block min-h-11 w-full border-[1.5px] border-encre bg-white px-3 py-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-moutarde"
         />
         <p id="fichier-aide" className="mt-1 text-sm">

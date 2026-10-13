@@ -18,6 +18,8 @@ export function BadgeCompte({ suivi }: { suivi: SuiviInvitation }) {
           Échec
         </Badge>
       );
+    case "desactive":
+      return <Badge ton="rouge">Désactivé</Badge>;
     case "active":
       return <Badge ton="vert">Activé</Badge>;
   }
@@ -29,4 +31,5 @@ export const LIBELLES_FILTRE_COMPTE = {
   invite: "Invités",
   active: "Activés",
   echec: "En échec",
+  desactive: "Désactivés",
 } as const;

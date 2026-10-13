@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
-import { changerActivation, creerCompte, creerCompteAvecMotDePasse } from "./comptes";
+import { creerCompte, creerCompteAvecMotDePasse } from "./comptes";
 import { ErreurMetier } from "./erreurs";
 import {
   activerCompte,
@@ -14,6 +14,7 @@ import {
   genererLienInvitation,
   inviterLesNonInvites,
   inviterParEmail,
+  reactiverCompteMembre,
   suiviInvitations,
   verifierInvitable,
   verifierJeton,
@@ -220,15 +221,28 @@ describe("désactivation d'un compte pas encore activé", () => {
     await desactiverCompteMembre(db, { acteurId: admin.id, cibleId: id });
     expect(await db.select().from(emailsFile)).toHaveLength(0);
     await expect(activerCompte(db, jetonDe(email.html), "motdepasse-solide")).rejects.toBeInstanceOf(ErreurMetier);
+    // Même un jeton créé avant la désactivation (course) ne sert pas.
+    await db.update(user).set({ desactiveLe: null }).where(eq(user.id, id));
+    const { jeton } = await creerInvitation(db, id);
+    await db.update(user).set({ desactiveLe: new Date() }).where(eq(user.id, id));
+    await expect(activerCompte(db, jeton, "motdepasse-solide")).rejects.toThrow(/désactivé/);
     expect((await etatCompte(db, id))?.desactive).toBe(true);
     await expect(verifierInvitable(db, id)).rejects.toThrow(/désactivé/);
+    await expect(inviterParEmail(db, id, url)).rejects.toThrow(/désactivé/);
+    await expect(genererLienInvitation(db, id)).rejects.toThrow(/désactivé/);
     expect(await inviterLesNonInvites(db, url)).toBe(0);
     expect(await db.select().from(emailsFile)).toHaveLength(0);
 
-    await changerActivation(db, { acteurId: admin.id, cibleId: id, actif: true });
-    expect((await etatCompte(db, id))?.desactive).toBe(false);
+    expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("desactive");
+
+    await reactiverCompteMembre(db, id);
+    expect((await etatCompte(db, id))).toMatchObject({ desactive: false, actif: false, aMotDePasse: false });
+    expect((await db.select({ actif: user.actif }).from(user).where(eq(user.id, id)))[0].actif).toBe(false);
+    expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("a_inviter");
     await expect(verifierInvitable(db, id)).resolves.toBeUndefined();
-    expect(await inviterLesNonInvites(db, url)).toBe(1);
+    await inviterParEmail(db, id, url, { prioritaire: true });
+    expect(await db.select().from(emailsFile)).toHaveLength(1);
+    expect(await inviterLesNonInvites(db, url)).toBe(0);
   });
 });
 
