@@ -56,6 +56,8 @@ export default async function Accueil() {
   const t = fusionnerTextes(reglages.textes);
   const diapositives = choisirDiaposHero({ actualites, evenements, maintenant: new Date() });
   const aLaUne = diapositives.some((d) => d.une);
+  // Plusieurs photos d'une même actualité : « Actualité 1, 2, 3 » n'apprendrait rien, les repères restent muets.
+  const reperesNommes = new Set(diapositives.map((d) => d.une?.href ?? d.src)).size > 1;
   const faq = faqAffichee(reglages.faq);
 
   return (
@@ -87,34 +89,52 @@ export default async function Accueil() {
           <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-papier to-transparent" />
         </div>
 
-        <div className="w-full px-5 pt-10 pb-28 sm:px-10 sm:py-14 lg:px-16 2xl:px-24">
+        <div className="w-full px-5 pt-4 pb-16 sm:px-10 sm:py-14 lg:px-16 2xl:px-24">
           <div data-cadre="hero" data-hero="texte" className="max-w-3xl">
-            {/* Médaillon papier : le logo garde ses couleurs sur n'importe quelle photo. */}
+            {/* Médaillon papier : le logo garde ses couleurs sur n'importe quelle photo. Il porte le sigle. */}
             <div
               data-hero="logo"
-              className="mb-5 inline-block rounded-2xl bg-papier px-3 py-2 shadow-[0_8px_24px_-6px_rgb(22_65_93/0.35)] sm:mb-8 sm:px-4 sm:py-3"
+              className="mb-4 inline-block rounded-2xl bg-papier px-3 py-2 shadow-[0_8px_24px_-6px_rgb(22_65_93/0.35)] sm:mb-8 sm:px-4 sm:py-3"
             >
-              <Logo alt="" priority className="h-14 w-auto sm:h-20" />
+              <Logo alt={site.name} priority className="h-12 w-auto sm:h-20" />
             </div>
+            {/* Sur mobile, la taille suit la largeur de l'écran pour que le nom complet reste compact. */}
             <h1
               data-hero="titre"
-              className="font-titre text-[2.2rem] leading-[1.05] text-balance sm:text-5xl xl:text-6xl"
+              className="font-titre text-[clamp(1.5rem,8vw,2.2rem)] leading-[1.08] text-balance sm:text-5xl sm:leading-[1.05] xl:text-6xl"
             >
               {t["accueil.accroche"]}
             </h1>
-            <Etiquette className="mt-6 sm:text-lg">{site.name}</Etiquette>
-            <div data-hero="boutons" className="mt-8 flex flex-wrap gap-3">
-              <Bouton href="/membres">Découvrir les membres</Bouton>
-              <Bouton href="/amicale" variante="contour">
+            {/* Mobile : l'action principale en pleine largeur, les deux autres côte à côte. */}
+            <div
+              data-hero="boutons"
+              className="mt-6 grid grid-cols-2 gap-2 sm:mt-10 sm:flex sm:flex-wrap sm:gap-3"
+            >
+              <Bouton href="/membres" className="col-span-2 px-5 py-3 text-center">
+                Découvrir les membres
+              </Bouton>
+              <Bouton
+                href="/amicale"
+                variante="contour"
+                className="px-2 py-2.5 text-center text-sm sm:px-5 sm:py-3 sm:text-base"
+              >
                 Connaître l&apos;amicale
               </Bouton>
-              <Bouton href={site.ecole.url} variante="contour" externe>
-                Site de l&apos;{site.ecole.nom} <span aria-hidden>↗</span>
+              <Bouton
+                href={site.ecole.url}
+                variante="contour"
+                externe
+                className="px-2 py-2.5 text-center text-sm sm:px-5 sm:py-3 sm:text-base"
+              >
+                Site de{" "}
+                <span className="whitespace-nowrap">
+                  l&apos;{site.ecole.nom} <span aria-hidden>↗</span>
+                </span>
               </Bouton>
             </div>
             {aLaUne && (
               // Une légende par photo, superposées : le diaporama montre celle de la photo affichée.
-              <div data-hero="une" className="mt-8 grid grid-cols-[minmax(0,1fr)]">
+              <div data-hero="une" className="mt-4 grid grid-cols-[minmax(0,1fr)] sm:mt-8">
                 {diapositives.map((d, i) =>
                   d.une ? (
                     <Link
@@ -123,9 +143,9 @@ export default async function Accueil() {
                       data-hero-une
                       aria-hidden={i === 0 ? undefined : true}
                       tabIndex={i === 0 ? undefined : -1}
-                      className={`group inline-flex max-w-full items-center gap-2 justify-self-start border-[1.5px] border-encre bg-papier/90 py-1.5 pr-3 pl-1.5 text-sm [grid-area:1/1] sm:text-base ${i === 0 ? "" : "invisible opacity-0"}`}
+                      className={`group inline-flex max-w-full items-center gap-2 justify-self-start border-[1.5px] border-encre bg-papier/90 py-1 pr-2.5 pl-1 text-[0.8125rem] [grid-area:1/1] sm:py-1.5 sm:pr-3 sm:pl-1.5 sm:text-base ${i === 0 ? "" : "invisible opacity-0"}`}
                     >
-                      <span className="shrink-0 bg-eau px-2 py-0.5 font-bold">À la une</span>
+                      <span className="shrink-0 bg-eau px-1.5 py-0.5 font-bold sm:px-2">À la une</span>
                       <span className="min-w-0 truncate font-bold group-hover:underline">{d.une.titre}</span>
                       <span aria-hidden>→</span>
                     </Link>
@@ -138,30 +158,26 @@ export default async function Accueil() {
           </div>
         </div>
 
-        {/* Repère du diaporama : l'univers affiché et sa progression. */}
-        <ol
-          aria-hidden
-          data-hero="reperes"
-          className="absolute right-5 bottom-10 flex gap-4 sm:right-10 lg:right-16 2xl:right-24"
-        >
-          {diapositives.map((d) => (
-            <li
-              key={d.src}
-              data-hero-repere
-              className="w-20 opacity-60 sm:w-28"
-            >
-              <span className="block h-[3px] bg-encre/25">
-                <span
-                  data-hero-jauge
-                  className="block h-full origin-left scale-x-0 bg-marine"
-                />
-              </span>
-              <span className="font-titre mt-1.5 block text-sm sm:text-base">
-                {d.univers}
-              </span>
-            </li>
-          ))}
-        </ol>
+        {/* Repère du diaporama : la photo affichée et sa progression. Sur mobile, de simples traits sans libellé. */}
+        {diapositives.length > 1 && (
+          <ol
+            role="img"
+            aria-label={`Diaporama de ${diapositives.length} photos`}
+            data-hero="reperes"
+            className="absolute right-5 bottom-6 flex gap-2 sm:right-10 sm:bottom-10 sm:gap-4 lg:right-16 2xl:right-24"
+          >
+            {diapositives.map((d) => (
+              <li key={d.src} data-hero-repere className="w-7 opacity-60 sm:w-28">
+                <span className="block h-[3px] bg-encre/25">
+                  <span data-hero-jauge className="block h-full origin-left scale-x-0 bg-marine" />
+                </span>
+                {reperesNommes && (
+                  <span className="font-titre mt-1.5 hidden text-base sm:block">{d.univers}</span>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
 
       <Cadre aria-labelledby="devise">

@@ -225,7 +225,6 @@ function animerHero(nettoyages: (() => void)[]) {
   const fond = scene.querySelector<HTMLElement>("[data-hero-fond]");
   if (!titre || !texte || !fond) return;
 
-  const etiquette = texte.querySelector(":scope > span");
   const boutons = scene.querySelectorAll('[data-hero="boutons"] > *');
   const diapos = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-diapo]"));
   const reperes = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-repere]"));
@@ -233,13 +232,23 @@ function animerHero(nettoyages: (() => void)[]) {
   const logo = q("logo");
   const une = q("une");
   const legendes = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-une]"));
-  const split = SplitText.create(titre, { type: "words,chars" });
+  // Sur un petit écran, le titre est long et occupe tout l'écran : il monte mot par mot, vite,
+  // au lieu de lettres dispersées illisibles pendant plusieurs secondes.
+  const petitEcran = window.matchMedia("(max-width: 767px)").matches;
+  const split = petitEcran
+    ? SplitText.create(titre, { type: "lines,words", mask: "lines", linesClass: "ligne" })
+    : SplitText.create(titre, { type: "words,chars" });
 
   // 1. Entrée : le paysage se pose, les lettres tombent comme des blocs et soulèvent des pépites.
   const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-  tl.set(texte, { opacity: 1 })
-    .fromTo(fond, { scale: 1.18 }, { scale: 1, duration: 2.6, ease: "power3.out" }, 0)
-    .from(
+  tl.set(texte, { opacity: 1 }).fromTo(fond, { scale: 1.18 }, { scale: 1, duration: 2.6, ease: "power3.out" }, 0);
+  if (petitEcran) {
+    tl.from(split.words, { yPercent: 100, opacity: 0, duration: 0.55, stagger: 0.025 }, 0.15).add(() => {
+      const r = titre.getBoundingClientRect();
+      eclats(r.left + r.width * 0.4, r.bottom, 12, 700);
+    }, 0.6);
+  } else {
+    tl.from(
       split.chars,
       {
         y: () => gsap.utils.random(-320, -140),
@@ -250,19 +259,33 @@ function animerHero(nettoyages: (() => void)[]) {
         stagger: { each: 0.022, from: "random" },
       },
       0.1,
-    )
-    .add(() => {
+    ).add(() => {
       const r = titre.getBoundingClientRect();
       eclats(r.left + r.width * 0.35, r.bottom, 22, 800);
-    }, 0.75)
-    .from(etiquette, { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "power3.inOut" }, 0.9)
-    .from(boutons, { y: 26, opacity: 0, duration: 0.6, stagger: 0.1 }, 1.15);
+    }, 0.75);
+  }
+  tl.from(boutons, { y: 26, opacity: 0, duration: 0.6, stagger: 0.1 }, petitEcran ? 0.55 : 1.15);
   // Le médaillon du logo se pose en premier, comme un sceau.
   if (logo) {
     tl.from(logo, { y: -40, scale: 0.6, rotation: -12, opacity: 0, duration: 0.9, ease: "back.out(2.2)" }, 0);
   }
-  if (une) tl.from(une, { x: -30, opacity: 0, duration: 0.6 }, 1.35);
-  if (reperes.length) tl.from(reperes, { y: 20, opacity: 0, duration: 0.6, stagger: 0.08 }, 1.3);
+  if (une) tl.from(une, { x: -30, opacity: 0, duration: 0.6 }, petitEcran ? 0.8 : 1.35);
+  if (reperes.length) {
+    tl.from(reperes, { y: 20, opacity: 0, duration: 0.6, stagger: 0.08 }, petitEcran ? 0.8 : 1.3);
+  }
+
+  // Sur mobile, le rail du wagonnet traverserait les boutons en bas du hero : il n'apparaît
+  // qu'une fois le hero en partie défilé.
+  const rail = document.querySelector<HTMLElement>(".rail");
+  if (petitEcran && rail) {
+    gsap.set(rail, { autoAlpha: 0 });
+    ScrollTrigger.create({
+      trigger: scene,
+      start: "35% top",
+      onEnter: () => gsap.to(rail, { autoAlpha: 1, duration: 0.3, overwrite: true }),
+      onLeaveBack: () => gsap.to(rail, { autoAlpha: 0, duration: 0.3, overwrite: true }),
+    });
+  }
 
   // 2. Diaporama : chaque univers reste six secondes, avec un lent zoom arrière et un fondu.
   if (diapos.length > 1) {
