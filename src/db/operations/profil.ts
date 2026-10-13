@@ -6,9 +6,18 @@ import type { Liens } from "@/lib/content/types";
 import { depuisVisibilite, type Visibilite, versVisibilite } from "@/lib/membres/visibilite";
 import type { schemaProfil } from "@/lib/membres/profil";
 import { ErreurMetier } from "./erreurs";
-import { creerMedia, supprimerMedia, usagesMedia } from "./media";
+import { creerMedia, lireMedia, supprimerMedia, usagesMedia } from "./media";
 
+const PHOTO_PAS_A_VOUS = "Cette photo n'est pas la vôtre : choisissez-en une autre.";
 const SANS_FICHE = "Aucune fiche membre n'est liée à votre compte : contactez le bureau.";
+
+// Le navigateur envoie du WebP, ou du PNG quand il ne sait pas encoder en WebP (Safari).
+function mimeDe(pathname: string): string {
+  const extension = pathname.split(".").pop()?.toLowerCase();
+  if (extension === "png") return "image/png";
+  if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
+  return "image/webp";
+}
 
 export type ProfilMembre = {
   membreId: string;
@@ -70,6 +79,10 @@ export async function modifierProfil(
     let photoId = fiche.photoId;
     let anciennePhoto: string | null = null;
     if (p.photoUrl && p.photoPathname && p.photoLargeur && p.photoHauteur) {
+      // creerMedia est idempotent par adresse : sans ce contrôle, l'adresse du portrait d'un autre membre
+      // (ou d'une image de la médiathèque) serait rattachée à cette fiche.
+      const existant = await tx.query.media.findFirst({ where: eq(media.url, p.photoUrl), columns: { id: true } });
+      if (existant && existant.id !== fiche.photoId) throw new ErreurMetier(PHOTO_PAS_A_VOUS);
       const nouvelle = await creerMedia(
         tx,
         {
@@ -79,7 +92,7 @@ export async function modifierProfil(
           credit: null,
           width: p.photoLargeur,
           height: p.photoHauteur,
-          mime: "image/webp",
+          mime: mimeDe(p.photoPathname),
           taille: null,
         },
         userId,
@@ -113,7 +126,10 @@ export async function modifierProfil(
     if (!anciennePhoto) return { photoRemplacee: null };
     // L'ancienne image peut servir ailleurs (actualité, autre fiche) : on ne la supprime que si plus rien ne l'utilise.
     if ((await usagesMedia(tx, anciennePhoto)).length > 0) return { photoRemplacee: null };
-    const { url, pathname } = await supprimerMedia(tx, anciennePhoto);
-    return { photoRemplacee: pathname ? { url, pathname } : null };
+    // Une image de la médiathèque (hors membres/) reste en place : la fiche s'en détache, c'est tout.
+    const ancienne = await lireMedia(tx, anciennePhoto);
+    if (!ancienne?.pathname?.startsWith("membres/")) return { photoRemplacee: null };
+    await supprimerMedia(tx, anciennePhoto);
+    return { photoRemplacee: { url: ancienne.url, pathname: ancienne.pathname } };
   });
 }

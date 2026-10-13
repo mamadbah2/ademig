@@ -44,3 +44,17 @@ export const schemaNouveauMedia = z.object({
 });
 
 export const schemaMajMedia = z.object({ alt, credit });
+
+// Identifiant de la boutique Blob, lu dans le jeton « vercel_blob_rw_<idBoutique>_<secret> ».
+export function idBoutiqueDuJeton(jeton: string | undefined): string | null {
+  const m = /^vercel_blob_rw_([A-Za-z0-9]+)_/.exec(jeton ?? "");
+  return m ? m[1].toLowerCase() : null;
+}
+
+// Vrai si l'adresse pointe vers NOTRE boutique Blob (https://<idboutique>.public.blob.vercel-storage.com/…) :
+// estUrlBlob accepte n'importe quelle boutique de Vercel.
+export function estUrlDeNotreBoutique(url: string, jeton: string | undefined): boolean {
+  const id = idBoutiqueDuJeton(jeton);
+  if (!id || !estUrlBlob(url)) return false;
+  return new URL(url).hostname.toLowerCase() === `${id}.public.blob.vercel-storage.com`;
+}

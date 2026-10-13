@@ -115,6 +115,53 @@ describe("modifierProfil", () => {
   });
 });
 
+describe("photos : protections", () => {
+  it("refuse la photo d'un autre membre et ne touche à rien", async () => {
+    const db = await creerDbTest();
+    const a = await fiche(db, 1);
+    const b = await fiche(db, 2);
+    await modifierProfil(db, b.userId, saisie(photo(9)));
+    const photoB = (await lire(db, b.membreId)).photoId;
+    await expect(modifierProfil(db, a.userId, saisie({ ...photo(9), resume: "Piraté" }))).rejects.toThrow("Cette photo n'est pas la vôtre");
+    expect((await lire(db, a.membreId)).photoId).toBeNull();
+    expect((await lire(db, a.membreId)).resume).toBe("R");
+    expect((await lire(db, b.membreId)).photoId).toBe(photoB);
+  });
+
+  it("accepte de renvoyer sa propre photo", async () => {
+    const db = await creerDbTest();
+    const a = await fiche(db, 1);
+    await modifierProfil(db, a.userId, saisie(photo(1)));
+    await expect(modifierProfil(db, a.userId, saisie(photo(1)))).resolves.toEqual({ photoRemplacee: null });
+  });
+
+  it("refuse une image de la médiathèque rattachée à personne", async () => {
+    const db = await creerDbTest();
+    const a = await fiche(db, 1);
+    const [m] = await db.insert(media).values({ url: photo(5).photoUrl, pathname: "membres/p5.webp", alt: "x", width: 1, height: 1, mime: "image/webp" }).returning();
+    expect(m).toBeDefined();
+    await expect(modifierProfil(db, a.userId, saisie(photo(5)))).rejects.toThrow(ErreurMetier);
+  });
+
+  it("détache sans effacer une ancienne photo de la médiathèque (hors membres/)", async () => {
+    const db = await creerDbTest();
+    const [m] = await db.insert(media).values({ url: "https://x.public.blob.vercel-storage.com/medias/lib.webp", pathname: "medias/lib.webp", alt: "Lib", width: 1, height: 1, mime: "image/webp" }).returning();
+    const a = await fiche(db, 1, { photoId: m.id });
+    const r = await modifierProfil(db, a.userId, saisie(photo(2)));
+    expect(r).toEqual({ photoRemplacee: null });
+    expect(await db.select().from(media).where(eq(media.id, m.id))).toHaveLength(1);
+    expect((await lire(db, a.membreId)).photoId).not.toBe(m.id);
+  });
+
+  it("déduit le type MIME de l'extension (PNG sur Safari)", async () => {
+    const db = await creerDbTest();
+    const a = await fiche(db, 1);
+    await modifierProfil(db, a.userId, saisie({ ...photo(3), photoUrl: "https://x.public.blob.vercel-storage.com/membres/p3.png", photoPathname: "membres/p3.png" }));
+    const [ligne] = await db.select().from(media).where(eq(media.id, (await lire(db, a.membreId)).photoId!));
+    expect(ligne.mime).toBe("image/png");
+  });
+});
+
 describe("lireProfil", () => {
   it("renvoie la fiche du compte avec sa photo", async () => {
     const db = await creerDbTest();

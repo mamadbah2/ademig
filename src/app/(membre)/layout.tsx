@@ -6,5 +6,5 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 // Même habillage que le site, sans l'écran de chargement : l'espace membre se parcourt page à page.
 export default function LayoutMembre({ children }: { children: ReactNode }) {
-  return <CoquilleSite chargement={false}>{children}</CoquilleSite>;
+  return <CoquilleSite chargement={false} rail={false}>{children}</CoquilleSite>;
 }

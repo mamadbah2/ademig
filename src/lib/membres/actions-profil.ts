@@ -8,7 +8,7 @@ import { modifierProfil } from "@/db/operations/profil";
 import { lireFormulaire, type Resultat, resultatDErreur } from "@/lib/admin/resultat";
 import { TAGS } from "@/lib/content/tags";
 import { exigerMembre } from "@/lib/session";
-import { estUrlBlob } from "@/lib/validation/media";
+import { estUrlBlob, estUrlDeNotreBoutique } from "@/lib/validation/media";
 import { schemaProfil } from "./profil";
 
 const SANS_FICHE = "Aucune fiche membre n'est liée à votre compte : contactez le bureau.";
@@ -35,10 +35,16 @@ export async function enregistrerProfil(_etat: Resultat | null, donnees: FormDat
     return saisie.resultat;
   }
 
+  // estUrlBlob accepte toute boutique Blob : le portrait doit venir de la nôtre. Le fichier d'une autre n'est jamais touché.
+  if (saisie.data.photoUrl && !estUrlDeNotreBoutique(saisie.data.photoUrl, process.env.BLOB_READ_WRITE_TOKEN)) {
+    return { ok: false, message: "Photo inattendue : choisissez-la de nouveau.", erreurs: { photoUrl: ["Photo inattendue : choisissez-la de nouveau."] } };
+  }
+
   try {
     const r = await modifierProfil(db, m.userId, saisie.data);
     // Une panne d'effacement ne doit pas faire échouer un profil déjà enregistré.
-    if (r?.photoRemplacee) {
+    // Seuls les portraits (membres/) sont effacés ; l'ancienne photo d'une autre origine n'est jamais dans ce cas.
+    if (r?.photoRemplacee?.pathname.startsWith("membres/")) {
       try {
         await del(r.photoRemplacee.url);
       } catch (erreur) {

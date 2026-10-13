@@ -549,7 +549,8 @@ function lancerChargement(lenis: Lenis | null) {
   }
 }
 
-export function Animations() {
+// `rail: false` : pas de rail ni de wagonnet (l'espace membre y met sa barre d'onglets fixe).
+export function Animations({ rail = true }: { rail?: boolean }) {
   const pathname = usePathname();
   const lenis = useRef<Lenis | null>(null);
   const curseur = useRef<HTMLSpanElement>(null);
@@ -640,10 +641,12 @@ export function Animations() {
   return (
     <>
       <span ref={curseur} aria-hidden className="curseur" />
-      <div aria-hidden className="rail">
-        {/* eslint-disable-next-line @next/next/no-img-element -- SVG décoratif */}
-        <img ref={wagon} src="/illustrations/wagon.svg" alt="" width={190} height={167} />
-      </div>
+      {rail && (
+        <div aria-hidden className="rail">
+          {/* eslint-disable-next-line @next/next/no-img-element -- SVG décoratif */}
+          <img ref={wagon} src="/illustrations/wagon.svg" alt="" width={190} height={167} />
+        </div>
+      )}
     </>
   );
 }

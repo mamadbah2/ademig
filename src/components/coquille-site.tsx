@@ -17,10 +17,13 @@ const amorceAnimations = `(function(){var d=document.documentElement;if(matchMed
 export async function CoquilleSite({
   children,
   chargement = true,
+  rail = true,
 }: {
   children: ReactNode;
   // Écran de chargement : réservé au site public.
   chargement?: boolean;
+  // Rail et wagonnet de progression, fixés en bas de l'écran : absents de l'espace membre.
+  rail?: boolean;
 }) {
   const apercu = (await draftMode()).isEnabled;
   const { contact, reseaux } = await getReglages();
@@ -67,7 +70,7 @@ export async function CoquilleSite({
         {children}
       </main>
       <SiteFooter />
-      <Animations />
+      <Animations rail={rail} />
       {apercu && <BandeauApercu />}
     </>
   );

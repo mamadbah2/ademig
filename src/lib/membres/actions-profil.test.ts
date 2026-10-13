@@ -17,6 +17,7 @@ import { enregistrerProfil } from "./actions-profil";
 
 const MEMBRE = { userId: "u1", nom: "Awa", email: "a@ademig.test", role: "membre", membreId: "fiche-1" };
 const URL_BLOB = "https://x.public.blob.vercel-storage.com/membres/p-abc.webp";
+process.env.BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_X_secret";
 
 function formulaire(champs: Record<string, string> = {}) {
   const f = new FormData();
@@ -95,6 +96,29 @@ describe("enregistrerProfil", () => {
 
   it("ne supprime jamais un fichier hors du dossier membres/", async () => {
     await enregistrerProfil(null, formulaire({ linkedin: "x", photoUrl: "https://x.public.blob.vercel-storage.com/medias/logo.webp" }));
+    expect(blob.del).not.toHaveBeenCalled();
+  });
+
+  it("refuse une photo d'une autre boutique Blob, sans rien écrire ni effacer", async () => {
+    const r = await enregistrerProfil(
+      null,
+      formulaire({ photoUrl: "https://autre.public.blob.vercel-storage.com/membres/p.webp", photoPathname: "membres/p.webp", photoLargeur: "800", photoHauteur: "800" }),
+    );
+    expect(r.ok).toBe(false);
+    expect(ops.modifierProfil).not.toHaveBeenCalled();
+    expect(blob.del).not.toHaveBeenCalled();
+  });
+
+  it("n'efface jamais un ancien fichier hors de membres/", async () => {
+    ops.modifierProfil.mockResolvedValue({ photoRemplacee: { url: "https://x.public.blob.vercel-storage.com/medias/a.webp", pathname: "medias/a.webp" } });
+    await enregistrerProfil(null, formulaire());
+    expect(blob.del).not.toHaveBeenCalled();
+  });
+
+  it("ne supprime pas la photo d'un autre membre quand l'enregistrement est refusé", async () => {
+    ops.modifierProfil.mockRejectedValue(new ErreurMetier("Cette photo n'est pas la vôtre : choisissez-en une autre."));
+    media.mediaExiste.mockResolvedValue(true);
+    await enregistrerProfil(null, formulaire({ photoUrl: URL_BLOB, photoPathname: "membres/p-abc.webp", photoLargeur: "800", photoHauteur: "800" }));
     expect(blob.del).not.toHaveBeenCalled();
   });
 });

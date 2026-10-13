@@ -53,7 +53,7 @@ export function NavigationMembre() {
   return (
     <nav aria-label="Espace membre">
       <ul className="mx-auto mt-6 hidden max-w-6xl border-[1.5px] border-encre bg-papier md:flex">{onglets}</ul>
-      <ul className="fixed inset-x-0 bottom-0 z-40 flex border-t-[1.5px] border-encre bg-papier md:hidden">{onglets}</ul>
+      <ul className="fixed inset-x-0 bottom-0 z-40 flex pb-[env(safe-area-inset-bottom)] border-t-[1.5px] border-encre bg-papier md:hidden">{onglets}</ul>
     </nav>
   );
 }
