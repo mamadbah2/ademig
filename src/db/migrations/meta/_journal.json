@@ -15,6 +15,13 @@
       "when": 1791887442643,
       "tag": "0001_reglages_faq",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791890133157,
+      "tag": "0002_espace_membre",
+      "breakpoints": true
     }
   ]
 }

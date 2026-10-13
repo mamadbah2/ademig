@@ -58,7 +58,14 @@ La table `membres` gagne ces colonnes (migration additive) :
 
 - `user_id` : unique, nullable, `references user.id on delete set null` ;
 - `email_contact`, `telephone` : privés, jamais affichés publiquement ;
-- `visibilite` : `publique` | `membres` | `masquee`. Elle remplace l'usage public de `visible` : la migration convertit `visible = true` en `publique` et `false` en `masquee`, et les pages publiques lisent `visibilite = 'publique'`. La colonne `visible` est supprimée seulement dans une migration ultérieure ;
+- `annuaire` : booléen, `true` par défaut. La colonne `visible` existante reste la fiche publique du site ; `annuaire` indique la fiche listée dans l'annuaire privé des membres connectés. Le membre voit trois choix, convertis en deux colonnes :
+
+| Choix | visible | annuaire |
+|---|---|---|
+| `publique` | true | true |
+| `membres` | false | true |
+| `masquee` | false | false |
+
 - `active_le` : date d'activation du compte, qui sert de point de départ aux cotisations ;
 - `numero_membre` : entier unique attribué à l'activation.
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { creerDbTest } from "@/test/db";
-import { mandats, media, reglages, user } from "./schema";
+import { mandats, media, membres, reglages, user } from "./schema";
 
 describe("schéma de la base", () => {
   it("applique les migrations sur une base vide", async () => {
@@ -41,5 +41,27 @@ describe("schéma de la base", () => {
     expect(r.id).toBe(1);
     expect(r.reseaux).toEqual([]);
     expect(r.textes).toEqual({});
+  });
+
+  it("rattache au plus une fiche à un compte, et liste la fiche dans l'annuaire par défaut", async () => {
+    const db = await creerDbTest();
+    await db.insert(user).values({ id: "u-membre", name: "Awa", email: "awa@exemple.sn", role: "membre" });
+    const fiche = (slug: string, userId?: string) => ({
+      slug,
+      nom: slug,
+      titre: "Ingénieur",
+      specialite: "Mines",
+      resume: "Résumé",
+      userId,
+    });
+    await db.insert(membres).values(fiche("sans-compte"));
+    const [libre] = await db.select().from(membres);
+    expect(libre.annuaire).toBe(true);
+    expect(libre.userId).toBeNull();
+
+    await db.insert(membres).values(fiche("avec-compte", "u-membre"));
+    await expect(db.insert(membres).values(fiche("doublon", "u-membre"))).rejects.toMatchObject({
+      cause: { code: "23505" },
+    });
   });
 });

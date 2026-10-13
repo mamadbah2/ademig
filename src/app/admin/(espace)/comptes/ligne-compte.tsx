@@ -6,7 +6,7 @@ import { Alerte, Badge, Bouton, Selection } from "@/components/admin/ui";
 import type { Compte } from "@/db/operations/comptes";
 import { modifierActivation, modifierRole, renvoyerInvitation } from "@/lib/admin/comptes";
 import type { Resultat } from "@/lib/admin/resultat";
-import { LIBELLES_ROLES, ROLES } from "@/lib/roles";
+import { LIBELLES_ROLES, ROLES_ADMIN } from "@/lib/roles";
 
 export function LigneCompte({ compte, estMoi }: { compte: Compte; estMoi: boolean }) {
   const [resultat, setResultat] = useState<Resultat | null>(null);
@@ -34,7 +34,7 @@ export function LigneCompte({ compte, estMoi }: { compte: Compte; estMoi: boolea
           value={compte.role}
           disabled={estMoi || enCours}
           onChange={(e) => executer(() => modifierRole(compte.id, e.target.value))}
-          options={ROLES.map((r) => ({ valeur: r, libelle: LIBELLES_ROLES[r] }))}
+          options={ROLES_ADMIN.map((r) => ({ valeur: r, libelle: LIBELLES_ROLES[r] }))}
           className="w-48"
         />
         {!compte.aMotDePasse && (

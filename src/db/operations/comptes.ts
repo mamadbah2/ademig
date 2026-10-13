@@ -21,6 +21,8 @@ export const normaliserEmail = (email: string) => email.trim().toLowerCase();
 export async function listerComptes(db: Db): Promise<Compte[]> {
   const lignes = await db.query.user.findMany({
     with: { accounts: { columns: { providerId: true } } },
+    // Les membres (rôle `membre`) ne sont pas des comptes d'administration.
+    where: (u, { ne }) => ne(u.role, "membre"),
     orderBy: (u, { asc }) => [asc(u.name)],
   });
   return lignes.map((u) => ({
