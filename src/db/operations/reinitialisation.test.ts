@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
-import { account, emailsFile, membres, user } from "@/db/schema";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { account, emailsFile, invitations, membres, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
 import { creerCompte, creerCompteAvecMotDePasse } from "./comptes";
@@ -17,7 +17,13 @@ async function membreImporte(db: Db, n = 1) {
   return id;
 }
 
+const HEURE = 3600 * 1000;
+
 describe("demanderReinitialisation", () => {
+  // Envoi immédiat réservé à la production (voir le test hors production).
+  beforeEach(() => vi.stubEnv("VERCEL_ENV", "production"));
+  afterEach(() => vi.unstubAllEnvs());
+
   it("un membre importé pas encore activé reçoit son invitation, pas un lien de réinitialisation", async () => {
     const db = await creerDbTest();
     const id = await membreImporte(db);
@@ -39,7 +45,7 @@ describe("demanderReinitialisation", () => {
   it("si l'envoi échoue, l'invitation part en tête de file", async () => {
     const db = await creerDbTest();
     const id = await membreImporte(db);
-    const { jeton: ancien } = await creerInvitation(db, id);
+    const { jeton: ancien } = await creerInvitation(db, id, new Date(Date.now() - HEURE));
     const envoyer = vi.fn().mockRejectedValue(new Error("panne"));
     expect(await demanderReinitialisation(db, { userId: id, url: URL_BA }, { envoyer, urlActivation })).toBe("invitation_en_file");
     const [enFile] = await db.select().from(emailsFile);
@@ -81,5 +87,42 @@ describe("demanderReinitialisation", () => {
     // Admin invité sans fiche : invitation de l'administration, comme avant.
     expect(await demanderReinitialisation(db, { userId: sans.id, url: URL_BA }, { envoyer, urlActivation })).toBe("reinitialisation");
     expect(envoyer.mock.calls[1][0].sujet).toBe("Votre accès à l'administration du site ADEMIG");
+  });
+
+  it("hors production, l'invitation part en tête de file (le cron de production l'envoie avec son adresse)", async () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    const db = await creerDbTest();
+    const id = await membreImporte(db);
+    const envoyer = vi.fn();
+    expect(await demanderReinitialisation(db, { userId: id, url: URL_BA }, { envoyer, urlActivation })).toBe("invitation_en_file");
+    expect(envoyer).not.toHaveBeenCalled();
+    const [enFile] = await db.select().from(emailsFile);
+    expect(enFile).toMatchObject({ statut: "a_envoyer", userId: id, html: "" });
+    expect(Date.now() - enFile.creeLe.getTime()).toBeGreaterThan(300 * 24 * HEURE);
+  });
+
+  it("n'envoie pas de nouvelle invitation moins de 15 minutes après la précédente", async () => {
+    const db = await creerDbTest();
+    const id = await membreImporte(db);
+    const envoyer = vi.fn().mockResolvedValue(undefined);
+    expect(await demanderReinitialisation(db, { userId: id, url: URL_BA }, { envoyer, urlActivation })).toBe("invitation");
+    expect(await demanderReinitialisation(db, { userId: id, url: URL_BA }, { envoyer, urlActivation })).toBe("ignore");
+    expect(envoyer).toHaveBeenCalledTimes(1);
+    // Passé le délai, l'envoi reprend.
+    await db.update(invitations).set({ creeLe: new Date(Date.now() - 16 * 60 * 1000) }).where(eq(invitations.userId, id));
+    expect(await demanderReinitialisation(db, { userId: id, url: URL_BA }, { envoyer, urlActivation })).toBe("invitation");
+  });
+
+  it("plafonne à 3 invitations envoyées par 24 heures", async () => {
+    const db = await creerDbTest();
+    const id = await membreImporte(db);
+    const trace = { destinataire: "e2e-1@exemple.test", sujet: "s", html: "", type: "invitation" as const, userId: id, statut: "envoye" as const };
+    for (const h of [2, 5, 20]) await db.insert(emailsFile).values({ ...trace, envoyeLe: new Date(Date.now() - h * HEURE) });
+    const envoyer = vi.fn().mockResolvedValue(undefined);
+    expect(await demanderReinitialisation(db, { userId: id, url: URL_BA }, { envoyer, urlActivation })).toBe("ignore");
+    expect(envoyer).not.toHaveBeenCalled();
+    // Une des trois date de plus de 24 heures : un envoi redevient possible.
+    await db.update(emailsFile).set({ envoyeLe: new Date(Date.now() - 25 * HEURE) }).where(eq(emailsFile.userId, id));
+    expect(await demanderReinitialisation(db, { userId: id, url: URL_BA }, { envoyer, urlActivation })).toBe("invitation");
   });
 });
