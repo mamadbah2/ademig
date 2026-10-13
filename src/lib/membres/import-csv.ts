@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ErreurMetier } from "@/db/operations/erreurs";
+import { normaliserTelephone } from "./profil";
 
 export const COLONNES_IMPORT = ["nom", "prenom", "email", "telephone", "promotion", "specialite"] as const;
 
@@ -147,7 +148,7 @@ export function analyserCsv(texte: string): AnalyseCsv {
       nom,
       prenom,
       email,
-      telephone: lire("telephone") || null,
+      telephone: normaliserTelephone(lire("telephone")),
       promotion: promotionBrute ? promotion : null,
       specialite: lire("specialite") || null,
     });

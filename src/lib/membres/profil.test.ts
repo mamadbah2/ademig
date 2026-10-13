@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { schemaProfil } from "./profil";
+import { normaliserTelephone, schemaProfil } from "./profil";
 
 const base = { resume: "Géologue.", specialite: "Géologie", visibilite: "publique" };
 const message = (r: ReturnType<typeof schemaProfil.safeParse>) => (r.success ? null : r.error.issues.map((i) => i.message));
@@ -109,5 +109,18 @@ describe("photo", () => {
 
   it("exige les dimensions", () => {
     expect(schemaProfil.safeParse({ ...base, ...photo, photoLargeur: "" }).success).toBe(false);
+  });
+});
+
+describe("normaliserTelephone", () => {
+  it("garde chiffres, espaces et « + » initial, remplace les séparateurs, refuse le reste", () => {
+    expect(normaliserTelephone(" 77.123.45.67 ")).toBe("77 123 45 67");
+    expect(normaliserTelephone("+221  77-123-45-67")).toBe("+221 77 123 45 67");
+    expect(normaliserTelephone("221771234567")).toBe("221771234567");
+    for (const t of ["", "123", "7,71E+08", "77 12 ab", "1".repeat(21)]) expect(normaliserTelephone(t)).toBeNull();
+  });
+  it("une valeur normalisée passe toujours la règle du profil", () => {
+    const r = schemaProfil.safeParse({ ...base, telephone: normaliserTelephone("+221 77-123.45.67")! });
+    expect(r.success).toBe(true);
   });
 });

@@ -185,7 +185,7 @@ export function AccesRefusePage() {
     <>
       <TitrePage>Accès refusé</TitrePage>
       <p className="max-w-xl text-lg">
-        Cette rubrique est réservée aux super-admins.{" "}
+        Votre rôle ne donne pas accès à cette rubrique.{" "}
         <Link href="/admin" className="font-bold underline underline-offset-4">
           Revenir au tableau de bord
         </Link>

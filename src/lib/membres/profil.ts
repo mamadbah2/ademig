@@ -58,13 +58,23 @@ const linkedin = z
     return normalise;
   });
 
+// Règle du téléphone du profil : chiffres, espaces et « + » initial, 7 à 20 caractères.
+const estTelephone = (t: string) => t.length >= 7 && t.length <= 20 && /^\+?[\d ]+$/.test(t);
+
+// Pour l'import CSV : points, tirets et barres deviennent des espaces ; null si la règle n'est pas respectée,
+// pour que le premier enregistrement du profil par le membre ne bute pas sur un numéro importé.
+export function normaliserTelephone(saisie: string): string | null {
+  const t = saisie.replace(/[.\-/]/g, " ").replace(/\s+/g, " ").trim();
+  return estTelephone(t) ? t : null;
+}
+
 const telephone = z
   .string()
   .optional()
   .transform((v, ctx) => {
     const t = v?.trim() ?? "";
     if (!t) return null;
-    if (t.length < 7 || t.length > 20 || !/^\+?[\d ]+$/.test(t)) {
+    if (!estTelephone(t)) {
       ctx.addIssue({ code: "custom", message: "Chiffres, espaces et « + » uniquement (7 à 20 caractères)." });
       return z.NEVER;
     }

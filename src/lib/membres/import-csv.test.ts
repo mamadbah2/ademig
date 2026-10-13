@@ -30,7 +30,11 @@ describe("analyserCsv", () => {
   });
   it("gère les guillemets doublés et les alias d'en-têtes", () => {
     const r = analyserCsv("Nom;Prénom;Mail;Tel;Promo\n\"O\"\"Neil\";Jo;jo@ex.org;77;2020\n");
-    expect(r.valides[0]).toMatchObject({ nom: "O\"Neil", telephone: "77", promotion: 2020 });
+    expect(r.valides[0]).toMatchObject({ nom: "O\"Neil", telephone: null, promotion: 2020 });
+  });
+  it("ramène le téléphone à la règle du profil, ou null s'il ne la respecte pas", () => {
+    const csv = "nom;prenom;email;telephone\nA;B;a@ex.org;+221 77-123.45.67\nC;D;c@ex.org;(+221) 77 123 45 67\nE;F;e@ex.org;7,71E+08\nG;H;g@ex.org;123\n";
+    expect(analyserCsv(csv).valides.map((l) => l.telephone)).toEqual(["+221 77 123 45 67", null, null, null]);
   });
   it("refuse un fichier sans les colonnes obligatoires", () => {
     expect(() => analyserCsv("name;mail\nA;a@ex.org")).toThrow(ErreurMetier);
