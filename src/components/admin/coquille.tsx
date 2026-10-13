@@ -6,21 +6,31 @@ import { type ReactNode, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { LIBELLES_ROLES, type Role } from "@/lib/roles";
 
-const liens: { href: string; libelle: string; superadmin?: boolean }[] = [
+const liens: { href: string; libelle: string; superadmin?: boolean; sansTresorier?: boolean }[] = [
   { href: "/admin", libelle: "Tableau de bord" },
-  { href: "/admin/actualites", libelle: "Actualités" },
-  { href: "/admin/evenements", libelle: "Événements" },
-  { href: "/admin/membres", libelle: "Membres" },
-  { href: "/admin/bureau", libelle: "Bureau" },
-  { href: "/admin/partenaires", libelle: "Partenaires" },
-  { href: "/admin/medias", libelle: "Médiathèque" },
-  { href: "/admin/reglages", libelle: "Réglages" },
+  { href: "/admin/actualites", libelle: "Actualités", sansTresorier: true },
+  { href: "/admin/evenements", libelle: "Événements", sansTresorier: true },
+  { href: "/admin/membres", libelle: "Membres", sansTresorier: true },
+  { href: "/admin/bureau", libelle: "Bureau", sansTresorier: true },
+  { href: "/admin/partenaires", libelle: "Partenaires", sansTresorier: true },
+  { href: "/admin/medias", libelle: "Médiathèque", sansTresorier: true },
+  { href: "/admin/reglages", libelle: "Réglages", sansTresorier: true },
   { href: "/admin/comptes", libelle: "Comptes", superadmin: true },
 ];
 
 const lienStyle = "block min-h-11 px-3 py-2.5 font-bold focus-visible:outline-3 focus-visible:outline-moutarde";
 
-export function CoquilleAdmin({ nom, role, children }: { nom: string; role: Role; children: ReactNode }) {
+export function CoquilleAdmin({
+  nom,
+  role,
+  aUneFiche,
+  children,
+}: {
+  nom: string;
+  role: Role;
+  aUneFiche: boolean;
+  children: ReactNode;
+}) {
   const chemin = usePathname();
   const router = useRouter();
   const [ouvert, setOuvert] = useState(false);
@@ -61,7 +71,7 @@ export function CoquilleAdmin({ nom, role, children }: { nom: string; role: Role
         </div>
         <ul className="px-3 py-4">
           {liens
-            .filter((l) => !l.superadmin || role === "superadmin")
+            .filter((l) => (!l.superadmin || role === "superadmin") && !(l.sansTresorier && role === "tresorier"))
             .map((l) => {
               const actif = l.href === "/admin" ? chemin === "/admin" : chemin.startsWith(l.href);
               return (
@@ -88,6 +98,13 @@ export function CoquilleAdmin({ nom, role, children }: { nom: string; role: Role
                 Mon compte
               </Link>
             </li>
+            {aUneFiche && (
+              <li>
+                <Link href="/espace-membre" onClick={() => setOuvert(false)} className={`${lienStyle} hover:bg-papier`}>
+                  Mon espace membre
+                </Link>
+              </li>
+            )}
             <li>
               <a href="/" target="_blank" rel="noopener" className={`${lienStyle} hover:bg-papier`}>
                 Voir le site

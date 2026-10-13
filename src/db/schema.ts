@@ -40,6 +40,8 @@ export const user = pgTable("user", {
     .notNull(),
   role: text("role").default("editeur").notNull(),
   actif: boolean("actif").default(true).notNull(),
+  // Désactivé par un admin (compte membre) : bloque activation et invitations, quel que soit `actif`.
+  desactiveLe: timestamp("desactive_le", { withTimezone: true }),
 });
 
 export const session = pgTable(
@@ -203,8 +205,53 @@ export const membres = pgTable("membres", {
   liens: jsonb("liens").$type<Liens>(),
   photoId: uuid("photo_id").references(() => media.id, { onDelete: "set null" }),
   visible: boolean("visible").default(true).notNull(),
+  // Fiche listée dans l'annuaire privé des membres connectés (indépendant de `visible` = site public).
+  annuaire: boolean("annuaire").default(true).notNull(),
+  // Compte de connexion rattaché (au plus un), données privées jamais affichées publiquement.
+  userId: text("user_id").unique().references(() => user.id, { onDelete: "set null" }),
+  emailContact: text("email_contact"),
+  telephone: text("telephone"),
+  // Date d'activation du compte : départ des cotisations (lot 2).
+  activeLe: timestamp("active_le", { withTimezone: true }),
+  numeroMembre: integer("numero_membre").unique(),
   ...horodatage(),
 });
+
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    jetonHash: text("jeton_hash").notNull().unique(),
+    expireLe: timestamp("expire_le", { withTimezone: true }).notNull(),
+    utiliseeLe: timestamp("utilisee_le", { withTimezone: true }),
+    creeLe: timestamp("cree_le", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("invitations_user").on(t.userId),
+    // Au plus une invitation non utilisée par compte, même si deux « Renvoyer » se croisent.
+    uniqueIndex("invitations_une_active").on(t.userId).where(sql`${t.utiliseeLe} is null`),
+  ],
+);
+
+export const emailsFile = pgTable(
+  "emails_file",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    destinataire: text("destinataire").notNull(),
+    sujet: text("sujet").notNull(),
+    html: text("html").notNull(),
+    type: text("type").$type<"invitation" | "rappel" | "systeme">().notNull(),
+    // Invitation concernée : permet d'afficher le statut d'envoi dans l'admin.
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+    statut: text("statut").$type<"a_envoyer" | "envoye" | "echec">().default("a_envoyer").notNull(),
+    tentatives: integer("tentatives").default(0).notNull(),
+    erreur: text("erreur"),
+    envoyeLe: timestamp("envoye_le", { withTimezone: true }),
+    creeLe: timestamp("cree_le", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("emails_file_statut").on(t.statut, t.creeLe)],
+);
 
 export const mandats = pgTable(
   "mandats",
@@ -290,9 +337,10 @@ export const reglages = pgTable("reglages", {
 
 /* ---------- Relations (requêtes `db.query.*` avec `with`) ---------- */
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ one, many }) => ({
   sessions: many(session),
   accounts: many(account),
+  membre: one(membres),
 }));
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, { fields: [session.userId], references: [user.id] }),
@@ -320,6 +368,7 @@ export const evenementPhotosRelations = relations(evenementPhotos, ({ one }) => 
 
 export const membresRelations = relations(membres, ({ one, many }) => ({
   photo: one(media, { fields: [membres.photoId], references: [media.id] }),
+  compte: one(user, { fields: [membres.userId], references: [user.id] }),
   postes: many(postesBureau),
 }));
 

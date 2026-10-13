@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { Alerte, Bouton, Champ, Selection } from "@/components/admin/ui";
 import { inviterCompte } from "@/lib/admin/comptes";
-import { LIBELLES_ROLES, ROLES } from "@/lib/roles";
+import { LIBELLES_ROLES, ROLES_ADMIN } from "@/lib/roles";
 
 export function FormulaireInvitation() {
   const [resultat, envoyer, enCours] = useActionState(inviterCompte, null);
@@ -20,7 +20,7 @@ export function FormulaireInvitation() {
         label="Rôle"
         name="role"
         defaultValue="editeur"
-        options={ROLES.map((r) => ({ valeur: r, libelle: LIBELLES_ROLES[r] }))}
+        options={ROLES_ADMIN.map((r) => ({ valeur: r, libelle: LIBELLES_ROLES[r] }))}
         aide="L'éditeur gère le contenu ; le super-admin gère aussi les comptes."
         erreurs={erreurs?.role}
       />

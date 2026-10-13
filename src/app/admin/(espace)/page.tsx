@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TitrePage } from "@/components/admin/ui";
 import { aLeRole } from "@/lib/roles";
-import { exigerSession } from "@/lib/session";
+import { exigerSession, ficheDeLaSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
 export default async function TableauDeBord() {
   const session = await exigerSession();
+  const aUneFiche = Boolean(await ficheDeLaSession(session.userId));
+  // Le trésorier n'a pas encore de page de gestion (la trésorerie arrive au lot 3).
+  const sansTresorier = session.role === "tresorier";
   const raccourcis = [
     { href: "/admin/actualites", titre: "Actualités", texte: "Écrire, publier et dépublier les articles." },
     { href: "/admin/evenements", titre: "Événements", texte: "Annoncer les rencontres et garder leurs photos." },
@@ -17,10 +20,13 @@ export default async function TableauDeBord() {
     { href: "/admin/reglages", titre: "Réglages", texte: "Coordonnées, réseaux sociaux et textes clés du site." },
     { href: "/admin/medias", titre: "Médiathèque", texte: "Envoyer des images et décrire celles du site." },
     { href: "/admin/mon-compte", titre: "Mon compte", texte: "Changer votre nom ou votre mot de passe." },
+    ...(aUneFiche
+      ? [{ href: "/espace-membre", titre: "Mon espace membre", texte: "Votre fiche, votre profil et l'annuaire des membres." }]
+      : []),
     ...(aLeRole(session.role, "superadmin")
       ? [{ href: "/admin/comptes", titre: "Comptes", texte: "Inviter les membres du bureau et gérer leurs accès." }]
       : []),
-  ];
+  ].filter((r) => !sansTresorier || ["/admin/mon-compte", "/espace-membre"].includes(r.href));
   return (
     <>
       <TitrePage>Bonjour {session.nom}</TitrePage>

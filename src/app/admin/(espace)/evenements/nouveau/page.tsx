@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { suggestionsPartenaires } from "@/db/requetes/admin/evenements";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 import { FormulaireEvenement } from "../formulaire";
 
 export const metadata: Metadata = { title: "Nouvel événement" };
 
 export default async function NouvelEvenement() {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const suggestions = await suggestionsPartenaires(db);
   return (
     <>

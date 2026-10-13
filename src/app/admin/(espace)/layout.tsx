@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { CoquilleAdmin } from "@/components/admin/coquille";
-import { exigerSession } from "@/lib/session";
+import { exigerAdmin, ficheDeLaSession } from "@/lib/session";
 
 export default async function LayoutEspace({ children }: { children: ReactNode }) {
-  const session = await exigerSession();
+  const session = await exigerAdmin();
+  const aUneFiche = Boolean(await ficheDeLaSession(session.userId));
   return (
-    <CoquilleAdmin nom={session.nom} role={session.role}>
+    <CoquilleAdmin nom={session.nom} role={session.role} aUneFiche={aUneFiche}>
       {children}
     </CoquilleAdmin>
   );

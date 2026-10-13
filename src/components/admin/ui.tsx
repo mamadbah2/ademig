@@ -157,10 +157,14 @@ export function Alerte({ resultat }: { resultat: Pick<Resultat, "ok" | "message"
   );
 }
 
-const tonsBadge = { vert: "bg-vert/25", rouge: "bg-rouge/20", moutarde: "bg-moutarde/40", neutre: "bg-sable" };
+const tonsBadge = { vert: "bg-vert/25", rouge: "bg-rouge/20", moutarde: "bg-moutarde/40", neutre: "bg-sable", gris: "bg-encre/10", eau: "bg-eau/50" };
 
-export function Badge({ ton = "neutre", children }: { ton?: keyof typeof tonsBadge; children: ReactNode }) {
-  return <span className={`inline-block px-2 py-0.5 text-sm font-bold ${tonsBadge[ton]}`}>{children}</span>;
+export function Badge({ ton = "neutre", title, children }: { ton?: keyof typeof tonsBadge; title?: string; children: ReactNode }) {
+  return (
+    <span title={title} className={`inline-block px-2 py-0.5 text-sm font-bold ${tonsBadge[ton]}`}>
+      {children}
+    </span>
+  );
 }
 
 export function TitrePage({ children, action }: { children: ReactNode; action?: ReactNode }) {
@@ -181,7 +185,7 @@ export function AccesRefusePage() {
     <>
       <TitrePage>Accès refusé</TitrePage>
       <p className="max-w-xl text-lg">
-        Cette rubrique est réservée aux super-admins.{" "}
+        Votre rôle ne donne pas accès à cette rubrique.{" "}
         <Link href="/admin" className="font-bold underline underline-offset-4">
           Revenir au tableau de bord
         </Link>

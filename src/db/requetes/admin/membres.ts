@@ -1,12 +1,22 @@
-import { asc, eq, ilike } from "drizzle-orm";
-import { membres } from "@/db/schema";
+import { and, asc, eq, ilike, isNotNull } from "drizzle-orm";
+import { etatCompte, type SuiviInvitation, suiviInvitations } from "@/db/operations/invitations";
+import { membres, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import type { Filtre } from "@/lib/admin/filtre";
 import type { Etape, Realisation } from "@/lib/content/types";
 import { postesDuMandatActif } from "../membres";
 import { type MediaChoisi, motifRecherche, PAR_PAGE, versMediaChoisi } from "./commun";
 
-export type LigneMembreAdmin = { id: string; nom: string; slug: string; titre: string; visible: boolean; fonction: string | null };
+export type LigneMembreAdmin = {
+  id: string;
+  nom: string;
+  slug: string;
+  titre: string;
+  visible: boolean;
+  fonction: string | null;
+  // Null tant que la fiche n'a pas de compte.
+  suivi: SuiviInvitation | null;
+};
 
 export type MembreAdmin = {
   id: string;
@@ -34,20 +44,50 @@ export type MembreAdmin = {
 
 export type OptionMembre = { id: string; nom: string; visible: boolean };
 
+const colonnesListe = { id: membres.id, nom: membres.nom, slug: membres.slug, titre: membres.titre, visible: membres.visible, userId: membres.userId };
+type FicheListe = { id: string; nom: string; slug: string; titre: string; visible: boolean; userId: string | null };
+
 export async function listerMembresAdmin(db: Db, f: Filtre): Promise<{ lignes: LigneMembreAdmin[]; total: number }> {
   const ou = f.q ? ilike(membres.nom, motifRecherche(f.q)) : undefined;
-  const [lignes, total, postes] = await Promise.all([
-    db
-      .select({ id: membres.id, nom: membres.nom, slug: membres.slug, titre: membres.titre, visible: membres.visible })
-      .from(membres)
-      .where(ou)
-      .orderBy(asc(membres.nom))
-      .limit(PAR_PAGE)
-      .offset((f.page - 1) * PAR_PAGE),
-    db.$count(membres, ou),
-    postesDuMandatActif(db),
-  ]);
-  return { lignes: lignes.map((l) => ({ ...l, fonction: postes.get(l.id)?.fonction ?? null })), total };
+  const postes = postesDuMandatActif(db);
+  let page: FicheListe[];
+  let total: number;
+  let suivi: Map<string, SuiviInvitation>;
+  if (f.compte) {
+    // Le statut se déduit de l'email, de l'invitation et du compte : on le calcule pour toutes les
+    // fiches liées à un compte, puis on filtre et on pagine ici (quelques centaines de membres).
+    const liees = await db.select(colonnesListe).from(membres).where(and(ou, isNotNull(membres.userId))).orderBy(asc(membres.nom));
+    suivi = await suiviInvitations(db, liees.map((m) => m.userId!));
+    const retenues = liees.filter((m) => suivi.get(m.userId!)?.statut === f.compte);
+    total = retenues.length;
+    page = retenues.slice((f.page - 1) * PAR_PAGE, f.page * PAR_PAGE);
+  } else {
+    [page, total] = await Promise.all([
+      db.select(colonnesListe).from(membres).where(ou).orderBy(asc(membres.nom)).limit(PAR_PAGE).offset((f.page - 1) * PAR_PAGE),
+      db.$count(membres, ou),
+    ]);
+    suivi = await suiviInvitations(db, page.flatMap((m) => (m.userId ? [m.userId] : [])));
+  }
+  const fonctions = await postes;
+  return {
+    lignes: page.map(({ userId, ...m }) => ({ ...m, fonction: fonctions.get(m.id)?.fonction ?? null, suivi: userId ? (suivi.get(userId) ?? null) : null })),
+    total,
+  };
+}
+
+export type CompteDuMembre = { userId: string; email: string; actif: boolean; aMotDePasse: boolean; desactive: boolean; suivi: SuiviInvitation };
+
+// Compte lié à une fiche, avec le statut de son invitation (null si la fiche n'a pas de compte).
+export async function lireCompteDuMembre(db: Db, membreId: string): Promise<CompteDuMembre | null> {
+  const [ligne] = await db
+    .select({ userId: user.id, email: user.email, actif: user.actif })
+    .from(membres)
+    .innerJoin(user, eq(user.id, membres.userId))
+    .where(eq(membres.id, membreId));
+  if (!ligne) return null;
+  const suivi = (await suiviInvitations(db, [ligne.userId])).get(ligne.userId)!;
+  const etat = (await etatCompte(db, ligne.userId))!;
+  return { ...ligne, aMotDePasse: etat.aMotDePasse, desactive: etat.desactive, suivi };
 }
 
 export async function lireMembreAdmin(db: Db, id: string): Promise<MembreAdmin | undefined> {

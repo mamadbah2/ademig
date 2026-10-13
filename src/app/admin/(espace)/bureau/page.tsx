@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge, EtatVide, TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, Badge, EtatVide, TitrePage } from "@/components/admin/ui";
 import { formatDate } from "@/components/ui";
 import { db } from "@/db";
 import { listerMandatsAdmin } from "@/db/requetes/admin/bureau";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 import { FormulaireNouveauMandat } from "./nouveau-mandat";
 
 export const metadata: Metadata = { title: "Bureau" };
 
 export default async function Bureau() {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const mandats = await listerMandatsAdmin(db);
 
   return (

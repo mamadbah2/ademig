@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "invitations_une_active" ON "invitations" USING btree ("user_id") WHERE "invitations"."utilisee_le" is null;

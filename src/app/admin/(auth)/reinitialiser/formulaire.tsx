@@ -5,7 +5,7 @@ import { type FormEvent, useState } from "react";
 import { Alerte, Bouton, Champ } from "@/components/admin/ui";
 import { authClient } from "@/lib/auth-client";
 
-export function FormulaireReinitialisation({ token }: { token: string }) {
+export function FormulaireReinitialisation({ token, nouveauLien }: { token: string; nouveauLien: string }) {
   const [erreurs, setErreurs] = useState<{ motDePasse?: string[]; confirmation?: string[] }>({});
   const [etat, setEtat] = useState<"saisie" | "envoi" | "fait" | "invalide">("saisie");
 
@@ -26,7 +26,7 @@ export function FormulaireReinitialisation({ token }: { token: string }) {
     return (
       <div className="mt-4 space-y-4">
         <Alerte resultat={{ ok: true, message: "Mot de passe enregistré." }} />
-        <Link href="/admin/connexion" className="font-bold underline underline-offset-4">
+        <Link href="/connexion" className="font-bold underline underline-offset-4">
           Se connecter
         </Link>
       </div>
@@ -62,7 +62,7 @@ export function FormulaireReinitialisation({ token }: { token: string }) {
       </Bouton>
       {etat === "invalide" && (
         <p className="text-center">
-          <Link href="/admin/mot-de-passe-oublie" className="font-bold underline underline-offset-4">
+          <Link href={nouveauLien} className="font-bold underline underline-offset-4">
             Demander un nouveau lien
           </Link>
         </p>

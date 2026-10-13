@@ -9,6 +9,11 @@ describe("lireFiltre", () => {
     expect(lireFiltre({ q: ["a", "b"], statut: "supprime", page: "-2" })).toEqual({ q: "", statut: undefined, page: 1 });
     expect(lireFiltre({ page: "abc" }).page).toBe(1);
   });
+  it("lit le filtre de compte et ignore une valeur inconnue", () => {
+    expect(lireFiltre({ compte: "en_file" }).compte).toBe("en_file");
+    expect(lireFiltre({ compte: "expire" }).compte).toBe("expire");
+    expect(lireFiltre({ compte: "nimporte" }).compte).toBeUndefined();
+  });
   it("plafonne la page", () => {
     expect(lireFiltre({ page: "99999999999" }).page).toBe(10000);
     expect(lireFiltre({ page: "1e300" }).page).toBe(10000);
@@ -16,6 +21,9 @@ describe("lireFiltre", () => {
 });
 
 describe("urlListe", () => {
+  it("garde le filtre de compte", () => {
+    expect(urlListe("/admin/membres", { q: "", compte: "echec", page: 1 }, 2)).toBe("/admin/membres?compte=echec&page=2");
+  });
   it("ne garde que les paramètres utiles", () => {
     expect(urlListe("/admin/actualites", { q: "", page: 1 }, 1)).toBe("/admin/actualites");
     expect(urlListe("/admin/actualites", { q: "forum sim", statut: "brouillon", page: 1 }, 2)).toBe(

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estUrlBlob, schemaNouveauMedia, verifierFichier } from "./media";
+import { estUrlBlob, estUrlDeNotreBoutique, idBoutiqueDuJeton, schemaNouveauMedia, verifierFichier } from "./media";
 
 const Mo = 1024 * 1024;
 
@@ -56,5 +56,21 @@ describe("schemaNouveauMedia", () => {
     const r = schemaNouveauMedia.safeParse({ ...valide, alt: "", url: "https://exemple.com/x.webp" });
     expect(r.success).toBe(false);
     expect(r.error!.issues.map((i) => i.path[0])).toEqual(expect.arrayContaining(["alt", "url"]));
+  });
+});
+
+describe("boutique Blob", () => {
+  const jeton = "vercel_blob_rw_AbC123xyz_secretsecret";
+  it("lit l'identifiant de la boutique en minuscules", () => {
+    expect(idBoutiqueDuJeton(jeton)).toBe("abc123xyz");
+    expect(idBoutiqueDuJeton(undefined)).toBeNull();
+    expect(idBoutiqueDuJeton("n-importe-quoi")).toBeNull();
+  });
+  it("n'accepte que les adresses de notre boutique", () => {
+    expect(estUrlDeNotreBoutique("https://abc123xyz.public.blob.vercel-storage.com/membres/a.webp", jeton)).toBe(true);
+    expect(estUrlDeNotreBoutique("https://autre.public.blob.vercel-storage.com/membres/a.webp", jeton)).toBe(false);
+    expect(estUrlDeNotreBoutique("https://xabc123xyz.public.blob.vercel-storage.com/membres/a.webp", jeton)).toBe(false);
+    expect(estUrlDeNotreBoutique("https://abc123xyz.public.blob.vercel-storage.com/membres/a.webp", undefined)).toBe(false);
+    expect(estUrlDeNotreBoutique("http://abc123xyz.public.blob.vercel-storage.com/membres/a.webp", jeton)).toBe(false);
   });
 });

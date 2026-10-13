@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { and, eq, like } from "drizzle-orm";
 import { db } from "../src/db";
 import { creerCompteAvecMotDePasse } from "../src/db/operations/comptes";
-import { actualites, evenements, mandats, membres, partenaires, user } from "../src/db/schema";
+import { actualites, emailsFile, evenements, mandats, membres, partenaires, user } from "../src/db/schema";
 import { COMPTES } from "./comptes";
 import { retirerTextesDeTest } from "./nettoyage";
 
@@ -25,6 +25,7 @@ export default async function preparation() {
   // Mot de passe propre à ce lancement, transmis aux tests par l'environnement.
   const motDePasse = randomBytes(18).toString("base64url");
   process.env.E2E_MOT_DE_PASSE = motDePasse;
+  await db.delete(emailsFile).where(like(emailsFile.destinataire, "%@ademig.test"));
   await db.delete(user).where(like(user.email, "%@ademig.test"));
   for (const compte of Object.values(COMPTES)) {
     await creerCompteAvecMotDePasse(db, { ...compte, motDePasse });

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TitrePage } from "@/components/admin/ui";
+import { AccesRefusePage, TitrePage } from "@/components/admin/ui";
 import { db } from "@/db";
 import { lireReglagesAdmin } from "@/db/requetes/admin/reglages";
+import { aLeRole } from "@/lib/roles";
 import { exigerSession } from "@/lib/session";
 import { faqAffichee } from "@/lib/content/faq";
 import { FormulaireCoordonnees } from "./coordonnees";
@@ -21,7 +22,8 @@ const ONGLETS = [
 
 // Chaque onglet est une page à part : en changer recharge la version à jour de la ligne.
 export default async function Reglages({ searchParams }: PageProps<"/admin/reglages">) {
-  await exigerSession();
+  const session = await exigerSession();
+  if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
   const { onglet: demande } = await searchParams;
   const onglet = ONGLETS.find((o) => o.valeur === demande)?.valeur ?? "coordonnees";
   const reglages = await lireReglagesAdmin(db);

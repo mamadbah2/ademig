@@ -1,6 +1,6 @@
 import { hashPassword } from "better-auth/crypto";
-import { and, count, eq, ne } from "drizzle-orm";
-import { account, session, user } from "@/db/schema";
+import { and, count, eq, isNull, ne } from "drizzle-orm";
+import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import type { Role } from "@/lib/roles";
 import { ErreurMetier } from "./erreurs";
@@ -21,6 +21,8 @@ export const normaliserEmail = (email: string) => email.trim().toLowerCase();
 export async function listerComptes(db: Db): Promise<Compte[]> {
   const lignes = await db.query.user.findMany({
     with: { accounts: { columns: { providerId: true } } },
+    // Les membres (rôle `membre`) ne sont pas des comptes d'administration.
+    where: (u, { ne }) => ne(u.role, "membre"),
     orderBy: (u, { asc }) => [asc(u.name)],
   });
   return lignes.map((u) => ({
@@ -87,12 +89,38 @@ export async function changerRole(db: Db, p: { acteurId: string; cibleId: string
   await db.update(user).set({ role: p.role }).where(eq(user.id, p.cibleId));
 }
 
+// Seule porte de désactivation (Comptes et suivi des membres) : `desactive_le` marque le compte, les sessions
+// sont fermées, et l'invitation en cours comme l'email d'invitation en file sont retirés, sinon le lien
+// déjà envoyé réactiverait le compte. La réactivation efface `desactive_le`.
 export async function changerActivation(db: Db, p: { acteurId: string; cibleId: string; actif: boolean }) {
   const cible = await lireUtilisateur(db, p.cibleId);
-  if (cible.actif === p.actif) return;
+  const desactive = cible.desactiveLe !== null;
+  // Un compte jamais activé est déjà `actif = false` : on le désactive quand même (desactive_le).
+  if (p.actif ? cible.actif && !desactive : !cible.actif && desactive) return;
   if (p.acteurId === p.cibleId) throw new ErreurMetier("Vous ne pouvez pas désactiver votre propre compte.");
   if (!p.actif) await verifierQuIlResteUnSuperadmin(db, cible);
-  await db.update(user).set({ actif: p.actif }).where(eq(user.id, p.cibleId));
-  // Un compte désactivé perd l'accès tout de suite, pas à l'expiration de sa session.
-  if (!p.actif) await db.delete(session).where(eq(session.userId, p.cibleId));
+  const ecrire = async (tx: Db) => {
+    if (p.actif) {
+      // Comme reactiverCompteMembre : un compte de membre (ou lié à une fiche) sans mot de passe redevient
+      // « à inviter », inactif ; son invitation l'activera. Un compte d'administration sans fiche reste actif :
+      // son lien Better Auth crée le mot de passe sans toucher à `actif`.
+      const mdp = await tx.query.account.findFirst({
+        where: and(eq(account.userId, p.cibleId), eq(account.providerId, "credential")),
+        columns: { id: true },
+      });
+      const fiche = await tx.query.membres.findFirst({ where: eq(membres.userId, p.cibleId), columns: { id: true } });
+      const actif = Boolean(mdp) || (cible.role !== "membre" && !fiche);
+      await tx.update(user).set({ actif, desactiveLe: null }).where(eq(user.id, p.cibleId));
+      return;
+    }
+    await tx.update(user).set({ actif: false, desactiveLe: new Date() }).where(eq(user.id, p.cibleId));
+    // Un compte désactivé perd l'accès tout de suite, pas à l'expiration de sa session.
+    await tx.delete(session).where(eq(session.userId, p.cibleId));
+    await tx.delete(invitations).where(and(eq(invitations.userId, p.cibleId), isNull(invitations.utiliseeLe)));
+    await tx
+      .delete(emailsFile)
+      .where(and(eq(emailsFile.userId, p.cibleId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
+  };
+  if ("rollback" in db) await ecrire(db);
+  else await db.transaction(ecrire);
 }

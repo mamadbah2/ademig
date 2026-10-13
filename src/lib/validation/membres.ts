@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Liens } from "@/lib/content/types";
+import { MESSAGE_LINKEDIN, normaliserLinkedin } from "@/lib/membres/profil";
 import { caseACocher, champJson, champSlug, htmlRicheFacultatif, idMediaFacultatif, texteFacultatif, urlWeb } from "./commun";
 
 const texte = (message: string, max: number) => z.string().trim().min(1, message).max(max, `${max} caractères au plus.`);
@@ -23,6 +24,20 @@ function entierFacultatif(min: number, max: number, message: string) {
 
 const vide = (v: string | undefined) => v?.trim() || undefined;
 const urlFacultative = z.string().optional().transform(vide).pipe(urlWeb.optional());
+// Même règle que le profil du membre : une seule adresse LinkedIn valide, vide autorisé.
+const linkedinFacultatif = z
+  .string()
+  .optional()
+  .transform(vide)
+  .transform((v, ctx) => {
+    if (v === undefined) return undefined;
+    const normalise = normaliserLinkedin(v);
+    if (!normalise) {
+      ctx.addIssue({ code: "custom", message: MESSAGE_LINKEDIN });
+      return z.NEVER;
+    }
+    return normalise;
+  });
 const emailFacultatif = z
   .string()
   .optional()
@@ -63,7 +78,7 @@ const champs = z.object({
   parcours: champJson(z.array(etape).max(30, "30 étapes au plus.")),
   competences,
   realisations: champJson(z.array(realisation).max(20, "20 réalisations au plus.")),
-  lienLinkedin: urlFacultative,
+  lienLinkedin: linkedinFacultatif,
   lienEmail: emailFacultatif,
   lienSite: urlFacultative,
   photoId: idMediaFacultatif,
