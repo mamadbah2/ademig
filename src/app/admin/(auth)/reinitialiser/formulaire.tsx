@@ -26,7 +26,7 @@ export function FormulaireReinitialisation({ token }: { token: string }) {
     return (
       <div className="mt-4 space-y-4">
         <Alerte resultat={{ ok: true, message: "Mot de passe enregistré." }} />
-        <Link href="/admin/connexion" className="font-bold underline underline-offset-4">
+        <Link href="/connexion" className="font-bold underline underline-offset-4">
           Se connecter
         </Link>
       </div>

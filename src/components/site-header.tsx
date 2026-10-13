@@ -129,6 +129,14 @@ export function SiteHeader({ email }: { email: string }) {
                     </Link>
                   </li>
                 ))}
+                <li>
+                  <Link
+                    href="/connexion"
+                    className="block border border-transparent px-2.5 py-1 whitespace-nowrap underline underline-offset-4 hover:border-encre"
+                  >
+                    Espace membre
+                  </Link>
+                </li>
               </ul>
             </nav>
           </div>
@@ -174,6 +182,11 @@ export function SiteHeader({ email }: { email: string }) {
                 <span className="inline-block border border-encre bg-moutarde px-3 py-1.5">
                   {site.motto}
                 </span>
+              </p>
+              <p className="mt-4">
+                <Link href="/connexion" onClick={() => setOuvert(false)} className="underline underline-offset-4">
+                  Espace membre
+                </Link>
               </p>
               <p className="mt-4">
                 <a href={`mailto:${email}`} className="font-bold underline underline-offset-4">
