@@ -25,3 +25,8 @@ export class AccesRefuse extends Error {
     this.name = "AccesRefuse";
   }
 }
+
+// Où l'on arrive après la connexion : les rôles d'administration vont à l'admin, le membre à son espace.
+export function destinationApresConnexion(role: Role): "/admin" | "/espace-membre" {
+  return estRoleAdmin(role) ? "/admin" : "/espace-membre";
+}

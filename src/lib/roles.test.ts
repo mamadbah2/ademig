@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aLeRole, estRoleAdmin } from "./roles";
+import { aLeRole, destinationApresConnexion, estRoleAdmin } from "./roles";
 
 describe("aLeRole", () => {
   it("donne au super-admin tous les droits", () => {
@@ -23,5 +23,14 @@ describe("nouveaux rôles", () => {
   it("seul le membre n'a pas accès à l'admin", () => {
     expect(estRoleAdmin("membre")).toBe(false);
     expect(["superadmin", "editeur", "tresorier"].every((r) => estRoleAdmin(r as never))).toBe(true);
+  });
+});
+
+describe("destinationApresConnexion", () => {
+  it("envoie un membre vers son espace et les rôles d'administration vers l'admin", () => {
+    expect(destinationApresConnexion("membre")).toBe("/espace-membre");
+    expect(destinationApresConnexion("editeur")).toBe("/admin");
+    expect(destinationApresConnexion("tresorier")).toBe("/admin");
+    expect(destinationApresConnexion("superadmin")).toBe("/admin");
   });
 });
