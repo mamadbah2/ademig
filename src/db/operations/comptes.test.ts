@@ -1,7 +1,7 @@
 import { verifyPassword } from "better-auth/crypto";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { account, session, user } from "@/db/schema";
+import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import { creerDbTest } from "@/test/db";
 import {
   changerActivation,
@@ -11,6 +11,7 @@ import {
   listerComptes,
 } from "./comptes";
 import { ErreurMetier } from "./erreurs";
+import { activerCompte, creerInvitation, verifierInvitable } from "./invitations";
 
 const awa = { nom: "Awa Ndiaye", email: "awa@exemple.sn", role: "superadmin" as const };
 const moussa = { nom: "Moussa Fall", email: "moussa@exemple.sn", role: "editeur" as const };
@@ -106,5 +107,29 @@ describe("activation", () => {
     await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: false });
     await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: true });
     expect((await db.query.user.findFirst({ where: eq(user.id, m.id) }))?.actif).toBe(true);
+  });
+
+  it("désactiver un compte d'administration tue son invitation de membre en cours, et la réactivation la rouvre", async () => {
+    const db = await creerDbTest();
+    const a = await creerCompte(db, awa);
+    const m = await creerCompte(db, moussa);
+    // Compte admin rattaché à une fiche par l'import, pas encore activé.
+    await db.insert(membres).values({ slug: "moussa-fall", nom: "Moussa Fall", titre: "T", specialite: "S", resume: "R", userId: m.id });
+    const { jeton } = await creerInvitation(db, m.id);
+    await db.insert(emailsFile).values({ destinataire: "moussa@exemple.sn", sujet: "s", html: "", type: "invitation", userId: m.id });
+
+    await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: false });
+    const cible = await db.query.user.findFirst({ where: eq(user.id, m.id) });
+    expect(cible).toMatchObject({ actif: false });
+    expect(cible?.desactiveLe).toBeInstanceOf(Date);
+    expect(await db.$count(invitations, eq(invitations.userId, m.id))).toBe(0);
+    expect(await db.$count(emailsFile, eq(emailsFile.userId, m.id))).toBe(0);
+    await expect(activerCompte(db, jeton, "motdepasse-solide")).rejects.toBeInstanceOf(ErreurMetier);
+    await expect(verifierInvitable(db, m.id)).rejects.toThrow(/désactivé/);
+    expect(await db.$count(account, eq(account.userId, m.id))).toBe(0);
+
+    await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: true });
+    expect(await db.query.user.findFirst({ where: eq(user.id, m.id) })).toMatchObject({ actif: true, desactiveLe: null });
+    await expect(verifierInvitable(db, m.id)).resolves.toBeUndefined();
   });
 });

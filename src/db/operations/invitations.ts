@@ -72,18 +72,9 @@ export async function verifierInvitable(db: Db, userId: string): Promise<void> {
   if (etat.aMotDePasse) throw new ErreurMetier("Ce compte est déjà activé.");
 }
 
-// Désactive le compte (une transaction) : sessions fermées, invitation en cours et email en file retirés,
-// sinon le lien déjà envoyé le réactiverait.
+// Désactive le compte : même chemin que la page Comptes (changerActivation).
 export async function desactiverCompteMembre(db: Db, p: { acteurId: string; cibleId: string }): Promise<void> {
-  await db.transaction(async (tx) => {
-    await changerActivation(tx, { ...p, actif: false });
-    await tx.update(user).set({ desactiveLe: new Date() }).where(eq(user.id, p.cibleId));
-    await tx.delete(session).where(eq(session.userId, p.cibleId));
-    await tx.delete(invitations).where(and(eq(invitations.userId, p.cibleId), isNull(invitations.utiliseeLe)));
-    await tx
-      .delete(emailsFile)
-      .where(and(eq(emailsFile.userId, p.cibleId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
-  });
+  await db.transaction((tx) => changerActivation(tx, { ...p, actif: false }));
 }
 
 // Un compte jamais activé (sans mot de passe) redevient inactif et « à inviter » : il n'entre ni dans
