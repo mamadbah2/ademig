@@ -17,7 +17,7 @@ export const TEXTES = {
     forme: "ligne",
     max: 120,
     defaut:
-      "Amicale des ingénieurs diplômés de l'École nationale supérieure des mines et de la géologie (ex-IST)",
+      "Amicale des Ingénieurs Diplômés de l'École Nationale Supérieure des Mines et de la Géologie (ex-IST)",
   },
   "accueil.devise.reflechir": {
     groupe: "Accueil",
