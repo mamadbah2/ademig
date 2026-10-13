@@ -175,7 +175,7 @@ describe("lireProfil", () => {
       numeroMembre: 7,
       photo: photo(1).photoUrl,
       resume: "Nouvelle présentation.",
-      linkedin: "https://linkedin.com/in/x",
+      linkedin: "https://www.linkedin.com/in/x",
       promotion: "2008",
       specialite: "Géologie",
       organisation: "",

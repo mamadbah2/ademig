@@ -3,7 +3,23 @@ import { texteFacultatif } from "@/lib/validation/commun";
 import { estUrlBlob } from "@/lib/validation/media";
 import { VISIBILITES } from "./visibilite";
 
-export const LINKEDIN = /^https:\/\/(www\.)?linkedin\.com\/in\/[^/\s?#]+\/?$/;
+// Une adresse de profil LinkedIn, ramenée à une seule forme : https, www.linkedin.com, sans paramètres
+// (liens de partage mobile « ?utm_source=… »), sans « / » final. Les sous-domaines de pays (sn., fr.)
+// pointent vers le même profil. Renvoie null si ce n'est pas un profil LinkedIn.
+export function normaliserLinkedin(saisie: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(saisie.trim());
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  if (url.username || url.password || url.port) return null;
+  const hote = url.hostname.toLowerCase();
+  if (hote !== "linkedin.com" && !/^[a-z]{2,3}\.linkedin\.com$/.test(hote)) return null;
+  const identifiant = /^\/in\/([^/]+)\/?$/.exec(url.pathname)?.[1];
+  return identifiant ? `https://www.linkedin.com/in/${identifiant}` : null;
+}
 export const MESSAGE_LINKEDIN = "Collez l'adresse de votre profil LinkedIn (https://www.linkedin.com/in/…).";
 
 // Un champ numérique facultatif arrive en texte depuis le formulaire : vide donne null.
@@ -34,11 +50,12 @@ const linkedin = z
   .transform((v, ctx) => {
     const t = v?.trim() ?? "";
     if (!t) return null;
-    if (!LINKEDIN.test(t)) {
+    const normalise = normaliserLinkedin(t);
+    if (!normalise) {
       ctx.addIssue({ code: "custom", message: MESSAGE_LINKEDIN });
       return z.NEVER;
     }
-    return t;
+    return normalise;
   });
 
 const telephone = z

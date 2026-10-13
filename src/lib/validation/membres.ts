@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Liens } from "@/lib/content/types";
-import { LINKEDIN, MESSAGE_LINKEDIN } from "@/lib/membres/profil";
+import { MESSAGE_LINKEDIN, normaliserLinkedin } from "@/lib/membres/profil";
 import { caseACocher, champJson, champSlug, htmlRicheFacultatif, idMediaFacultatif, texteFacultatif, urlWeb } from "./commun";
 
 const texte = (message: string, max: number) => z.string().trim().min(1, message).max(max, `${max} caractères au plus.`);
@@ -29,7 +29,15 @@ const linkedinFacultatif = z
   .string()
   .optional()
   .transform(vide)
-  .pipe(z.string().regex(LINKEDIN, MESSAGE_LINKEDIN).optional());
+  .transform((v, ctx) => {
+    if (v === undefined) return undefined;
+    const normalise = normaliserLinkedin(v);
+    if (!normalise) {
+      ctx.addIssue({ code: "custom", message: MESSAGE_LINKEDIN });
+      return z.NEVER;
+    }
+    return normalise;
+  });
 const emailFacultatif = z
   .string()
   .optional()

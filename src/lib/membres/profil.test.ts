@@ -5,12 +5,19 @@ const base = { resume: "Géologue.", specialite: "Géologie", visibilite: "publi
 const message = (r: ReturnType<typeof schemaProfil.safeParse>) => (r.success ? null : r.error.issues.map((i) => i.message));
 
 describe("linkedin", () => {
-  it.each(["https://www.linkedin.com/in/awa-ndiaye-123/", "https://linkedin.com/in/awa"])("accepte %s", (linkedin) => {
+  it.each([
+    ["https://www.linkedin.com/in/awa-ndiaye-123/", "https://www.linkedin.com/in/awa-ndiaye-123"],
+    ["https://linkedin.com/in/awa", "https://www.linkedin.com/in/awa"],
+    ["http://www.linkedin.com/in/awa", "https://www.linkedin.com/in/awa"],
+    ["https://sn.linkedin.com/in/awa/", "https://www.linkedin.com/in/awa"],
+    ["https://fr.linkedin.com/in/awa?trk=public_profile", "https://www.linkedin.com/in/awa"],
+    ["https://www.linkedin.com/in/awa?utm_source=share&utm_medium=member_android#apercu", "https://www.linkedin.com/in/awa"],
+  ])("accepte %s et l'enregistre sous la forme %s", (linkedin, attendu) => {
     const r = schemaProfil.safeParse({ ...base, linkedin });
-    expect(r.success && r.data.linkedin).toBe(linkedin);
+    expect(r.success && r.data.linkedin).toBe(attendu);
   });
 
-  it.each(["http://www.linkedin.com/in/awa", "https://linkedin.com/company/x", "https://evil.com/in/x", "https://linkedin.com.evil.com/in/x"])(
+  it.each(["ftp://www.linkedin.com/in/awa", "https://linkedin.com/in/", "https://www.linkedin.com/in/a/b", "https://linkedin.com/company/x", "https://evil.com/in/x", "https://linkedin.com.evil.com/in/x"])(
     "refuse %s",
     (linkedin) => {
       expect(message(schemaProfil.safeParse({ ...base, linkedin }))).toEqual([

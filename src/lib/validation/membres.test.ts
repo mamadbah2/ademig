@@ -76,7 +76,7 @@ describe("schemaMembre", () => {
     expect(r).toMatchObject({ bio: null, promotion: null, numero: null, liens: null, visible: false });
   });
 
-  it.each(["https://example.com/in/awa", "http://www.linkedin.com/in/awa", "https://linkedin.com/company/x"])(
+  it.each(["https://example.com/in/awa", "ftp://www.linkedin.com/in/awa", "https://linkedin.com/company/x"])(
     "refuse l'adresse LinkedIn %s, comme le profil du membre",
     (lienLinkedin) => {
       const r = schemaMembre.safeParse({ ...valide, lienLinkedin });
@@ -85,8 +85,8 @@ describe("schemaMembre", () => {
   );
 
   it("accepte une adresse LinkedIn de profil, ou vide", () => {
-    expect(schemaMembre.parse({ ...valide, lienLinkedin: " https://www.linkedin.com/in/awa/ " }).liens).toMatchObject({
-      linkedin: "https://www.linkedin.com/in/awa/",
+    expect(schemaMembre.parse({ ...valide, lienLinkedin: " https://sn.linkedin.com/in/awa/?utm_source=share " }).liens).toMatchObject({
+      linkedin: "https://www.linkedin.com/in/awa",
     });
     expect(schemaMembre.parse({ ...valide, lienLinkedin: "  ", lienEmail: "", lienSite: "" }).liens).toBeNull();
   });
