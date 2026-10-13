@@ -64,7 +64,7 @@ export function FormulaireConnexion({
       </Bouton>
       <p className="text-center">
         <Link
-          href="/admin/mot-de-passe-oublie"
+          href={variante === "site" ? "/admin/mot-de-passe-oublie?espace=membre" : "/admin/mot-de-passe-oublie"}
           className="underline underline-offset-4"
         >
           Mot de passe oublié ?

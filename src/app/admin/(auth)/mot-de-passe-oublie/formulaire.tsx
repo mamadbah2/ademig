@@ -6,7 +6,7 @@ import { Alerte, Bouton, Champ } from "@/components/admin/ui";
 import { messageConnexion } from "@/lib/admin/messages";
 import { authClient } from "@/lib/auth-client";
 
-export function FormulaireMotDePasseOublie() {
+export function FormulaireMotDePasseOublie({ membre }: { membre: boolean }) {
   const [resultat, setResultat] = useState<{ ok: boolean; message: string } | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
@@ -14,7 +14,10 @@ export function FormulaireMotDePasseOublie() {
     evenement.preventDefault();
     setEnvoi(true);
     const email = String(new FormData(evenement.currentTarget).get("email")).trim().toLowerCase();
-    const { error } = await authClient.requestPasswordReset({ email, redirectTo: "/admin/reinitialiser" });
+    const { error } = await authClient.requestPasswordReset({
+      email,
+      redirectTo: membre ? "/admin/reinitialiser?espace=membre" : "/admin/reinitialiser",
+    });
     setEnvoi(false);
     // Même réponse que le compte existe ou non : on ne révèle pas les adresses enregistrées.
     setResultat(
@@ -35,7 +38,7 @@ export function FormulaireMotDePasseOublie() {
         {envoi ? "Envoi…" : "Recevoir le lien"}
       </Bouton>
       <p className="text-center">
-        <Link href="/admin/connexion" className="underline underline-offset-4">
+        <Link href={membre ? "/connexion" : "/admin/connexion"} className="underline underline-offset-4">
           Retour à la connexion
         </Link>
       </p>

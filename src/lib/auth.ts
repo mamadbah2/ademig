@@ -2,11 +2,12 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
-import { envoyerEmailMotDePasse } from "@/lib/emails";
-import { urlSite } from "@/lib/membres/url";
+import { demanderReinitialisation } from "@/db/operations/reinitialisation";
+import { envoyerEmailVerifie } from "@/lib/emails";
+import { urlActivation, urlSite } from "@/lib/membres/url";
 
 const https = (hote?: string) => (hote ? `https://${hote}` : undefined);
 
@@ -24,12 +25,10 @@ export const auth = betterAuth({
     // Le même lien sert à l'invitation et à la réinitialisation.
     resetPasswordTokenExpiresIn: 60 * 60 * 24,
     revokeSessionsOnPasswordReset: true,
+    // Membre jamais activé : son invitation remplace le lien ; membre activé : email et retour de l'espace membre
+    // (voir demanderReinitialisation).
     sendResetPassword: async ({ user, url }) => {
-      const credential = await db.query.account.findFirst({
-        where: and(eq(schema.account.userId, user.id), eq(schema.account.providerId, "credential")),
-        columns: { id: true },
-      });
-      await envoyerEmailMotDePasse({ email: user.email, nom: user.name, url, invitation: !credential });
+      await demanderReinitialisation(db, { userId: user.id, url }, { envoyer: envoyerEmailVerifie, urlActivation });
     },
   },
   user: {

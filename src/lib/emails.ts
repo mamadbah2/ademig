@@ -2,15 +2,19 @@ import nodemailer, { type Transporter } from "nodemailer";
 import { Resend } from "resend";
 import { echapperHtml } from "@/lib/html";
 
-type EmailMotDePasse = { nom: string; url: string; invitation: boolean };
+// `espace` : un membre a demandé à réinitialiser le mot de passe de son espace membre (jamais une invitation :
+// un membre est invité par contenuInvitationMembre).
+type EmailMotDePasse = { nom: string; url: string; invitation: boolean; espace?: "admin" | "membre" };
 
-export function contenuEmailMotDePasse({ nom, url, invitation }: EmailMotDePasse) {
+export function contenuEmailMotDePasse({ nom, url, invitation, espace = "admin" }: EmailMotDePasse) {
   const sujet = invitation
     ? "Votre accès à l'administration du site ADEMIG"
     : "Réinitialisation de votre mot de passe ADEMIG";
   const intro = invitation
     ? "Un compte vient d'être créé pour vous sur l'espace d'administration du site de l'ADEMIG."
-    : "Vous avez demandé à changer le mot de passe de votre compte d'administration du site de l'ADEMIG.";
+    : espace === "membre"
+      ? "Vous avez demandé à changer le mot de passe de votre espace membre ADEMIG."
+      : "Vous avez demandé à changer le mot de passe de votre compte d'administration du site de l'ADEMIG.";
   const bouton = invitation ? "Définir mon mot de passe" : "Choisir un nouveau mot de passe";
   const lien = echapperHtml(url);
   const html = `<!doctype html>
@@ -105,11 +109,11 @@ export async function envoyerEmail({ a, sujet, html }: Email): Promise<void> {
   }
 }
 
-export async function envoyerEmailMotDePasse(p: EmailMotDePasse & { email: string }) {
-  // Jamais de lien (jeton de 24 h) dans les journaux hors développement.
+// Envoi immédiat d'un email portant un lien (réinitialisation, invitation) : jamais de lien dans les journaux
+// hors développement, donc refus net quand aucun service n'est configuré.
+export async function envoyerEmailVerifie(email: Email): Promise<void> {
   if (!emailsConfigures()) {
-    throw new Error("Envoi d'email impossible : aucun service d'email n'est configuré.");
+    throw new ErreurTransport("Envoi d'email impossible : aucun service d'email n'est configuré.");
   }
-  const { sujet, html } = contenuEmailMotDePasse(p);
-  await envoyerEmail({ a: p.email, sujet, html });
+  await envoyerEmail(email);
 }

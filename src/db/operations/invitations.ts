@@ -49,13 +49,30 @@ export async function envoyerInvitation(
   tx: Db,
   userId: string,
   { envoyer, urlActivation }: { envoyer: (e: Email) => Promise<void>; urlActivation: (jeton: string) => string },
-): Promise<void> {
+): Promise<{ a: string }> {
   await verifierInvitable(tx, userId);
   const compte = await tx.query.user.findFirst({ where: eq(user.id, userId), columns: { email: true, name: true } });
   const fiche = await tx.query.membres.findFirst({ where: eq(membres.userId, userId), columns: { nom: true } });
   const { jeton } = await creerInvitation(tx, userId);
   const { sujet, html } = contenuInvitationMembre({ prenomNom: fiche?.nom ?? compte!.name, url: urlActivation(jeton) });
   await envoyer({ a: compte!.email, sujet, html });
+  return { a: compte!.email };
+}
+
+// Envoi immédiat, hors file (« Mot de passe oublié » d'un membre pas encore activé) : l'envoi est tracé comme
+// envoyé pour le suivi, et un email encore en file (qui tuerait ce lien à son envoi) est retiré.
+export async function envoyerInvitationMaintenant(
+  db: Db,
+  userId: string,
+  options: { envoyer: (e: Email) => Promise<void>; urlActivation: (jeton: string) => string },
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const { a } = await envoyerInvitation(tx, userId, options);
+    await retirerInvitationsEnFile(tx, userId);
+    await tx.insert(emailsFile).values({
+      destinataire: a, sujet: SUJET_INVITATION_MEMBRE, html: "", type: "invitation", userId, statut: "envoye", envoyeLe: new Date(),
+    });
+  });
 }
 
 export type EtatCompte = { actif: boolean; aMotDePasse: boolean; desactive: boolean };

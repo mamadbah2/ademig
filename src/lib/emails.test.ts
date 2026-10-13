@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { contenuEmailMotDePasse, contenuInvitationMembre, emailsConfigures, envoyerEmailMotDePasse, ErreurTransport, estErreurTransport } from "./emails";
+import { contenuEmailMotDePasse, contenuInvitationMembre, emailsConfigures, envoyerEmailVerifie, ErreurTransport, estErreurTransport } from "./emails";
 
 const url = "https://www.ademig.sn/api/auth/reset-password/abc?callbackURL=%2Fadmin%2Freinitialiser";
 
@@ -10,6 +10,13 @@ describe("contenuEmailMotDePasse", () => {
     expect(html).toContain("Définir mon mot de passe");
     expect(html).toContain(url.replace(/&/g, "&amp;"));
     expect(html).toContain("24 heures");
+  });
+
+  it("rédige la réinitialisation d'un membre pour son espace membre", () => {
+    const { sujet, html } = contenuEmailMotDePasse({ nom: "Awa", url, invitation: false, espace: "membre" });
+    expect(sujet).toBe("Réinitialisation de votre mot de passe ADEMIG");
+    expect(html).toContain("votre espace membre ADEMIG");
+    expect(html).not.toContain("administration");
   });
 
   it("rédige la réinitialisation", () => {
@@ -25,8 +32,8 @@ describe("contenuEmailMotDePasse", () => {
   });
 });
 
-describe("envoyerEmailMotDePasse sans clé Resend", () => {
-  const p = { email: "awa@ademig.test", nom: "Awa", url, invitation: true };
+describe("envoyerEmailVerifie sans clé Resend", () => {
+  const p = { a: "awa@ademig.test", ...contenuEmailMotDePasse({ nom: "Awa", url, invitation: true }) };
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
@@ -36,8 +43,8 @@ describe("envoyerEmailMotDePasse sans clé Resend", () => {
     vi.stubEnv("RESEND_API_KEY", "");
     vi.stubEnv("NODE_ENV", "development");
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
-    await expect(envoyerEmailMotDePasse(p)).resolves.toBeUndefined();
-    expect(info).toHaveBeenCalledWith(expect.stringContaining(url));
+    await expect(envoyerEmailVerifie(p)).resolves.toBeUndefined();
+    expect(info).toHaveBeenCalledWith(expect.stringContaining(url.replace(/&/g, "&amp;")));
   });
 
   it.each(["production", "test"])("refuse hors développement (%s) et n'écrit pas le lien", async (env) => {
@@ -47,7 +54,7 @@ describe("envoyerEmailMotDePasse sans clé Resend", () => {
     vi.stubEnv("NODE_ENV", env);
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
-    await expect(envoyerEmailMotDePasse(p)).rejects.toThrow(
+    await expect(envoyerEmailVerifie(p)).rejects.toThrow(
       "Envoi d'email impossible : aucun service d'email n'est configuré.",
     );
     for (const spy of [info, log]) {
