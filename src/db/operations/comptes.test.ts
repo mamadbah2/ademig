@@ -129,7 +129,32 @@ describe("activation", () => {
     expect(await db.$count(account, eq(account.userId, m.id))).toBe(0);
 
     await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: true });
-    expect(await db.query.user.findFirst({ where: eq(user.id, m.id) })).toMatchObject({ actif: true, desactiveLe: null });
+    // Lié à une fiche et sans mot de passe : inactif jusqu'à l'activation par son invitation.
+    expect(await db.query.user.findFirst({ where: eq(user.id, m.id) })).toMatchObject({ actif: false, desactiveLe: null });
     await expect(verifierInvitable(db, m.id)).resolves.toBeUndefined();
+  });
+
+  it("réactiver un compte de membre sans mot de passe le laisse inactif (à inviter)", async () => {
+    const db = await creerDbTest();
+    const a = await creerCompte(db, awa);
+    const m = await creerCompte(db, { nom: "Membre", email: "membre@exemple.sn", role: "membre" });
+    await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: false });
+    await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: true });
+    expect(await db.query.user.findFirst({ where: eq(user.id, m.id) })).toMatchObject({ actif: false, desactiveLe: null });
+    // Compte d'administration lié à une fiche, sans mot de passe : son invitation de membre l'activera.
+    const e = await creerCompte(db, { nom: "Éditeur", email: "editeur@exemple.sn", role: "editeur" });
+    await db.insert(membres).values({ slug: "editeur", nom: "Éditeur", titre: "T", specialite: "S", resume: "R", userId: e.id });
+    await changerActivation(db, { acteurId: a.id, cibleId: e.id, actif: false });
+    await changerActivation(db, { acteurId: a.id, cibleId: e.id, actif: true });
+    expect(await db.query.user.findFirst({ where: eq(user.id, e.id) })).toMatchObject({ actif: false, desactiveLe: null });
+  });
+
+  it("réactiver un compte d'administration sans fiche ni mot de passe le rend actif (son lien Better Auth crée le mot de passe)", async () => {
+    const db = await creerDbTest();
+    const a = await creerCompte(db, awa);
+    const m = await creerCompte(db, moussa);
+    await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: false });
+    await changerActivation(db, { acteurId: a.id, cibleId: m.id, actif: true });
+    expect(await db.query.user.findFirst({ where: eq(user.id, m.id) })).toMatchObject({ actif: true, desactiveLe: null });
   });
 });

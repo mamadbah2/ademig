@@ -1,6 +1,6 @@
 import { hashPassword } from "better-auth/crypto";
 import { and, count, eq, isNull, ne } from "drizzle-orm";
-import { account, emailsFile, invitations, session, user } from "@/db/schema";
+import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import type { Role } from "@/lib/roles";
 import { ErreurMetier } from "./erreurs";
@@ -101,7 +101,16 @@ export async function changerActivation(db: Db, p: { acteurId: string; cibleId: 
   if (!p.actif) await verifierQuIlResteUnSuperadmin(db, cible);
   const ecrire = async (tx: Db) => {
     if (p.actif) {
-      await tx.update(user).set({ actif: true, desactiveLe: null }).where(eq(user.id, p.cibleId));
+      // Comme reactiverCompteMembre : un compte de membre (ou lié à une fiche) sans mot de passe redevient
+      // « à inviter », inactif ; son invitation l'activera. Un compte d'administration sans fiche reste actif :
+      // son lien Better Auth crée le mot de passe sans toucher à `actif`.
+      const mdp = await tx.query.account.findFirst({
+        where: and(eq(account.userId, p.cibleId), eq(account.providerId, "credential")),
+        columns: { id: true },
+      });
+      const fiche = await tx.query.membres.findFirst({ where: eq(membres.userId, p.cibleId), columns: { id: true } });
+      const actif = Boolean(mdp) || (cible.role !== "membre" && !fiche);
+      await tx.update(user).set({ actif, desactiveLe: null }).where(eq(user.id, p.cibleId));
       return;
     }
     await tx.update(user).set({ actif: false, desactiveLe: new Date() }).where(eq(user.id, p.cibleId));

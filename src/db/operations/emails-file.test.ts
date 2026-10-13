@@ -184,3 +184,15 @@ describe("viderFile : invitations construites à l'envoi", () => {
     expect(lignes.every((l) => l.statut === "echec" && l.tentatives === 0)).toBe(true);
   });
 });
+
+describe("viderFile : invitation sans compte", () => {
+  it("passe en échec sans envoi", async () => {
+    const db = await creerDbTest();
+    await mettreEnFile(db, { ...email(1), type: "invitation", html: "" });
+    const envoyer = vi.fn().mockResolvedValue(undefined);
+    expect(await viderFile(db, options(envoyer))).toEqual({ envoyes: 0, echecs: 0, restants: 0 });
+    expect(envoyer).not.toHaveBeenCalled();
+    const [ligne] = await db.select().from(emailsFile);
+    expect(ligne).toMatchObject({ statut: "echec", tentatives: 0, erreur: "Invitation sans compte : jamais envoyée." });
+  });
+});

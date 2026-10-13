@@ -65,6 +65,11 @@ export async function viderFile(
       await abandonner("Adresse de test : jamais envoyée.");
       continue;
     }
+    // Une invitation se construit à partir du compte : sans compte, il n'y a rien à envoyer.
+    if (ligne.type === "invitation" && !ligne.userId) {
+      await abandonner("Invitation sans compte : jamais envoyée.");
+      continue;
+    }
     if (!premier) await new Promise((r) => setTimeout(r, pauseMs));
     premier = false;
     const marquerEnvoye = (tx: Db) =>
