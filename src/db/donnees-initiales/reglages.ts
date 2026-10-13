@@ -20,4 +20,5 @@ export const reglagesInitiaux: Reglages = {
     { label: "Facebook", url: "https://www.facebook.com/share/1AhAE1eCAQ/" },
   ],
   textes: {},
+  faq: null,
 };

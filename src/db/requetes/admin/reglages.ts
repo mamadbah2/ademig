@@ -8,5 +8,5 @@ export type ReglagesAdmin = Reglages & { version: string | null };
 export async function lireReglagesAdmin(db: Db): Promise<ReglagesAdmin> {
   const ligne = await db.query.reglages.findFirst();
   if (!ligne) return { ...reglagesInitiaux, version: null };
-  return { contact: ligne.contact, reseaux: ligne.reseaux, textes: ligne.textes, version: ligne.majLe.toISOString() };
+  return { contact: ligne.contact, reseaux: ligne.reseaux, textes: ligne.textes, faq: ligne.faq, version: ligne.majLe.toISOString() };
 }

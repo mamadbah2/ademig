@@ -12,7 +12,7 @@ vi.mock("@/db", () => ({ db: {} }));
 vi.mock("@/db/operations/reglages", () => ops);
 vi.mock("next/cache", () => cache);
 
-import { enregistrerCoordonnees, enregistrerReseaux, enregistrerTextes } from "./reglages";
+import { enregistrerCoordonnees, enregistrerFaq, enregistrerReseaux, enregistrerTextes } from "./reglages";
 
 const VERSION = "2026-10-11T10:00:00.000Z";
 const NOUVELLE = "2026-10-11T11:00:00.000Z";
@@ -41,6 +41,7 @@ describe("autorisation", () => {
     expect(await enregistrerCoordonnees(null, formulaire({ ...coordonnees, version: VERSION }))).toEqual(refus);
     expect(await enregistrerReseaux(null, formulaire({ reseaux: "[]", version: VERSION }))).toEqual(refus);
     expect(await enregistrerTextes(null, formulaire({ version: VERSION }))).toEqual(refus);
+    expect(await enregistrerFaq(null, formulaire({ faq: "[]", version: VERSION }))).toEqual(refus);
     expect(ops.modifierReglages).not.toHaveBeenCalled();
     expect(exigerRole).toHaveBeenCalledWith("editeur");
   });
@@ -81,6 +82,14 @@ describe("avec une session d'éditeur", () => {
     const r = await enregistrerTextes(null, formulaire({ "accueil.accroche": TEXTES["accueil.accroche"].defaut, version: VERSION }));
     expect(r).toEqual({ ok: true, message: "Textes enregistrés.", donnees: { version: NOUVELLE } });
     expect(ops.modifierReglages).toHaveBeenCalledWith({}, { textes: {} }, { version: VERSION });
+  });
+
+  it("enregistre la FAQ, seule, et invalide le cache des réglages", async () => {
+    const faq = [{ question: "Comment adhérer ?", reponse: "Écrivez au bureau." }];
+    const r = await enregistrerFaq(null, formulaire({ faq: JSON.stringify(faq), version: VERSION }));
+    expect(r).toEqual({ ok: true, message: "Questions fréquentes enregistrées.", donnees: { version: NOUVELLE } });
+    expect(ops.modifierReglages).toHaveBeenCalledWith({}, { faq }, { version: VERSION });
+    expect(cache.revalidateTag).toHaveBeenCalledWith("reglages", { expire: 0 });
   });
 
   it("un conflit de version devient un message", async () => {

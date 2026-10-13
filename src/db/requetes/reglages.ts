@@ -6,5 +6,5 @@ import type { Reglages } from "@/lib/content/types";
 export async function lireReglages(db: Db): Promise<Reglages> {
   const ligne = await db.query.reglages.findFirst();
   if (!ligne) return reglagesInitiaux;
-  return { contact: ligne.contact, reseaux: ligne.reseaux, textes: ligne.textes };
+  return { contact: ligne.contact, reseaux: ligne.reseaux, textes: ligne.textes, faq: ligne.faq };
 }

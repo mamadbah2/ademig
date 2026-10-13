@@ -1,0 +1,1 @@
+ALTER TABLE "reglages" ADD COLUMN "faq" jsonb;

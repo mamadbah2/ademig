@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FAQ_MAX_QUESTION, FAQ_MAX_QUESTIONS, FAQ_MAX_REPONSE } from "@/lib/content/faq";
 import { CLES_TEXTES, type CleTexte, normaliserTexte, TEXTES, textesAEnregistrer } from "@/lib/content/textes";
 import { champJson } from "./commun";
 
@@ -65,3 +66,29 @@ function champTexte(cle: CleTexte) {
 export const schemaTextes = z
   .strictObject({ ...Object.fromEntries(CLES_TEXTES.map((cle) => [cle, champTexte(cle)])), version })
   .transform(({ version, ...saisie }) => ({ version, textes: textesAEnregistrer(saisie) }));
+
+// Une question tient sur une ligne ; la réponse garde ses retours à la ligne.
+const questionFaq = z.object({
+  question: z
+    .string()
+    .transform((v) => v.replace(/\s+/g, " ").trim())
+    .pipe(z.string().min(1, "Écrivez chaque question.").max(FAQ_MAX_QUESTION, `${FAQ_MAX_QUESTION} caractères au plus.`)),
+  reponse: z
+    .string()
+    .transform((v) => v.replace(/\r\n?/g, "\n").trim())
+    .pipe(z.string().min(1, "Écrivez la réponse à chaque question.").max(FAQ_MAX_REPONSE, `${FAQ_MAX_REPONSE} caractères au plus.`)),
+});
+
+// Une liste vide est permise : elle masque la section FAQ de l'accueil.
+export const schemaFaq = z.object({
+  faq: champJson(
+    z
+      .array(questionFaq)
+      .max(FAQ_MAX_QUESTIONS, `${FAQ_MAX_QUESTIONS} questions au plus.`)
+      .refine(
+        (liste) => new Set(liste.map((q) => q.question.toLowerCase())).size === liste.length,
+        "Deux questions sont identiques.",
+      ),
+  ),
+  version,
+});

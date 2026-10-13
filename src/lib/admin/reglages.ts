@@ -7,11 +7,11 @@ import { modifierReglages, type PartieReglages } from "@/db/operations/reglages"
 import { action } from "@/lib/admin/action";
 import { lireFormulaire, type Resultat } from "@/lib/admin/resultat";
 import { TAGS } from "@/lib/content/tags";
-import { schemaCoordonnees, schemaReseaux, schemaTextes } from "@/lib/validation/reglages";
+import { schemaCoordonnees, schemaFaq, schemaReseaux, schemaTextes } from "@/lib/validation/reglages";
 
 export type ResultatReglages = Resultat<{ version: string }>;
 
-// Les trois onglets suivent le même chemin : validation, écriture de leur seule partie, invalidation.
+// Les onglets suivent le même chemin : validation, écriture de leur seule partie, invalidation.
 function enregistrer(schema: z.ZodType<PartieReglages & { version?: string }>, donnees: FormData, message: string) {
   return action<{ version: string }>("editeur", async () => {
     const saisie = lireFormulaire(schema, donnees);
@@ -35,4 +35,8 @@ export async function enregistrerReseaux(_etat: ResultatReglages | null, donnees
 
 export async function enregistrerTextes(_etat: ResultatReglages | null, donnees: FormData): Promise<ResultatReglages> {
   return enregistrer(schemaTextes, donnees, "Textes enregistrés.");
+}
+
+export async function enregistrerFaq(_etat: ResultatReglages | null, donnees: FormData): Promise<ResultatReglages> {
+  return enregistrer(schemaFaq, donnees, "Questions fréquentes enregistrées.");
 }
