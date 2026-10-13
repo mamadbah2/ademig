@@ -1,5 +1,5 @@
 import { hashPassword } from "better-auth/crypto";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { contenuInvitationMembre } from "@/lib/emails";
@@ -24,7 +24,13 @@ export async function creerInvitation(db: Db, userId: string, maintenant = new D
 }
 
 // Crée l'invitation et met l'email dans la file d'envoi (le cron quotidien l'enverra).
-export async function inviterParEmail(db: Db, userId: string, urlActivation: (jeton: string) => string): Promise<void> {
+// `prioritaire` (« Renvoyer ») : l'email est antidaté d'un an pour partir au prochain passage du cron.
+export async function inviterParEmail(
+  db: Db,
+  userId: string,
+  urlActivation: (jeton: string) => string,
+  { prioritaire = false }: { prioritaire?: boolean } = {},
+): Promise<void> {
   const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { email: true, name: true } });
   if (!compte) throw new ErreurMetier("Compte introuvable.");
   const fiche = await db.query.membres.findFirst({ where: eq(membres.userId, userId), columns: { nom: true } });
@@ -35,8 +41,50 @@ export async function inviterParEmail(db: Db, userId: string, urlActivation: (je
       .where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
     const { jeton } = await creerInvitation(tx, userId);
     const { sujet, html } = contenuInvitationMembre({ prenomNom: fiche?.nom ?? compte.name, url: urlActivation(jeton) });
-    await mettreEnFile(tx, { destinataire: compte.email, sujet, html, type: "invitation", userId });
+    const creeLe = prioritaire ? new Date(Date.now() - 365 * 24 * 3600 * 1000) : undefined;
+    await mettreEnFile(tx, { destinataire: compte.email, sujet, html, type: "invitation", userId, creeLe });
   });
+}
+
+// Une invitation active le compte (et le réactive) : on ne l'envoie qu'à un compte qui n'a jamais défini son mot de passe.
+export async function verifierInvitable(db: Db, userId: string): Promise<void> {
+  const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { actif: true } });
+  if (!compte) throw new ErreurMetier("Compte introuvable.");
+  const mdp = await db.query.account.findFirst({
+    where: and(eq(account.userId, userId), eq(account.providerId, "credential")),
+    columns: { id: true },
+  });
+  if (!mdp) return;
+  throw new ErreurMetier(
+    compte.actif
+      ? "Ce compte est déjà activé."
+      : "Ce compte est désactivé : réactivez-le dans la rubrique Comptes plutôt que de renvoyer une invitation.",
+  );
+}
+
+// Nouveau lien à transmettre à la main : l'ancien lien meurt et l'email encore en file, qui le porterait, est retiré.
+export async function genererLienInvitation(db: Db, userId: string): Promise<{ jeton: string }> {
+  const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { id: true } });
+  if (!compte) throw new ErreurMetier("Compte introuvable.");
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(emailsFile)
+      .where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
+    return creerInvitation(tx, userId);
+  });
+}
+
+// Rattrapage : met en file une invitation pour chaque compte de fiche sans mot de passe et jamais invité.
+export async function inviterLesNonInvites(db: Db, urlActivation: (jeton: string) => string): Promise<number> {
+  const fiches = await db.select({ userId: membres.userId }).from(membres).where(isNotNull(membres.userId));
+  const suivi = await suiviInvitations(db, fiches.map((f) => f.userId!));
+  // Un compte avec mot de passe mais désactivé relève de « Comptes », pas d'une invitation.
+  const avecMotDePasse = new Set(
+    (await db.select({ userId: account.userId }).from(account).where(eq(account.providerId, "credential"))).map((a) => a.userId),
+  );
+  const cibles = [...suivi.values()].filter((s) => s.statut === "a_inviter" && !avecMotDePasse.has(s.userId));
+  for (const { userId } of cibles) await inviterParEmail(db, userId, urlActivation);
+  return cibles.length;
 }
 
 export type EtatJeton =
@@ -140,7 +188,12 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
   const avecMotDePasse = new Set(credentials.map((c) => c.userId));
   // Triés du plus récent au plus ancien : le premier email rencontré par compte est le dernier envoyé.
   const dernierEmail = new Map<string, (typeof emails)[number]>();
-  for (const e of emails) if (e.userId && !dernierEmail.has(e.userId)) dernierEmail.set(e.userId, e);
+  // Un email en file l'emporte : « Renvoyer » l'antidate, il peut donc sembler plus ancien qu'un envoi passé.
+  for (const e of emails) {
+    if (!e.userId) continue;
+    const retenu = dernierEmail.get(e.userId);
+    if (!retenu || (e.statut === "a_envoyer" && retenu.statut !== "a_envoyer")) dernierEmail.set(e.userId, e);
+  }
   const derniereInvitation = new Map<string, Date>();
   for (const i of invs) {
     const precedente = derniereInvitation.get(i.userId);

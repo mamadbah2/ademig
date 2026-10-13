@@ -11,6 +11,8 @@ type EmailEnFile = {
   html: string;
   type: "invitation" | "rappel" | "systeme";
   userId?: string;
+  // Pour passer devant les autres dans la file (le cron traite du plus ancien au plus récent).
+  creeLe?: Date;
 };
 
 export async function mettreEnFile(db: Db, e: EmailEnFile): Promise<void> {

@@ -1,11 +1,14 @@
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { creerMembre, type DonneesMembre } from "@/db/operations/membres";
 import { trouverMembre } from "@/db/requetes/membres";
-import { mandats, postesBureau } from "@/db/schema";
+import { creerCompte } from "@/db/operations/comptes";
+import { inviterParEmail } from "@/db/operations/invitations";
+import { membres, mandats, postesBureau } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
 import { cheminApercu } from "./apercu";
-import { lireMembreAdmin, listerMembresAdmin, optionsMembres } from "./membres";
+import { lireCompteDuMembre, lireMembreAdmin, listerMembresAdmin, optionsMembres } from "./membres";
 
 const base: DonneesMembre = {
   nom: "Awa Ndiaye",
@@ -45,6 +48,23 @@ describe("lectures de l'admin des membres", () => {
       ["Bineta Fall", true, "Secrétaire générale"],
     ]);
     expect((await listerMembresAdmin(db, { q: "bine", page: 1 })).lignes.map((l) => l.slug)).toEqual(["bineta-fall"]);
+  });
+
+  it("donne le statut du compte et filtre la liste par statut", async () => {
+    const a = await creerMembre(db, base);
+    await creerMembre(db, { ...base, nom: "Bineta Fall", slug: "bineta-fall" });
+    const { id: userId } = await creerCompte(db, { nom: "Awa", email: "e2e-awa@ademig.test", role: "membre" });
+    await db.update(membres).set({ userId }).where(eq(membres.id, a.id));
+    await inviterParEmail(db, userId, (j) => `https://exemple.test/activer?jeton=${j}`);
+
+    const { lignes } = await listerMembresAdmin(db, { q: "", page: 1 });
+    expect(lignes.map((l) => [l.nom, l.suivi?.statut ?? null])).toEqual([["Awa Ndiaye", "en_file"], ["Bineta Fall", null]]);
+    const filtre = await listerMembresAdmin(db, { q: "", compte: "en_file", page: 1 });
+    expect(filtre.total).toBe(1);
+    expect(filtre.lignes[0].nom).toBe("Awa Ndiaye");
+    expect((await listerMembresAdmin(db, { q: "", compte: "echec", page: 1 })).total).toBe(0);
+    expect(await lireCompteDuMembre(db, a.id)).toMatchObject({ userId, email: "e2e-awa@ademig.test", aMotDePasse: false, suivi: { statut: "en_file" } });
+    expect(await lireCompteDuMembre(db, "00000000-0000-4000-8000-000000000000")).toBeNull();
   });
 
   it("lit une fiche prête pour le formulaire", async () => {

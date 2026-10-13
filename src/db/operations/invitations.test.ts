@@ -1,12 +1,21 @@
 import { verifyPassword } from "better-auth/crypto";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
 import { creerCompte, creerCompteAvecMotDePasse } from "./comptes";
 import { ErreurMetier } from "./erreurs";
-import { activerCompte, creerInvitation, inviterParEmail, suiviInvitations, verifierJeton } from "./invitations";
+import {
+  activerCompte,
+  creerInvitation,
+  genererLienInvitation,
+  inviterLesNonInvites,
+  inviterParEmail,
+  suiviInvitations,
+  verifierInvitable,
+  verifierJeton,
+} from "./invitations";
 
 const JOUR = 24 * 3600 * 1000;
 
@@ -153,6 +162,80 @@ describe("inviterParEmail", () => {
     expect(file).toHaveLength(1);
     expect((await verifierJeton(db, jetonDe(file[0].html))).ok).toBe(true);
     expect(await db.select().from(invitations).where(eq(invitations.userId, id))).toHaveLength(1);
+  });
+});
+
+describe("inviterParEmail prioritaire", () => {
+  it("antidate l'email pour qu'il parte en tête de file", async () => {
+    const db = await creerDbTest();
+    const [a, b] = [await membreAvecCompte(db, 1), await membreAvecCompte(db, 2)];
+    const url = (j: string) => `https://exemple.test/activer?jeton=${j}`;
+    await inviterParEmail(db, a, url);
+    await inviterParEmail(db, b, url, { prioritaire: true });
+    const [premier] = await db.select().from(emailsFile).orderBy(asc(emailsFile.creeLe));
+    expect(premier.userId).toBe(b);
+    expect(Date.now() - premier.creeLe.getTime()).toBeGreaterThan(300 * JOUR);
+  });
+
+  it("le statut reste « en file » malgré un ancien email déjà envoyé", async () => {
+    const db = await creerDbTest();
+    const id = await membreAvecCompte(db, 1);
+    await db.insert(emailsFile).values({ sujet: "s", html: "h", type: "invitation", destinataire: "e2e-1@ademig.test", userId: id, statut: "envoye", envoyeLe: new Date() });
+    await inviterParEmail(db, id, (j) => `https://exemple.test/activer?jeton=${j}`, { prioritaire: true });
+    expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("en_file");
+  });
+});
+
+describe("verifierInvitable", () => {
+  it("accepte un compte pas encore activé", async () => {
+    const db = await creerDbTest();
+    const id = await membreAvecCompte(db, 1);
+    await expect(verifierInvitable(db, id)).resolves.toBeUndefined();
+  });
+
+  it("refuse un compte activé, un compte désactivé avec mot de passe et un compte inconnu", async () => {
+    const db = await creerDbTest();
+    const id = await membreAvecCompte(db, 1);
+    const { jeton } = await creerInvitation(db, id);
+    await activerCompte(db, jeton, "motdepasse-solide");
+    await expect(verifierInvitable(db, id)).rejects.toThrow(/déjà activé/);
+    await db.update(user).set({ actif: false }).where(eq(user.id, id));
+    await expect(verifierInvitable(db, id)).rejects.toThrow(/désactivé/);
+    await expect(verifierInvitable(db, "inconnu")).rejects.toBeInstanceOf(ErreurMetier);
+  });
+});
+
+describe("genererLienInvitation", () => {
+  it("invalide l'ancien lien et retire l'email en file, sans en mettre un autre", async () => {
+    const db = await creerDbTest();
+    const id = await membreAvecCompte(db, 1);
+    await inviterParEmail(db, id, (j) => `https://exemple.test/activer?jeton=${j}`);
+    const [ancien] = await db.select().from(emailsFile);
+    const { jeton } = await genererLienInvitation(db, id);
+    expect(await db.select().from(emailsFile)).toHaveLength(0);
+    expect((await verifierJeton(db, jetonDe(ancien.html))).ok).toBe(false);
+    expect((await verifierJeton(db, jeton)).ok).toBe(true);
+    expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("invite");
+  });
+
+  it("refuse un compte inconnu", async () => {
+    const db = await creerDbTest();
+    await expect(genererLienInvitation(db, "inconnu")).rejects.toBeInstanceOf(ErreurMetier);
+  });
+});
+
+describe("inviterLesNonInvites", () => {
+  it("met en file les seuls comptes de fiche pas encore invités, une fois chacun", async () => {
+    const db = await creerDbTest();
+    const [a, b, c] = [await membreAvecCompte(db, 1), await membreAvecCompte(db, 2), await membreAvecCompte(db, 3)];
+    await creerCompte(db, { nom: "Sans fiche", email: "e2e-sans@ademig.test", role: "membre" });
+    await inviterParEmail(db, b, (j) => `https://exemple.test/activer?jeton=${j}`);
+    const { jeton } = await creerInvitation(db, c);
+    await activerCompte(db, jeton, "motdepasse-solide");
+    expect(await inviterLesNonInvites(db, (j) => `https://exemple.test/activer?jeton=${j}`)).toBe(1);
+    const file = await db.select().from(emailsFile).where(eq(emailsFile.userId, a));
+    expect(file).toHaveLength(1);
+    expect(await inviterLesNonInvites(db, (j) => `https://exemple.test/activer?jeton=${j}`)).toBe(0);
   });
 });
 

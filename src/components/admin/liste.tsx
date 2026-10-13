@@ -1,9 +1,20 @@
 import Link from "next/link";
-import { type Filtre, urlListe } from "@/lib/admin/filtre";
+import { FILTRES_COMPTE, type Filtre, urlListe } from "@/lib/admin/filtre";
 import { PAR_PAGE } from "@/db/requetes/admin/commun";
+import { LIBELLES_FILTRE_COMPTE } from "./badge-compte";
 import { Bouton, Champ, Selection } from "./ui";
 
-export function FiltresListe({ base, filtre, avecStatut = true }: { base: string; filtre: Filtre; avecStatut?: boolean }) {
+export function FiltresListe({
+  base,
+  filtre,
+  avecStatut = true,
+  avecCompte = false,
+}: {
+  base: string;
+  filtre: Filtre;
+  avecStatut?: boolean;
+  avecCompte?: boolean;
+}) {
   return (
     <form role="search" action={base} className="mb-6 flex flex-wrap items-end gap-3">
       <Champ label="Rechercher" name="q" type="search" defaultValue={filtre.q} className="w-full max-w-sm" />
@@ -17,6 +28,14 @@ export function FiltresListe({ base, filtre, avecStatut = true }: { base: string
             { valeur: "publie", libelle: "Publiés" },
             { valeur: "brouillon", libelle: "Brouillons" },
           ]}
+        />
+      )}
+      {avecCompte && (
+        <Selection
+          label="Compte"
+          name="compte"
+          defaultValue={filtre.compte ?? ""}
+          options={[{ valeur: "", libelle: "Tous" }, ...FILTRES_COMPTE.map((c) => ({ valeur: c, libelle: LIBELLES_FILTRE_COMPTE[c] }))]}
         />
       )}
       <Bouton type="submit" variante="secondaire">
