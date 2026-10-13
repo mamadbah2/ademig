@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { creerMembre, type DonneesMembre } from "@/db/operations/membres";
 import { trouverMembre } from "@/db/requetes/membres";
 import { creerCompte } from "@/db/operations/comptes";
-import { inviterParEmail } from "@/db/operations/invitations";
+import { creerInvitation, inviterParEmail } from "@/db/operations/invitations";
 import { membres, mandats, postesBureau } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
@@ -65,6 +65,15 @@ describe("lectures de l'admin des membres", () => {
     expect((await listerMembresAdmin(db, { q: "", compte: "echec", page: 1 })).total).toBe(0);
     expect(await lireCompteDuMembre(db, a.id)).toMatchObject({ userId, email: "e2e-awa@ademig.test", aMotDePasse: false, suivi: { statut: "en_file" } });
     expect(await lireCompteDuMembre(db, "00000000-0000-4000-8000-000000000000")).toBeNull();
+  });
+
+  it("filtre les liens expirés", async () => {
+    const a = await creerMembre(db, base);
+    const { id: userId } = await creerCompte(db, { nom: "Awa", email: "e2e-awa@ademig.test", role: "membre" });
+    await db.update(membres).set({ userId }).where(eq(membres.id, a.id));
+    await creerInvitation(db, userId, new Date(Date.now() - 31 * 24 * 3600 * 1000));
+    const filtre = await listerMembresAdmin(db, { q: "", compte: "expire", page: 1 });
+    expect(filtre.lignes.map((l) => [l.nom, l.suivi?.statut])).toEqual([["Awa Ndiaye", "expire"]]);
   });
 
   it("lit une fiche prête pour le formulaire", async () => {

@@ -11,6 +11,7 @@ describe("lireFiltre", () => {
   });
   it("lit le filtre de compte et ignore une valeur inconnue", () => {
     expect(lireFiltre({ compte: "en_file" }).compte).toBe("en_file");
+    expect(lireFiltre({ compte: "expire" }).compte).toBe("expire");
     expect(lireFiltre({ compte: "nimporte" }).compte).toBeUndefined();
   });
   it("plafonne la page", () => {
