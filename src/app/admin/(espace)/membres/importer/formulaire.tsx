@@ -28,10 +28,26 @@ function Compteur({ valeur, libelle }: { valeur: number; libelle: string }) {
 }
 
 export function FormulaireImport() {
+  // Changer la clé remonte le composant : l'état de l'analyse et du bilan repart de zéro.
+  const [essai, setEssai] = useState(0);
+  return <Import key={essai} recommencer={() => setEssai((n) => n + 1)} />;
+}
+
+function Import({ recommencer }: { recommencer: () => void }) {
   const [etat, analyser, analyseEnCours] = useActionState<Resultat<ApercuImport> | null, FormData>(analyserImport, null);
   const [bilan, setBilan] = useState<Resultat<BilanImport> | null>(null);
   const [confirmation, demarrer] = useTransition();
   const apercu = etat?.ok ? etat.donnees : undefined;
+
+  // Une requête refusée avant l'action (taille, réseau) lève : on l'affiche au lieu de laisser l'écran figé.
+  const confirmer = (csv: string) =>
+    demarrer(async () => {
+      try {
+        setBilan(await confirmerImport(csv));
+      } catch {
+        setBilan({ ok: false, message: "L'import n'a pas pu aboutir (fichier trop volumineux ou connexion perdue). Vérifiez la liste des membres avant de recommencer." });
+      }
+    });
 
   // Étape 3 : le résultat remplace l'aperçu.
   if (bilan?.ok && bilan.donnees) {
@@ -42,12 +58,16 @@ export function FormulaireImport() {
           Import terminé
         </h2>
         <Alerte resultat={{ ok: true, message: `${b.crees} fiche(s) créée(s), ${b.rattaches} rattachée(s) à une fiche ou un compte existant, ${b.ignores} ignorée(s), ${b.invites} invitation(s) mise(s) en file.` }} />
+        {b.echecs > 0 && <Alerte resultat={{ ok: false, message: bilan.message }} />}
         <p>Les invitations partent par lots de {PAR_JOUR} par jour, à partir du prochain envoi.</p>
         <p>
           <Link href="/admin/membres?compte=en_file" className="font-bold underline underline-offset-4">
             Voir les membres en file d&apos;invitation
           </Link>
         </p>
+        <Bouton type="button" variante="secondaire" onClick={recommencer}>
+          Importer un autre fichier
+        </Bouton>
       </section>
     );
   }
@@ -132,16 +152,14 @@ export function FormulaireImport() {
             </p>
             {bilan && !bilan.ok && <Alerte resultat={bilan} />}
             {/* Le CSV est renvoyé tel quel et réanalysé côté serveur à la confirmation. */}
-            <Bouton type="button" disabled={confirmation} onClick={() => demarrer(async () => setBilan(await confirmerImport(csv)))}>
+            <Bouton type="button" disabled={confirmation} onClick={() => confirmer(csv)}>
               {confirmation ? "Import en cours…" : `Importer ${n} membre${n > 1 ? "s" : ""} et programmer les invitations`}
             </Bouton>
           </div>
         )}
-        <p>
-          <Link href="/admin/membres/importer" className="underline underline-offset-4">
-            Choisir un autre fichier
-          </Link>
-        </p>
+        <Bouton type="button" variante="secondaire" onClick={recommencer}>
+          Choisir un autre fichier
+        </Bouton>
       </section>
     );
   }

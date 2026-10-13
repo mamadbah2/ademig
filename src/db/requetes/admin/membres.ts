@@ -1,6 +1,6 @@
 import { and, asc, eq, ilike, isNotNull } from "drizzle-orm";
-import { type SuiviInvitation, suiviInvitations } from "@/db/operations/invitations";
-import { account, membres, user } from "@/db/schema";
+import { etatCompte, type SuiviInvitation, suiviInvitations } from "@/db/operations/invitations";
+import { membres, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import type { Filtre } from "@/lib/admin/filtre";
 import type { Etape, Realisation } from "@/lib/content/types";
@@ -75,7 +75,7 @@ export async function listerMembresAdmin(db: Db, f: Filtre): Promise<{ lignes: L
   };
 }
 
-export type CompteDuMembre = { userId: string; email: string; actif: boolean; aMotDePasse: boolean; suivi: SuiviInvitation };
+export type CompteDuMembre = { userId: string; email: string; actif: boolean; aMotDePasse: boolean; desactive: boolean; suivi: SuiviInvitation };
 
 // Compte lié à une fiche, avec le statut de son invitation (null si la fiche n'a pas de compte).
 export async function lireCompteDuMembre(db: Db, membreId: string): Promise<CompteDuMembre | null> {
@@ -86,11 +86,8 @@ export async function lireCompteDuMembre(db: Db, membreId: string): Promise<Comp
     .where(eq(membres.id, membreId));
   if (!ligne) return null;
   const suivi = (await suiviInvitations(db, [ligne.userId])).get(ligne.userId)!;
-  const mdp = await db.query.account.findFirst({
-    where: and(eq(account.userId, ligne.userId), eq(account.providerId, "credential")),
-    columns: { id: true },
-  });
-  return { ...ligne, aMotDePasse: Boolean(mdp), suivi };
+  const etat = (await etatCompte(db, ligne.userId))!;
+  return { ...ligne, aMotDePasse: etat.aMotDePasse, desactive: etat.desactive, suivi };
 }
 
 export async function lireMembreAdmin(db: Db, id: string): Promise<MembreAdmin | undefined> {

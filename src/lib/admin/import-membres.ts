@@ -15,7 +15,7 @@ const TAILLE_MAX = 1024 * 1024;
 const GROUPE = 20;
 
 export type ApercuImport = { lignes: LigneClassee[]; problemes: ProblemeImport[]; csv: string };
-export type BilanImport = { crees: number; rattaches: number; ignores: number; invites: number };
+export type BilanImport = { crees: number; rattaches: number; ignores: number; invites: number; echecs: number };
 
 export async function analyserImport(_etat: unknown, donnees: FormData): Promise<Resultat<ApercuImport>> {
   return action("superadmin", async () => {
@@ -36,10 +36,20 @@ export async function confirmerImport(csv: string): Promise<Resultat<BilanImport
     const { valides } = analyserCsv(csv);
     const { crees, rattaches, ignores, aInviter } = await executerImport(db, valides);
     const comptes = [...new Set(aInviter)];
+    // L'import est déjà enregistré : une invitation qui échoue est comptée, pas fatale (rattrapage : « Inviter tous »).
+    let echecs = 0;
     for (let i = 0; i < comptes.length; i += GROUPE) {
-      await Promise.all(comptes.slice(i, i + GROUPE).map((id) => inviterParEmail(db, id, urlActivation)));
+      const issues = await Promise.allSettled(comptes.slice(i, i + GROUPE).map((id) => inviterParEmail(db, id, urlActivation)));
+      echecs += issues.filter((r) => r.status === "rejected").length;
     }
     revalidatePath("/admin/membres");
-    return { ok: true, donnees: { crees, rattaches, ignores, invites: comptes.length } };
+    const donnees = { crees, rattaches, ignores, invites: comptes.length - echecs, echecs };
+    return echecs === 0
+      ? { ok: true, donnees }
+      : {
+          ok: true,
+          donnees,
+          message: `Import enregistré, mais ${echecs} invitation(s) n'ont pas pu être mises en file : utilisez « Inviter tous les membres pas encore invités » sur la liste.`,
+        };
   });
 }

@@ -18,9 +18,9 @@ const lienBouton = "inline-flex min-h-11 items-center px-4 py-2 font-bold focus-
 export default async function Membres({ searchParams }: PageProps<"/admin/membres">) {
   const session = await exigerSession();
   if (!aLeRole(session.role, "editeur")) return <AccesRefusePage />;
-  const filtre = lireFiltre(await searchParams);
   const estSuperadmin = aLeRole(session.role, "superadmin");
-  const { lignes, total } = await listerMembresAdmin(db, filtre);
+  const filtre = lireFiltre(await searchParams);
+  const { lignes, total } = await listerMembresAdmin(db, estSuperadmin ? filtre : { ...filtre, compte: undefined });
 
   return (
     <>
@@ -45,7 +45,7 @@ export default async function Membres({ searchParams }: PageProps<"/admin/membre
           <InviterTous />
         </div>
       )}
-      <FiltresListe base={BASE} filtre={filtre} avecStatut={false} avecCompte />
+      <FiltresListe base={BASE} filtre={filtre} avecStatut={false} avecCompte={estSuperadmin} />
       {lignes.length === 0 ? (
         <EtatVide>{filtre.q || filtre.compte ? "Aucun membre ne correspond." : "Aucun membre pour le moment."}</EtatVide>
       ) : (
@@ -56,7 +56,7 @@ export default async function Membres({ searchParams }: PageProps<"/admin/membre
                 <span className="min-w-0 flex-1 font-bold">{m.nom}</span>
                 <span className="text-sm">{m.titre}</span>
                 {m.fonction && <span className="text-sm">{m.fonction}</span>}
-                {m.suivi && <BadgeCompte suivi={m.suivi} />}
+                {estSuperadmin && m.suivi && <BadgeCompte suivi={m.suivi} />}
                 <Badge ton={m.visible ? "vert" : "moutarde"}>{m.visible ? "Visible" : "Masqué"}</Badge>
               </Link>
             </li>

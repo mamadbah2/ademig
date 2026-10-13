@@ -8,6 +8,7 @@ const invitations = vi.hoisted(() => ({
   genererLienInvitation: vi.fn(),
   inviterLesNonInvites: vi.fn(),
   verifierInvitable: vi.fn(),
+  desactiverCompteMembre: vi.fn(),
 }));
 const comptes = vi.hoisted(() => ({ changerActivation: vi.fn() }));
 const cache = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
@@ -18,7 +19,7 @@ vi.mock("@/db/operations/comptes", () => comptes);
 vi.mock("next/cache", () => cache);
 
 import { urlSite } from "@/lib/membres/url";
-import { copierLienInvitation, desactiverMembre, inviterTousLesNonInvites, renvoyerInvitationMembre } from "./invitations";
+import { copierLienInvitation, desactiverMembre, inviterTousLesNonInvites, reactiverMembre, renvoyerInvitationMembre } from "./invitations";
 
 const ID = "u-membre";
 
@@ -36,6 +37,7 @@ describe("autorisation", () => {
     expect(await copierLienInvitation(ID)).toEqual(refus);
     expect(await inviterTousLesNonInvites()).toEqual(refus);
     expect(await desactiverMembre(ID)).toEqual(refus);
+    expect(await reactiverMembre(ID)).toEqual(refus);
     expect(Object.values({ ...invitations, ...comptes }).every((f) => f.mock.calls.length === 0)).toBe(true);
     expect(exigerRole).toHaveBeenCalledWith("superadmin");
   });
@@ -86,9 +88,14 @@ describe("inviterTousLesNonInvites", () => {
   });
 });
 
-describe("desactiverMembre", () => {
-  it("désactive le compte au nom de l'acteur", async () => {
+describe("desactiverMembre et reactiverMembre", () => {
+  it("désactive le compte au nom de l'acteur et retire ses invitations", async () => {
     expect((await desactiverMembre(ID)).ok).toBe(true);
-    expect(comptes.changerActivation).toHaveBeenCalledWith({}, { acteurId: "admin", cibleId: ID, actif: false });
+    expect(invitations.desactiverCompteMembre).toHaveBeenCalledWith({}, { acteurId: "admin", cibleId: ID });
+  });
+
+  it("réactive le compte", async () => {
+    expect((await reactiverMembre(ID)).ok).toBe(true);
+    expect(comptes.changerActivation).toHaveBeenCalledWith({}, { acteurId: "admin", cibleId: ID, actif: true });
   });
 });

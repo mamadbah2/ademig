@@ -60,6 +60,8 @@ describe("analyserImport", () => {
     exigerRole.mockResolvedValue({ userId: "u1", role: "superadmin" });
     const r = await analyserImport(null, formulaire(new File(["Ndiaye;Awa\n"], "x.csv")));
     expect(r.ok).toBe(false);
+    expect(r.message).toMatch(/email/i);
+    expect(importOps.classerImport).not.toHaveBeenCalled();
   });
 });
 
@@ -83,8 +85,16 @@ describe("confirmerImport", () => {
     ]);
     expect(invitationOps.inviterParEmail).toHaveBeenCalledTimes(2);
     expect(invitationOps.inviterParEmail).toHaveBeenCalledWith({}, "a", expect.any(Function));
-    expect(r.ok && r.donnees).toEqual({ crees: 1, rattaches: 1, ignores: 0, invites: 2 });
+    expect(r.ok && r.donnees).toEqual({ crees: 1, rattaches: 1, ignores: 0, invites: 2, echecs: 0 });
     expect(cache.revalidatePath).toHaveBeenCalledWith("/admin/membres");
+  });
+
+  it("compte les invitations en échec sans faire échouer l'import", async () => {
+    importOps.executerImport.mockResolvedValue({ crees: 2, rattaches: 0, ignores: 0, aInviter: ["a", "b"] });
+    invitationOps.inviterParEmail.mockRejectedValueOnce(new Error("panne"));
+    const r = await confirmerImport(CSV);
+    expect(r.ok && r.donnees).toEqual({ crees: 2, rattaches: 0, ignores: 0, invites: 1, echecs: 1 });
+    expect(r.message).toMatch(/1 invitation/);
   });
 
   it("n'importe que les lignes valides et n'exécute rien si le CSV est illisible", async () => {

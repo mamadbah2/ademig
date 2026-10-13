@@ -5,7 +5,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { changerActivation } from "@/db/operations/comptes";
 import { ErreurMetier } from "@/db/operations/erreurs";
-import { genererLienInvitation, inviterLesNonInvites, inviterParEmail, verifierInvitable } from "@/db/operations/invitations";
+import { desactiverCompteMembre, genererLienInvitation, inviterLesNonInvites, inviterParEmail, verifierInvitable } from "@/db/operations/invitations";
 import { action } from "@/lib/admin/action";
 import type { Resultat } from "@/lib/admin/resultat";
 import { urlActivation } from "@/lib/membres/url";
@@ -53,8 +53,16 @@ export async function inviterTousLesNonInvites(): Promise<Resultat<{ invites: nu
 
 export async function desactiverMembre(userId: string): Promise<Resultat> {
   return action("superadmin", async (session) => {
-    await changerActivation(db, { acteurId: session.userId, cibleId: lireId(userId), actif: false });
+    await desactiverCompteMembre(db, { acteurId: session.userId, cibleId: lireId(userId) });
     revalidatePath("/admin/membres");
-    return { ok: true, message: "Compte désactivé : ses sessions sont fermées." };
+    return { ok: true, message: "Compte désactivé : ses sessions sont fermées et ses liens d'invitation ne fonctionnent plus." };
+  });
+}
+
+export async function reactiverMembre(userId: string): Promise<Resultat> {
+  return action("superadmin", async (session) => {
+    await changerActivation(db, { acteurId: session.userId, cibleId: lireId(userId), actif: true });
+    revalidatePath("/admin/membres");
+    return { ok: true, message: "Compte réactivé." };
   });
 }

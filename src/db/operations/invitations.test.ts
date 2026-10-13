@@ -4,11 +4,13 @@ import { describe, expect, it } from "vitest";
 import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
-import { creerCompte, creerCompteAvecMotDePasse } from "./comptes";
+import { changerActivation, creerCompte, creerCompteAvecMotDePasse } from "./comptes";
 import { ErreurMetier } from "./erreurs";
 import {
   activerCompte,
   creerInvitation,
+  desactiverCompteMembre,
+  etatCompte,
   genererLienInvitation,
   inviterLesNonInvites,
   inviterParEmail,
@@ -202,6 +204,31 @@ describe("verifierInvitable", () => {
     await db.update(user).set({ actif: false }).where(eq(user.id, id));
     await expect(verifierInvitable(db, id)).rejects.toThrow(/désactivé/);
     await expect(verifierInvitable(db, "inconnu")).rejects.toBeInstanceOf(ErreurMetier);
+  });
+});
+
+describe("désactivation d'un compte pas encore activé", () => {
+  const url = (j: string) => `https://exemple.test/activer?jeton=${j}`;
+
+  it("tue le lien et l'email en file, bloque l'activation, le renvoi et le rattrapage, puis la réactivation rouvre", async () => {
+    const db = await creerDbTest();
+    const admin = await creerCompteAvecMotDePasse(db, { nom: "Admin", email: "e2e-admin@ademig.test", role: "superadmin", motDePasse: "motdepasse-solide" });
+    const id = await membreAvecCompte(db, 1);
+    await inviterParEmail(db, id, url);
+    const [email] = await db.select().from(emailsFile);
+
+    await desactiverCompteMembre(db, { acteurId: admin.id, cibleId: id });
+    expect(await db.select().from(emailsFile)).toHaveLength(0);
+    await expect(activerCompte(db, jetonDe(email.html), "motdepasse-solide")).rejects.toBeInstanceOf(ErreurMetier);
+    expect((await etatCompte(db, id))?.desactive).toBe(true);
+    await expect(verifierInvitable(db, id)).rejects.toThrow(/désactivé/);
+    expect(await inviterLesNonInvites(db, url)).toBe(0);
+    expect(await db.select().from(emailsFile)).toHaveLength(0);
+
+    await changerActivation(db, { acteurId: admin.id, cibleId: id, actif: true });
+    expect((await etatCompte(db, id))?.desactive).toBe(false);
+    await expect(verifierInvitable(db, id)).resolves.toBeUndefined();
+    expect(await inviterLesNonInvites(db, url)).toBe(1);
   });
 });
 

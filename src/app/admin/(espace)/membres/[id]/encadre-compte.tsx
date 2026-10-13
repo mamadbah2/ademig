@@ -6,7 +6,7 @@ import { BadgeCompte } from "@/components/admin/badge-compte";
 import { BoutonConfirmation } from "@/components/admin/confirmation";
 import { Alerte, Badge, Bouton } from "@/components/admin/ui";
 import type { CompteDuMembre } from "@/db/requetes/admin/membres";
-import { copierLienInvitation, desactiverMembre, renvoyerInvitationMembre } from "@/lib/admin/invitations";
+import { copierLienInvitation, desactiverMembre, reactiverMembre, renvoyerInvitationMembre } from "@/lib/admin/invitations";
 import type { Resultat } from "@/lib/admin/resultat";
 
 const LIEN_COPIE =
@@ -54,12 +54,12 @@ export function EncadreCompte({ compte, nom }: { compte: CompteDuMembre; nom: st
         </h2>
         <div className="flex flex-wrap gap-2">
           <BadgeCompte suivi={compte.suivi} />
-          {!compte.actif && activee && <Badge ton="rouge">Désactivé</Badge>}
+          {compte.desactive && <Badge ton="rouge">Désactivé</Badge>}
         </div>
       </div>
       <p className="mt-2 break-all">{compte.email}</p>
       <div className="mt-4 flex flex-wrap gap-3">
-        {!activee && (
+        {!activee && !compte.desactive && (
           <>
             <Bouton type="button" variante="secondaire" disabled={enCours} onClick={() => executer(() => renvoyerInvitationMembre(compte.userId))}>
               Renvoyer l&apos;invitation
@@ -69,7 +69,11 @@ export function EncadreCompte({ compte, nom }: { compte: CompteDuMembre; nom: st
             </Bouton>
           </>
         )}
-        {compte.actif && (
+        {compte.desactive ? (
+          <Bouton type="button" variante="secondaire" disabled={enCours} onClick={() => executer(() => reactiverMembre(compte.userId))}>
+            Réactiver le compte
+          </Bouton>
+        ) : (
           <BoutonConfirmation
             libelle="Désactiver le compte"
             question={`Désactiver le compte de ${nom} ? La personne sera déconnectée immédiatement.`}
@@ -79,7 +83,7 @@ export function EncadreCompte({ compte, nom }: { compte: CompteDuMembre; nom: st
           />
         )}
       </div>
-      {!activee && (
+      {!activee && !compte.desactive && (
         <p className="mt-3 text-sm">« Copier le lien » crée un nouveau lien : le précédent, y compris celui d&apos;un email encore en file, cesse de fonctionner.</p>
       )}
       {resultat && (

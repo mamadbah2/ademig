@@ -4,6 +4,7 @@ import { account, emailsFile, invitations, membres, session, user } from "@/db/s
 import type { Db } from "@/db/types";
 import { contenuInvitationMembre } from "@/lib/emails";
 import { hacherJeton, nouveauJeton } from "@/lib/membres/jetons";
+import { changerActivation } from "./comptes";
 import { ErreurMetier } from "./erreurs";
 import { mettreEnFile } from "./emails-file";
 
@@ -46,20 +47,66 @@ export async function inviterParEmail(
   });
 }
 
-// Une invitation active le compte (et le réactive) : on ne l'envoie qu'à un compte qui n'a jamais défini son mot de passe.
-export async function verifierInvitable(db: Db, userId: string): Promise<void> {
+export type EtatCompte = { actif: boolean; aMotDePasse: boolean; revoquee: boolean; desactive: boolean };
+
+// Un compte jamais activé est « actif = faux » dès l'import : seul un « Désactiver » le distingue, par une
+// invitation « consommée » sans mot de passe (une vraie activation crée toujours un mot de passe).
+export async function etatCompte(db: Db, userId: string): Promise<EtatCompte | null> {
   const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { actif: true } });
-  if (!compte) throw new ErreurMetier("Compte introuvable.");
+  if (!compte) return null;
   const mdp = await db.query.account.findFirst({
     where: and(eq(account.userId, userId), eq(account.providerId, "credential")),
     columns: { id: true },
   });
-  if (!mdp) return;
-  throw new ErreurMetier(
-    compte.actif
-      ? "Ce compte est déjà activé."
-      : "Ce compte est désactivé : réactivez-le dans la rubrique Comptes plutôt que de renvoyer une invitation.",
-  );
+  const consommee = mdp
+    ? undefined
+    : await db.query.invitations.findFirst({
+        where: and(eq(invitations.userId, userId), isNotNull(invitations.utiliseeLe)),
+        columns: { id: true },
+      });
+  const aMotDePasse = Boolean(mdp);
+  const revoquee = Boolean(consommee);
+  return { actif: compte.actif, aMotDePasse, revoquee, desactive: !compte.actif && (aMotDePasse || revoquee) };
+}
+
+// Une invitation active le compte (et le réactive) : on ne l'envoie qu'à un compte jamais activé ni désactivé.
+export async function verifierInvitable(db: Db, userId: string): Promise<void> {
+  const etat = await etatCompte(db, userId);
+  if (!etat) throw new ErreurMetier("Compte introuvable.");
+  if (etat.aMotDePasse && etat.actif) throw new ErreurMetier("Ce compte est déjà activé.");
+  if (etat.desactive) throw new ErreurMetier("Ce compte est désactivé : réactivez-le avant de renvoyer une invitation.");
+}
+
+// Désactive le compte ; pour un compte pas encore activé, l'invitation en cours et l'email en file sont retirés,
+// sinon le lien déjà envoyé le réactiverait.
+export async function desactiverCompteMembre(db: Db, p: { acteurId: string; cibleId: string }): Promise<void> {
+  await db.transaction(async (tx) => {
+    await changerActivation(tx, { ...p, actif: false });
+    await tx.delete(invitations).where(and(eq(invitations.userId, p.cibleId), isNull(invitations.utiliseeLe)));
+    await tx
+      .delete(emailsFile)
+      .where(and(eq(emailsFile.userId, p.cibleId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
+    const mdp = await tx.query.account.findFirst({
+      where: and(eq(account.userId, p.cibleId), eq(account.providerId, "credential")),
+      columns: { id: true },
+    });
+    if (!mdp) {
+      const deja = await tx.query.invitations.findFirst({
+        where: and(eq(invitations.userId, p.cibleId), isNotNull(invitations.utiliseeLe)),
+        columns: { id: true },
+      });
+      if (!deja) {
+        const maintenant = new Date();
+        await tx.insert(invitations).values({
+          userId: p.cibleId,
+          jetonHash: `revoquee-${crypto.randomUUID()}`,
+          expireLe: maintenant,
+          utiliseeLe: maintenant,
+          creeLe: maintenant,
+        });
+      }
+    }
+  });
 }
 
 // Nouveau lien à transmettre à la main : l'ancien lien meurt et l'email encore en file, qui le porterait, est retiré.
@@ -78,11 +125,17 @@ export async function genererLienInvitation(db: Db, userId: string): Promise<{ j
 export async function inviterLesNonInvites(db: Db, urlActivation: (jeton: string) => string): Promise<number> {
   const fiches = await db.select({ userId: membres.userId }).from(membres).where(isNotNull(membres.userId));
   const suivi = await suiviInvitations(db, fiches.map((f) => f.userId!));
-  // Un compte avec mot de passe mais désactivé relève de « Comptes », pas d'une invitation.
+  // Hors comptes déjà dotés d'un mot de passe (désactivés : rubrique Comptes) et hors comptes désactivés par un admin.
   const avecMotDePasse = new Set(
     (await db.select({ userId: account.userId }).from(account).where(eq(account.providerId, "credential"))).map((a) => a.userId),
   );
-  const cibles = [...suivi.values()].filter((s) => s.statut === "a_inviter" && !avecMotDePasse.has(s.userId));
+  const revoques = new Set(
+    (await db.select({ userId: invitations.userId }).from(invitations).where(isNotNull(invitations.utiliseeLe))).map((i) => i.userId),
+  );
+  const actifs = new Set((await db.select({ id: user.id }).from(user).where(eq(user.actif, true))).map((u) => u.id));
+  const cibles = [...suivi.values()].filter(
+    (s) => s.statut === "a_inviter" && !avecMotDePasse.has(s.userId) && !(revoques.has(s.userId) && !actifs.has(s.userId)),
+  );
   for (const { userId } of cibles) await inviterParEmail(db, userId, urlActivation);
   return cibles.length;
 }
@@ -182,7 +235,11 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
       .from(emailsFile)
       .where(and(inArray(emailsFile.userId, userIds), eq(emailsFile.type, "invitation")))
       .orderBy(desc(emailsFile.creeLe)),
-    db.select({ userId: invitations.userId, creeLe: invitations.creeLe }).from(invitations).where(inArray(invitations.userId, userIds)),
+    // Invitations consommées ou révoquées exclues : seul un lien encore en cours compte comme « invité ».
+    db
+      .select({ userId: invitations.userId, creeLe: invitations.creeLe })
+      .from(invitations)
+      .where(and(inArray(invitations.userId, userIds), isNull(invitations.utiliseeLe))),
   ]);
   const actifs = new Set(comptes.filter((c) => c.actif).map((c) => c.id));
   const avecMotDePasse = new Set(credentials.map((c) => c.userId));
