@@ -1,7 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/db";
 import { viderFile } from "@/db/operations/emails-file";
-import { envoyerEmail } from "@/lib/emails";
+import { emailsConfigures, envoyerEmail } from "@/lib/emails";
+import { urlActivation } from "@/lib/membres/url";
 
 export const maxDuration = 300;
 
@@ -18,7 +19,10 @@ export async function GET(request: Request): Promise<Response> {
   if (!secret || !autorise(request.headers.get("authorization"), `Bearer ${secret}`)) {
     return new Response("Non autorisé", { status: 401 });
   }
+  // Sans service d'email, la file n'est pas touchée : aucune tentative n'est consommée.
+  if (!emailsConfigures()) return new Response("Aucun service d'email n'est configuré.", { status: 503 });
   const max = Number(process.env.EMAILS_PAR_JOUR) || 150;
-  const emails = await viderFile(db, { max, envoyer: envoyerEmail, pauseMs: 1000, budgetMs: 240_000 });
+  // Les invitations sont construites à l'envoi, avec l'adresse de ce déploiement (seule la production a un cron).
+  const emails = await viderFile(db, { max, envoyer: envoyerEmail, pauseMs: 1000, budgetMs: 240_000, urlActivation });
   return Response.json({ emails });
 }

@@ -27,7 +27,7 @@
   - `Cadre`, `Etiquette` et les composants du site pour l'espace membre.
 - Le site est consulté surtout sur mobile : chaque écran de l'espace membre est conçu pour 390 px d'abord.
 - Les jetons d'invitation durent **30 jours**. Ils sont générés par `crypto.randomBytes(32)` en base64url et seul leur hash SHA-256 est stocké.
-- La file d'envoi traite au maximum `EMAILS_PAR_JOUR` emails (150 par défaut), avec une pause d'une seconde entre deux, et 3 tentatives au maximum par email.
+- La file d'envoi traite au maximum `EMAILS_PAR_JOUR` emails (150 par défaut), avec une pause d'une seconde entre deux, et 3 tentatives au maximum par email. *(Revue finale : une panne du service — identifiants, réseau, quota — arrête le passage sans compter de tentative ; seule une erreur propre au destinataire en compte une. Sans service configuré, le cron répond 503. Une invitation est mise en file sans jeton ni contenu : le cron la construit à l'envoi.)*
 - Présentation : 500 caractères maximum. LinkedIn : uniquement `https://(www.)linkedin.com/in/<identifiant>`. Photo : 5 Mo maximum, JPEG, PNG ou WebP. Mot de passe : 12 caractères minimum.
 - Le téléphone, l'email de contact et le statut de cotisation ne sont **jamais** affichés dans l'annuaire, ni public ni privé.
 - `/connexion`, `/espace-membre/*` et `/verifier/*` sont en `noindex` et absents du sitemap.
@@ -605,7 +605,7 @@ export async function envoyerEmail({ a, sujet, html }: Email): Promise<void> {
 `viderFile` :
 1. sélectionne les `a_envoyer` par `creeLe` croissant, avec `limit(max)` ;
 2. pour chacun, en séquence :
-   - appelle `envoyer` dans un `try`. En cas de succès : `statut = "envoye"` et `envoyeLe = now()`. En cas d'erreur : `tentatives + 1`, `erreur = message` (tronqué à 500 caractères), et `statut = "echec"` si `tentatives` atteint 3 ;
+   - appelle `envoyer` dans un `try`. En cas de succès : `statut = "envoye"` et `envoyeLe = now()`. En cas d'erreur : `tentatives + 1`, `erreur = message` (tronqué à 500 caractères), et `statut = "echec"` si `tentatives` atteint 3 *(revue finale : sauf panne du service, qui arrête le passage sans compter de tentative)* ;
    - attend `pauseMs` (`await new Promise((r) => setTimeout(r, pauseMs))`) entre deux envois ;
 3. calcule `restants` = nombre de `a_envoyer` après le traitement.
 

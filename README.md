@@ -65,16 +65,21 @@ Variables d'environnement (voir `.env.example`) :
 | Variable | Rôle |
 |---|---|
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Compte Gmail et mot de passe d'application qui envoient les invitations (prioritaires sur Resend). Sans elles, l'import et « Copier le lien » fonctionnent, mais la file reste en attente. |
-| `EMAILS_PAR_JOUR` | Quota quotidien de la file d'envoi (150 par défaut ; pause d'une seconde entre deux emails, 3 tentatives au maximum). |
+| `EMAILS_PAR_JOUR` | Quota quotidien de la file d'envoi (150 par défaut ; pause d'une seconde entre deux emails, 3 tentatives au maximum par email refusé pour son destinataire). |
 | `CRON_SECRET` | Secret du cron Vercel (`openssl rand -hex 32`), à définir en Production et en Preview. |
 
-Cron : `vercel.json` appelle `/api/cron/quotidien` chaque jour à 8 h (UTC) ; il vide la file d'envoi dans la limite du quota. L'appel exige l'en-tête `Authorization: Bearer $CRON_SECRET`.
+Cron : `vercel.json` appelle `/api/cron/quotidien` chaque jour à 8 h (UTC) ; il vide la file d'envoi dans la limite du quota. L'appel exige l'en-tête `Authorization: Bearer $CRON_SECRET`. Seul le déploiement de production a un cron : c'est lui qui envoie tous les emails de la base partagée.
+
+- Sans service d'email configuré, le cron répond 503 et ne touche pas à la file.
+- Une panne du service (identifiants refusés, serveur injoignable, quota Gmail atteint) arrête le passage sans consommer de tentative ; la file reprend au passage suivant. Seule une erreur propre au destinataire (adresse refusée…) compte une tentative.
+- Une invitation est mise en file sans lien : le cron crée le jeton au moment de l'envoi, avec l'adresse de la production, et les 30 jours partent de là. Aucun jeton n'est stocké en clair.
+- Les adresses en `@ademig.test` (données de test) ne sont jamais envoyées : elles passent en échec.
 
 Import des membres (super-admin) : `/admin/membres/importer`.
 
 1. Choisir un fichier CSV (1 Mo au plus, UTF-8, séparateur `,` ou `;`) aux colonnes `nom`, `prenom`, `email` (obligatoires), `telephone`, `promotion`, `specialite`. Un modèle est téléchargeable sur la page.
 2. Lire l'aperçu (nouveaux, fiches rattachées, comptes liés, déjà membres, lignes refusées), puis confirmer.
-3. Les invitations sont mises en file ; le cron les envoie par lots. Sur la fiche d'un membre (`/admin/membres/[id]`) : « Renvoyer », « Copier le lien » (à transmettre à la main), « Désactiver » et « Réactiver ».
+3. Les invitations sont mises en file ; le cron les envoie par lots. Sur la fiche d'un membre (`/admin/membres/[id]`) : « Renvoyer », « Copier le lien » (à transmettre à la main), « Désactiver » et « Réactiver ». « Inviter tous les membres pas encore invités » remet aussi en file les invitations en échec et les liens expirés.
 
 ### Commandes
 

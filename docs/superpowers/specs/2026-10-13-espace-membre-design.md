@@ -83,7 +83,7 @@ Un modèle de CSV est téléchargeable sur la page.
 
 La table `invitations` contient : `id`, `user_id`, `jeton_hash` (SHA-256), `expire_le` (30 jours), `utilisee_le`, `cree_le`.
 
-La table `emails_file` contient : `id`, `destinataire`, `sujet`, `html`, `type` (`invitation` | `rappel` | `systeme`), `statut` (`a_envoyer` | `envoye` | `echec`), `tentatives`, `erreur`, `envoye_le`, `cree_le`.
+La table `emails_file` contient : `id`, `destinataire`, `sujet`, `html`, `type` (`invitation` | `rappel` | `systeme`), `statut` (`a_envoyer` | `envoye` | `echec`), `tentatives`, `erreur`, `envoye_le`, `cree_le`. Une invitation y entre sans contenu (`html` vide) : le cron crée le jeton et l'email au moment de l'envoi, avec l'adresse de la production ; aucun jeton n'est stocké en clair.
 
 - Le jeton en clair n'existe qu'au moment de construire l'email (ou le lien copiable) ; la base ne garde que le hash. « Renvoyer » et « Copier le lien » génèrent un nouveau jeton et invalident l'ancien.
 - Le cron quotidien `/api/cron/quotidien` est protégé par `CRON_SECRET`. Il envoie au maximum `EMAILS_PAR_JOUR` emails (150 par défaut), par ordre de création, avec une pause d'une seconde entre deux envois. Un email en échec est retenté jusqu'à 3 fois.

@@ -48,7 +48,7 @@ describe("renvoyerInvitationMembre", () => {
   it("met l'invitation en file en priorité", async () => {
     const r = await renvoyerInvitationMembre(ID);
     expect(r.ok).toBe(true);
-    expect(invitations.inviterParEmail).toHaveBeenCalledWith({}, ID, expect.any(Function), { prioritaire: true });
+    expect(invitations.inviterParEmail).toHaveBeenCalledWith({}, ID, { prioritaire: true });
   });
 
   it("refuse un compte déjà activé", async () => {

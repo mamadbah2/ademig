@@ -55,7 +55,7 @@ describe("lectures de l'admin des membres", () => {
     await creerMembre(db, { ...base, nom: "Bineta Fall", slug: "bineta-fall" });
     const { id: userId } = await creerCompte(db, { nom: "Awa", email: "e2e-awa@ademig.test", role: "membre" });
     await db.update(membres).set({ userId }).where(eq(membres.id, a.id));
-    await inviterParEmail(db, userId, (j) => `https://exemple.test/activer?jeton=${j}`);
+    await inviterParEmail(db, userId);
 
     const { lignes } = await listerMembresAdmin(db, { q: "", page: 1 });
     expect(lignes.map((l) => [l.nom, l.suivi?.statut ?? null])).toEqual([["Awa Ndiaye", "en_file"], ["Bineta Fall", null]]);

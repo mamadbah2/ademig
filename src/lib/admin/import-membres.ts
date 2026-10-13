@@ -8,7 +8,6 @@ import { inviterParEmail } from "@/db/operations/invitations";
 import { action } from "@/lib/admin/action";
 import type { Resultat } from "@/lib/admin/resultat";
 import { analyserCsv, type ProblemeImport } from "@/lib/membres/import-csv";
-import { urlActivation } from "@/lib/membres/url";
 
 const TAILLE_MAX = 1024 * 1024;
 // Invitations écrites par groupes : 2000 lignes en série seraient trop longues pour une requête.
@@ -39,7 +38,7 @@ export async function confirmerImport(csv: string): Promise<Resultat<BilanImport
     // L'import est déjà enregistré : une invitation qui échoue est comptée, pas fatale (rattrapage : « Inviter tous »).
     let echecs = 0;
     for (let i = 0; i < comptes.length; i += GROUPE) {
-      const issues = await Promise.allSettled(comptes.slice(i, i + GROUPE).map((id) => inviterParEmail(db, id, urlActivation)));
+      const issues = await Promise.allSettled(comptes.slice(i, i + GROUPE).map((id) => inviterParEmail(db, id)));
       echecs += issues.filter((r) => r.status === "rejected").length;
     }
     revalidatePath("/admin/membres");

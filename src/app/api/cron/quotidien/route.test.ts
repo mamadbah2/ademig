@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/db", () => ({ db: {} }));
-vi.mock("@/lib/emails", () => ({ envoyerEmail: vi.fn() }));
+const emails = vi.hoisted(() => ({ envoyerEmail: vi.fn(), emailsConfigures: vi.fn(() => true) }));
+vi.mock("@/lib/emails", () => emails);
 vi.mock("@/db/operations/emails-file", () => ({
   viderFile: vi.fn().mockResolvedValue({ envoyes: 2, echecs: 0, restants: 5 }),
 }));
@@ -16,6 +17,7 @@ describe("cron quotidien", () => {
   beforeEach(() => {
     vi.stubEnv("CRON_SECRET", "secret-de-test");
     vi.mocked(viderFile).mockClear();
+    emails.emailsConfigures.mockReturnValue(true);
   });
 
   it("refuse sans en-tête", async () => {
@@ -37,6 +39,13 @@ describe("cron quotidien", () => {
     const reponse = await GET(requete("Bearer secret-de-test"));
     expect(reponse.status).toBe(200);
     expect(await reponse.json()).toEqual({ emails: { envoyes: 2, echecs: 0, restants: 5 } });
-    expect(viderFile).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ max: 150, pauseMs: 1000 }));
+    expect(viderFile).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ max: 150, pauseMs: 1000, urlActivation: expect.any(Function) }));
+  });
+
+  it("répond 503 sans toucher à la file quand aucun service d'email n'est configuré", async () => {
+    emails.emailsConfigures.mockReturnValue(false);
+    const reponse = await GET(requete("Bearer secret-de-test"));
+    expect(reponse.status).toBe(503);
+    expect(viderFile).not.toHaveBeenCalled();
   });
 });

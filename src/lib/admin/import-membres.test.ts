@@ -84,7 +84,7 @@ describe("confirmerImport", () => {
       expect.objectContaining({ email: "e2e-bineta@ademig.test" }),
     ]);
     expect(invitationOps.inviterParEmail).toHaveBeenCalledTimes(2);
-    expect(invitationOps.inviterParEmail).toHaveBeenCalledWith({}, "a", expect.any(Function));
+    expect(invitationOps.inviterParEmail).toHaveBeenCalledWith({}, "a");
     expect(r.ok && r.donnees).toEqual({ crees: 1, rattaches: 1, ignores: 0, invites: 2, echecs: 0 });
     expect(cache.revalidatePath).toHaveBeenCalledWith("/admin/membres");
   });

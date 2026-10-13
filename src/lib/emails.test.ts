@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { contenuEmailMotDePasse, contenuInvitationMembre, emailsConfigures, envoyerEmailMotDePasse } from "./emails";
+import { contenuEmailMotDePasse, contenuInvitationMembre, emailsConfigures, envoyerEmailMotDePasse, ErreurTransport, estErreurTransport } from "./emails";
 
 const url = "https://www.ademig.sn/api/auth/reset-password/abc?callbackURL=%2Fadmin%2Freinitialiser";
 
@@ -117,5 +117,22 @@ describe("emailsConfigures", () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("RESEND_API_KEY", "");
     expect(emailsConfigures()).toBe(true);
+  });
+});
+
+describe("estErreurTransport", () => {
+  const avec = (champs: object, message = "x") => Object.assign(new Error(message), champs);
+  it("reconnaît une panne du service", () => {
+    expect(estErreurTransport(avec({ code: "EAUTH", responseCode: 535 }))).toBe(true);
+    expect(estErreurTransport(avec({ code: "ECONNECTION" }))).toBe(true);
+    expect(estErreurTransport(avec({ code: "ETIMEDOUT" }))).toBe(true);
+    expect(estErreurTransport(avec({ code: "EMESSAGE", responseCode: 421 }))).toBe(true);
+    expect(estErreurTransport(avec({ code: "EMESSAGE", responseCode: 550 }, "550-5.4.5 Daily user sending limit exceeded"))).toBe(true);
+    expect(estErreurTransport(new ErreurTransport("Aucun service"))).toBe(true);
+  });
+  it("laisse compter une tentative pour une erreur propre au destinataire", () => {
+    expect(estErreurTransport(avec({ code: "EENVELOPE", responseCode: 550 }, "550 5.1.1 adresse inconnue"))).toBe(false);
+    expect(estErreurTransport(new Error("SMTP 550"))).toBe(false);
+    expect(estErreurTransport("texte")).toBe(false);
   });
 });

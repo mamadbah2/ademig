@@ -2,11 +2,10 @@ import { hashPassword } from "better-auth/crypto";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
-import { contenuInvitationMembre } from "@/lib/emails";
+import { contenuInvitationMembre, type Email, SUJET_INVITATION_MEMBRE } from "@/lib/emails";
 import { hacherJeton, nouveauJeton } from "@/lib/membres/jetons";
 import { changerActivation } from "./comptes";
 import { ErreurMetier } from "./erreurs";
-import { mettreEnFile } from "./emails-file";
 
 export const DUREE_INVITATION_JOURS = 30;
 
@@ -24,28 +23,39 @@ export async function creerInvitation(db: Db, userId: string, maintenant = new D
   return { jeton };
 }
 
-// Crée l'invitation et met l'email dans la file d'envoi (le cron quotidien l'enverra).
+const retirerInvitationsEnFile = (db: Db, userId: string) =>
+  db
+    .delete(emailsFile)
+    .where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
+
+// Met l'invitation en file, sans jeton ni contenu : le cron la construit au moment de l'envoi (envoyerInvitation),
+// avec sa propre adresse de site, et les 30 jours de validité partent de là.
 // `prioritaire` (« Renvoyer ») : l'email est antidaté d'un an pour partir au prochain passage du cron.
-export async function inviterParEmail(
-  db: Db,
-  userId: string,
-  urlActivation: (jeton: string) => string,
-  { prioritaire = false }: { prioritaire?: boolean } = {},
-): Promise<void> {
-  const compte = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { email: true, name: true } });
-  if (!compte) throw new ErreurMetier("Compte introuvable.");
-  const fiche = await db.query.membres.findFirst({ where: eq(membres.userId, userId), columns: { nom: true } });
+export async function inviterParEmail(db: Db, userId: string, { prioritaire = false }: { prioritaire?: boolean } = {}): Promise<void> {
   await db.transaction(async (tx) => {
     await verifierInvitable(tx, userId);
-    // « Renvoyer » : l'ancien email encore en file porterait un lien désormais mort.
-    await tx
-      .delete(emailsFile)
-      .where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
-    const { jeton } = await creerInvitation(tx, userId);
-    const { sujet, html } = contenuInvitationMembre({ prenomNom: fiche?.nom ?? compte.name, url: urlActivation(jeton) });
+    const compte = await tx.query.user.findFirst({ where: eq(user.id, userId), columns: { email: true } });
+    // Une seule invitation en file par compte.
+    await retirerInvitationsEnFile(tx, userId);
     const creeLe = prioritaire ? new Date(Date.now() - 365 * 24 * 3600 * 1000) : undefined;
-    await mettreEnFile(tx, { destinataire: compte.email, sujet, html, type: "invitation", userId, creeLe });
+    await tx.insert(emailsFile).values({ destinataire: compte!.email, sujet: SUJET_INVITATION_MEMBRE, html: "", type: "invitation", userId, creeLe });
   });
+}
+
+// Au moment de l'envoi, dans la transaction de l'appelant : nouveau jeton (l'ancien lien inutilisé meurt), email
+// construit avec `urlActivation`, puis envoi. Si l'envoi lève une erreur, la transaction annule le jeton.
+// ErreurMetier si le compte n'est plus invitable (activé ou désactivé entre-temps).
+export async function envoyerInvitation(
+  tx: Db,
+  userId: string,
+  { envoyer, urlActivation }: { envoyer: (e: Email) => Promise<void>; urlActivation: (jeton: string) => string },
+): Promise<void> {
+  await verifierInvitable(tx, userId);
+  const compte = await tx.query.user.findFirst({ where: eq(user.id, userId), columns: { email: true, name: true } });
+  const fiche = await tx.query.membres.findFirst({ where: eq(membres.userId, userId), columns: { nom: true } });
+  const { jeton } = await creerInvitation(tx, userId);
+  const { sujet, html } = contenuInvitationMembre({ prenomNom: fiche?.nom ?? compte!.name, url: urlActivation(jeton) });
+  await envoyer({ a: compte!.email, sujet, html });
 }
 
 export type EtatCompte = { actif: boolean; aMotDePasse: boolean; desactive: boolean };
@@ -99,30 +109,32 @@ async function verifierExiste(db: Db, userId: string) {
   if (!compte) throw new ErreurMetier("Compte introuvable.");
 }
 
-// Nouveau lien à transmettre à la main : l'ancien lien meurt et l'email encore en file, qui le porterait, est retiré.
+// Nouveau lien à transmettre à la main : l'ancien lien meurt et l'email d'invitation encore en file est retiré.
 export async function genererLienInvitation(db: Db, userId: string): Promise<{ jeton: string }> {
   return db.transaction(async (tx) => {
     await verifierInvitable(tx, userId);
-    await tx
-      .delete(emailsFile)
-      .where(and(eq(emailsFile.userId, userId), eq(emailsFile.type, "invitation"), eq(emailsFile.statut, "a_envoyer")));
+    // L'email en file créerait à son envoi un jeton qui tuerait ce lien.
+    await retirerInvitationsEnFile(tx, userId);
     return creerInvitation(tx, userId);
   });
 }
 
-// Rattrapage : met en file une invitation pour chaque compte de fiche sans mot de passe, jamais invité et non désactivé.
-export async function inviterLesNonInvites(db: Db, urlActivation: (jeton: string) => string): Promise<number> {
+// Rattrapage : met en file une invitation pour chaque compte de fiche non désactivé, sans mot de passe, et
+// jamais invité, dont l'invitation a échoué, ou dont le lien a expiré.
+const A_RATTRAPER = new Set<SuiviInvitation["statut"]>(["a_inviter", "echec", "expire"]);
+
+export async function inviterLesNonInvites(db: Db): Promise<number> {
   const fiches = await db
     .select({ userId: membres.userId })
     .from(membres)
     .innerJoin(user, eq(user.id, membres.userId))
     .where(isNull(user.desactiveLe));
   const suivi = await suiviInvitations(db, fiches.map((f) => f.userId!));
-  const cibles = [...suivi.values()].filter((s) => s.statut === "a_inviter");
+  const cibles = [...suivi.values()].filter((s) => A_RATTRAPER.has(s.statut));
   let invites = 0;
   for (const { userId } of cibles) {
     try {
-      await inviterParEmail(db, userId, urlActivation);
+      await inviterParEmail(db, userId);
       invites++;
     } catch (e) {
       // Désactivé ou activé entre-temps : ignoré.
@@ -211,12 +223,12 @@ export async function activerCompte(
 
 export type SuiviInvitation = {
   userId: string;
-  statut: "a_inviter" | "en_file" | "invite" | "echec" | "active" | "desactive";
+  statut: "a_inviter" | "en_file" | "invite" | "expire" | "echec" | "active" | "desactive";
   le: Date | null;
   erreur: string | null;
 };
 
-export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<string, SuiviInvitation>> {
+export async function suiviInvitations(db: Db, userIds: string[], maintenant = new Date()): Promise<Map<string, SuiviInvitation>> {
   const suivi = new Map<string, SuiviInvitation>();
   if (userIds.length === 0) return suivi;
 
@@ -233,7 +245,7 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
       .orderBy(desc(emailsFile.creeLe)),
     // Invitations consommées ou révoquées exclues : seul un lien encore en cours compte comme « invité ».
     db
-      .select({ userId: invitations.userId, creeLe: invitations.creeLe })
+      .select({ userId: invitations.userId, creeLe: invitations.creeLe, expireLe: invitations.expireLe })
       .from(invitations)
       .where(and(inArray(invitations.userId, userIds), isNull(invitations.utiliseeLe))),
   ]);
@@ -248,10 +260,10 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
     const retenu = dernierEmail.get(e.userId);
     if (!retenu || (e.statut === "a_envoyer" && retenu.statut !== "a_envoyer")) dernierEmail.set(e.userId, e);
   }
-  const derniereInvitation = new Map<string, Date>();
+  const derniereInvitation = new Map<string, (typeof invs)[number]>();
   for (const i of invs) {
     const precedente = derniereInvitation.get(i.userId);
-    if (!precedente || i.creeLe > precedente) derniereInvitation.set(i.userId, i.creeLe);
+    if (!precedente || i.creeLe > precedente.creeLe) derniereInvitation.set(i.userId, i);
   }
 
   for (const userId of userIds) {
@@ -261,10 +273,12 @@ export async function suiviInvitations(db: Db, userIds: string[]): Promise<Map<s
     if (desactives.has(userId)) s = { userId, statut: "desactive", le: desactives.get(userId)!, erreur: null };
     else if (avecMotDePasse.has(userId) && actifs.has(userId)) s = { userId, statut: "active", le: null, erreur: null };
     else if (email?.statut === "a_envoyer") s = { userId, statut: "en_file", le: email.creeLe, erreur: email.erreur };
-    else if (email?.statut === "envoye") s = { userId, statut: "invite", le: email.envoyeLe, erreur: null };
     else if (email?.statut === "echec") s = { userId, statut: "echec", le: email.creeLe, erreur: email.erreur };
+    // Le dernier lien (envoyé ou copié) n'a pas servi et ne sert plus : à renvoyer.
+    else if (invitation && invitation.expireLe < maintenant) s = { userId, statut: "expire", le: invitation.expireLe, erreur: null };
+    else if (email?.statut === "envoye") s = { userId, statut: "invite", le: email.envoyeLe, erreur: null };
     // Lien copié à la main, sans email : l'invitation existe quand même.
-    else if (invitation) s = { userId, statut: "invite", le: invitation, erreur: null };
+    else if (invitation) s = { userId, statut: "invite", le: invitation.creeLe, erreur: null };
     suivi.set(userId, s);
   }
   return suivi;

@@ -38,8 +38,10 @@ export function contenuInvitationMembre({ prenomNom, url }: { prenomNom: string;
 <p>Ce lien est valable 30 jours et ne sert qu'une fois. Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :<br>${lien}</p>
 <p style="font-size:13px">Si ce message est arrivé dans vos spams, marquez-le comme « non spam » pour recevoir les prochains.</p>
 </div></body></html>`;
-  return { sujet: "Votre espace membre ADEMIG", html };
+  return { sujet: SUJET_INVITATION_MEMBRE, html };
 }
+
+export const SUJET_INVITATION_MEMBRE = "Votre espace membre ADEMIG";
 
 export type Email = { a: string; sujet: string; html: string };
 
@@ -51,6 +53,30 @@ const resendConfigure = () => Boolean(process.env.RESEND_API_KEY && process.env.
 export function emailsConfigures(): boolean {
   if (process.env.NODE_ENV === "development") return true;
   return gmailConfigure() || resendConfigure();
+}
+
+// Panne du service d'envoi (identifiants refusés, serveur injoignable, quota) : rien à voir avec le destinataire.
+export class ErreurTransport extends Error {}
+
+const CODES_TRANSPORT = new Set(["EAUTH", "ECONNECTION", "ETIMEDOUT", "ESOCKET", "EDNS", "ETLS", "ECONNREFUSED", "ECONNRESET", "ENOTFOUND", "EPROTOCOL"]);
+// 421 / 454 : service indisponible ; 530 / 534 / 535 : authentification refusée.
+const REPONSES_TRANSPORT = new Set([421, 454, 530, 534, 535]);
+// Erreurs Resend qui tiennent au compte ou au service, pas à l'adresse.
+const ERREURS_RESEND_TRANSPORT = new Set([
+  "missing_api_key", "invalid_api_key", "restricted_api_key", "invalid_access", "invalid_from_address", "rate_limit_exceeded",
+  "daily_quota_exceeded", "monthly_quota_exceeded", "internal_server_error", "application_error",
+]);
+
+// Une panne du service arrête le passage du cron sans user les 3 tentatives des emails ; une erreur propre
+// au destinataire (550 adresse inconnue…) compte une tentative.
+export function estErreurTransport(erreur: unknown): boolean {
+  if (erreur instanceof ErreurTransport) return true;
+  if (typeof erreur !== "object" || erreur === null) return false;
+  const { code, responseCode, message } = erreur as { code?: unknown; responseCode?: unknown; message?: unknown };
+  if (typeof code === "string" && CODES_TRANSPORT.has(code)) return true;
+  if (typeof responseCode === "number" && REPONSES_TRANSPORT.has(responseCode)) return true;
+  // Quota quotidien de Gmail atteint (550 5.4.5) : les emails suivants échoueraient tous.
+  return typeof message === "string" && /5\.4\.5|sending limit exceeded/i.test(message);
 }
 
 let transport: Transporter | null = null;
@@ -70,10 +96,13 @@ export async function envoyerEmail({ a, sujet, html }: Email): Promise<void> {
     await transport.sendMail({ from: `ADEMIG <${process.env.GMAIL_USER}>`, to: a, subject: sujet, html });
     return;
   }
-  if (!resendConfigure()) throw new Error("Aucun service d'email configuré (GMAIL_USER/GMAIL_APP_PASSWORD ou RESEND_API_KEY).");
+  if (!resendConfigure()) throw new ErreurTransport("Aucun service d'email configuré (GMAIL_USER/GMAIL_APP_PASSWORD ou RESEND_API_KEY).");
   // Créé à la demande : le constructeur lève une erreur sans clé.
   const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({ from: process.env.EMAIL_EXPEDITEUR!, to: a, subject: sujet, html });
-  if (error) throw new Error(`Envoi de l'email impossible : ${error.message}`);
+  if (error) {
+    const message = `Envoi de l'email impossible : ${error.message}`;
+    throw ERREURS_RESEND_TRANSPORT.has(error.name) ? new ErreurTransport(message) : new Error(message);
+  }
 }
 
 export async function envoyerEmailMotDePasse(p: EmailMotDePasse & { email: string }) {

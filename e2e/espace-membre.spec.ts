@@ -64,7 +64,7 @@ test("un membre invité active son compte, complète son profil et se retrouve d
 
   // 6. Déconnexion : l'espace redemande la connexion.
   await page.getByRole("button", { name: "Déconnexion" }).first().click();
-  await expect(page).toHaveURL("http://localhost:3100/");
+  await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/);
   await page.goto("/espace-membre");
   await expect(page).toHaveURL(/\/connexion\?retour=/);
 });

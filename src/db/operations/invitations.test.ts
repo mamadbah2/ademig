@@ -1,5 +1,5 @@
 import { verifyPassword } from "better-auth/crypto";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { account, emailsFile, invitations, membres, session, user } from "@/db/schema";
 import type { Db } from "@/db/types";
@@ -27,8 +27,6 @@ async function membreAvecCompte(db: Db, n: number) {
   await db.insert(membres).values({ slug: `membre-${n}`, nom: `Membre ${n}`, titre: "T", specialite: "S", resume: "R", userId: id });
   return id;
 }
-
-const jetonDe = (html: string) => /jeton=([\w-]+)/.exec(html)![1];
 
 describe("invitations", () => {
   it("un jeton créé est valide", async () => {
@@ -145,26 +143,28 @@ describe("activerCompte", () => {
 });
 
 describe("inviterParEmail", () => {
-  it("met en file un email contenant l'URL d'activation", async () => {
+  it("met en file une invitation sans jeton ni contenu, et ne crée pas encore de lien", async () => {
     const db = await creerDbTest();
     const id = await membreAvecCompte(db, 1);
-    await inviterParEmail(db, id, (j) => `https://exemple.test/activer?jeton=${j}`);
+    await inviterParEmail(db, id);
     const [email] = await db.select().from(emailsFile);
-    expect(email).toMatchObject({ type: "invitation", destinataire: "e2e-1@ademig.test", userId: id, statut: "a_envoyer" });
-    expect(email.html).toContain("https://exemple.test/activer?jeton=");
-    expect((await verifierJeton(db, jetonDe(email.html))).ok).toBe(true);
+    expect(email).toMatchObject({
+      type: "invitation", destinataire: "e2e-1@ademig.test", userId: id, statut: "a_envoyer", sujet: "Votre espace membre ADEMIG", html: "",
+    });
+    expect(await db.select().from(invitations).where(eq(invitations.userId, id))).toHaveLength(0);
   });
 
-  it("« Renvoyer » deux fois avant le cron ne laisse qu'un email en file, au lien valable", async () => {
+  it("« Renvoyer » deux fois avant le cron ne laisse qu'un email en file", async () => {
     const db = await creerDbTest();
     const id = await membreAvecCompte(db, 1);
-    const url = (j: string) => `https://exemple.test/activer?jeton=${j}`;
-    await inviterParEmail(db, id, url);
-    await inviterParEmail(db, id, url);
-    const file = await db.select().from(emailsFile).where(eq(emailsFile.statut, "a_envoyer"));
-    expect(file).toHaveLength(1);
-    expect((await verifierJeton(db, jetonDe(file[0].html))).ok).toBe(true);
-    expect(await db.select().from(invitations).where(eq(invitations.userId, id))).toHaveLength(1);
+    await inviterParEmail(db, id);
+    await inviterParEmail(db, id);
+    expect(await db.select().from(emailsFile).where(eq(emailsFile.statut, "a_envoyer"))).toHaveLength(1);
+  });
+
+  it("refuse un compte inconnu", async () => {
+    const db = await creerDbTest();
+    await expect(inviterParEmail(db, "inconnu")).rejects.toBeInstanceOf(ErreurMetier);
   });
 });
 
@@ -172,9 +172,8 @@ describe("inviterParEmail prioritaire", () => {
   it("antidate l'email pour qu'il parte en tête de file", async () => {
     const db = await creerDbTest();
     const [a, b] = [await membreAvecCompte(db, 1), await membreAvecCompte(db, 2)];
-    const url = (j: string) => `https://exemple.test/activer?jeton=${j}`;
-    await inviterParEmail(db, a, url);
-    await inviterParEmail(db, b, url, { prioritaire: true });
+    await inviterParEmail(db, a);
+    await inviterParEmail(db, b, { prioritaire: true });
     const [premier] = await db.select().from(emailsFile).orderBy(asc(emailsFile.creeLe));
     expect(premier.userId).toBe(b);
     expect(Date.now() - premier.creeLe.getTime()).toBeGreaterThan(300 * JOUR);
@@ -184,7 +183,7 @@ describe("inviterParEmail prioritaire", () => {
     const db = await creerDbTest();
     const id = await membreAvecCompte(db, 1);
     await db.insert(emailsFile).values({ sujet: "s", html: "h", type: "invitation", destinataire: "e2e-1@ademig.test", userId: id, statut: "envoye", envoyeLe: new Date() });
-    await inviterParEmail(db, id, (j) => `https://exemple.test/activer?jeton=${j}`, { prioritaire: true });
+    await inviterParEmail(db, id, { prioritaire: true });
     expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("en_file");
   });
 });
@@ -209,18 +208,16 @@ describe("verifierInvitable", () => {
 });
 
 describe("désactivation d'un compte pas encore activé", () => {
-  const url = (j: string) => `https://exemple.test/activer?jeton=${j}`;
-
   it("tue le lien et l'email en file, bloque l'activation, le renvoi et le rattrapage, puis la réactivation rouvre", async () => {
     const db = await creerDbTest();
     const admin = await creerCompteAvecMotDePasse(db, { nom: "Admin", email: "e2e-admin@ademig.test", role: "superadmin", motDePasse: "motdepasse-solide" });
     const id = await membreAvecCompte(db, 1);
-    await inviterParEmail(db, id, url);
-    const [email] = await db.select().from(emailsFile);
+    const { jeton: envoye } = await creerInvitation(db, id);
+    await inviterParEmail(db, id);
 
     await desactiverCompteMembre(db, { acteurId: admin.id, cibleId: id });
     expect(await db.select().from(emailsFile)).toHaveLength(0);
-    await expect(activerCompte(db, jetonDe(email.html), "motdepasse-solide")).rejects.toBeInstanceOf(ErreurMetier);
+    await expect(activerCompte(db, envoye, "motdepasse-solide")).rejects.toBeInstanceOf(ErreurMetier);
     // Même un jeton créé avant la désactivation (course) ne sert pas.
     await db.update(user).set({ desactiveLe: null }).where(eq(user.id, id));
     const { jeton } = await creerInvitation(db, id);
@@ -228,9 +225,9 @@ describe("désactivation d'un compte pas encore activé", () => {
     await expect(activerCompte(db, jeton, "motdepasse-solide")).rejects.toThrow(/désactivé/);
     expect((await etatCompte(db, id))?.desactive).toBe(true);
     await expect(verifierInvitable(db, id)).rejects.toThrow(/désactivé/);
-    await expect(inviterParEmail(db, id, url)).rejects.toThrow(/désactivé/);
+    await expect(inviterParEmail(db, id)).rejects.toThrow(/désactivé/);
     await expect(genererLienInvitation(db, id)).rejects.toThrow(/désactivé/);
-    expect(await inviterLesNonInvites(db, url)).toBe(0);
+    expect(await inviterLesNonInvites(db)).toBe(0);
     expect(await db.select().from(emailsFile)).toHaveLength(0);
 
     expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("desactive");
@@ -240,9 +237,9 @@ describe("désactivation d'un compte pas encore activé", () => {
     expect((await db.select({ actif: user.actif }).from(user).where(eq(user.id, id)))[0].actif).toBe(false);
     expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("a_inviter");
     await expect(verifierInvitable(db, id)).resolves.toBeUndefined();
-    await inviterParEmail(db, id, url, { prioritaire: true });
+    await inviterParEmail(db, id, { prioritaire: true });
     expect(await db.select().from(emailsFile)).toHaveLength(1);
-    expect(await inviterLesNonInvites(db, url)).toBe(0);
+    expect(await inviterLesNonInvites(db)).toBe(0);
   });
 });
 
@@ -250,11 +247,11 @@ describe("genererLienInvitation", () => {
   it("invalide l'ancien lien et retire l'email en file, sans en mettre un autre", async () => {
     const db = await creerDbTest();
     const id = await membreAvecCompte(db, 1);
-    await inviterParEmail(db, id, (j) => `https://exemple.test/activer?jeton=${j}`);
-    const [ancien] = await db.select().from(emailsFile);
+    const { jeton: ancien } = await creerInvitation(db, id);
+    await inviterParEmail(db, id);
     const { jeton } = await genererLienInvitation(db, id);
     expect(await db.select().from(emailsFile)).toHaveLength(0);
-    expect((await verifierJeton(db, jetonDe(ancien.html))).ok).toBe(false);
+    expect((await verifierJeton(db, ancien)).ok).toBe(false);
     expect((await verifierJeton(db, jeton)).ok).toBe(true);
     expect((await suiviInvitations(db, [id])).get(id)?.statut).toBe("invite");
   });
@@ -266,17 +263,23 @@ describe("genererLienInvitation", () => {
 });
 
 describe("inviterLesNonInvites", () => {
-  it("met en file les seuls comptes de fiche pas encore invités, une fois chacun", async () => {
+  it("met en file les comptes de fiche jamais invités, en échec ou au lien expiré, une fois chacun", async () => {
     const db = await creerDbTest();
-    const [a, b, c] = [await membreAvecCompte(db, 1), await membreAvecCompte(db, 2), await membreAvecCompte(db, 3)];
+    const [a, b, c, d, e] = [
+      await membreAvecCompte(db, 1), await membreAvecCompte(db, 2), await membreAvecCompte(db, 3),
+      await membreAvecCompte(db, 4), await membreAvecCompte(db, 5),
+    ];
     await creerCompte(db, { nom: "Sans fiche", email: "e2e-sans@ademig.test", role: "membre" });
-    await inviterParEmail(db, b, (j) => `https://exemple.test/activer?jeton=${j}`);
+    await inviterParEmail(db, b);
     const { jeton } = await creerInvitation(db, c);
     await activerCompte(db, jeton, "motdepasse-solide");
-    expect(await inviterLesNonInvites(db, (j) => `https://exemple.test/activer?jeton=${j}`)).toBe(1);
-    const file = await db.select().from(emailsFile).where(eq(emailsFile.userId, a));
-    expect(file).toHaveLength(1);
-    expect(await inviterLesNonInvites(db, (j) => `https://exemple.test/activer?jeton=${j}`)).toBe(0);
+    await db.insert(emailsFile).values({ sujet: "s", html: "", type: "invitation", destinataire: "e2e-4@ademig.test", userId: d, statut: "echec", erreur: "SMTP 550" });
+    await creerInvitation(db, e, new Date(Date.now() - 31 * JOUR));
+    expect(await inviterLesNonInvites(db)).toBe(3);
+    for (const id of [a, d, e]) {
+      expect(await db.select().from(emailsFile).where(and(eq(emailsFile.userId, id), eq(emailsFile.statut, "a_envoyer")))).toHaveLength(1);
+    }
+    expect(await inviterLesNonInvites(db)).toBe(0);
   });
 });
 
@@ -294,12 +297,18 @@ describe("suiviInvitations", () => {
     const { jeton } = await creerInvitation(db, e);
     await activerCompte(db, jeton, "motdepasse-solide");
 
-    const suivi = await suiviInvitations(db, [a, b, c, d, e]);
+    const f = await membreAvecCompte(db, 6);
+    await creerInvitation(db, f, new Date(Date.now() - 31 * JOUR));
+    // Email envoyé mais lien expiré depuis : « expiré », pas « invité ».
+    await db.insert(emailsFile).values({ ...base, destinataire: "f@ademig.test", userId: f, statut: "envoye", envoyeLe: new Date(Date.now() - 31 * JOUR) });
+
+    const suivi = await suiviInvitations(db, [a, b, c, d, e, f]);
     expect(suivi.get(a)).toMatchObject({ statut: "a_inviter", le: null, erreur: null });
     expect(suivi.get(b)?.statut).toBe("en_file");
     expect(suivi.get(c)).toMatchObject({ statut: "invite", le: new Date("2026-10-01") });
     expect(suivi.get(d)).toMatchObject({ statut: "echec", erreur: "SMTP 550" });
     expect(suivi.get(e)?.statut).toBe("active");
+    expect(suivi.get(f)?.statut).toBe("expire");
   });
 
   it("liste vide", async () => {

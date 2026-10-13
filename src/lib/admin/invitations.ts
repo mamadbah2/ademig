@@ -21,7 +21,7 @@ export async function renvoyerInvitationMembre(userId: string): Promise<Resultat
   return action("superadmin", async () => {
     const id = lireId(userId);
     await verifierInvitable(db, id);
-    await inviterParEmail(db, id, urlActivation, { prioritaire: true });
+    await inviterParEmail(db, id, { prioritaire: true });
     revalidatePath("/admin/membres");
     return { ok: true, message: "Invitation mise en file : elle partira en premier au prochain envoi." };
   });
@@ -40,7 +40,7 @@ export async function copierLienInvitation(userId: string): Promise<Resultat<{ u
 
 export async function inviterTousLesNonInvites(): Promise<Resultat<{ invites: number }>> {
   return action("superadmin", async () => {
-    const invites = await inviterLesNonInvites(db, urlActivation);
+    const invites = await inviterLesNonInvites(db);
     revalidatePath("/admin/membres");
     return {
       ok: true,
