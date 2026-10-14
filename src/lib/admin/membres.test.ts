@@ -40,17 +40,19 @@ describe("autorisation", () => {
 describe("avec une session d'éditeur", () => {
   beforeEach(() => exigerRole.mockResolvedValue({ userId: "u1", role: "editeur" }));
 
-  it("renvoie l'erreur d'email sans écrire", async () => {
-    const r = await creerMembre(null, formulaire({ lienEmail: "pas-un-email" }));
-    expect(!r.ok && r.erreurs?.lienEmail).toEqual(["Adresse email invalide."]);
+  it("renvoie l'erreur du lien LinkedIn sans écrire", async () => {
+    const r = await creerMembre(null, formulaire({ lienLinkedin: "https://example.com/awa" }));
+    expect(!r.ok && r.erreurs?.lienLinkedin?.[0]).toMatch(/LinkedIn/);
     expect(ops.creerMembre).not.toHaveBeenCalled();
   });
 
   it("crée une fiche masquée par défaut, invalide membres et bureau, puis redirige", async () => {
     ops.creerMembre.mockResolvedValue({ id: ID });
     await creerMembre(null, formulaire());
-    expect(ops.creerMembre).toHaveBeenCalledWith({}, expect.objectContaining({ visible: false, liens: null, bio: null, promotion: null, competences: [] }));
+    expect(ops.creerMembre).toHaveBeenCalledWith({}, expect.objectContaining({ visible: false, liens: null, promotion: null, organisation: null }));
     expect(ops.creerMembre.mock.calls[0][1]).not.toHaveProperty("modifierSlug");
+    // Les champs qui ne sont plus saisis ne partent pas vers la base.
+    expect(ops.creerMembre.mock.calls[0][1]).not.toHaveProperty("resume");
     expect(cache.revalidateTag).toHaveBeenCalledWith("membres", { expire: 0 });
     expect(cache.revalidateTag).toHaveBeenCalledWith("bureau", { expire: 0 });
     expect(redirect).toHaveBeenCalledWith(`/admin/membres/${ID}?cree=1`);

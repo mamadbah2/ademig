@@ -1,12 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { creerMembre, type DonneesMembre } from "@/db/operations/membres";
+import { creerMembre, type DonneesCreationMembre } from "@/db/operations/membres";
 import { membres, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
 import { ficheDuCompte } from "./fiche-du-compte";
 import { eq } from "drizzle-orm";
 
-const base: DonneesMembre = {
+const base: DonneesCreationMembre = {
   nom: "Awa Ndiaye",
   slug: "awa-ndiaye",
   titre: "Géologue",

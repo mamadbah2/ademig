@@ -1,20 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Portrait } from "@/components/portrait";
-import type { Member } from "@/lib/content/types";
+import { CarteMembre, type MembreAnnuaire } from "@/components/carte-membre";
 
 function normaliser(texte: string) {
   return texte.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
-export function AnnuaireMembres({ membres }: { membres: Member[] }) {
+export function AnnuaireMembres({ membres }: { membres: MembreAnnuaire[] }) {
   const [recherche, setRecherche] = useState("");
   const [specialite, setSpecialite] = useState("");
 
   const specialites = useMemo(
-    () => [...new Set(membres.map((m) => m.specialite))].filter((s) => s !== "À compléter").sort(),
+    () => [...new Set(membres.map((m) => m.specialite))].filter((s) => s && s !== "À compléter").sort(),
     [membres],
   );
 
@@ -22,7 +20,7 @@ export function AnnuaireMembres({ membres }: { membres: Member[] }) {
   const resultats = membres.filter((m) => {
     if (specialite && m.specialite !== specialite) return false;
     if (!q) return true;
-    const texte = [m.nom, m.titre, m.fonction, m.organisation, m.ville, m.specialite, ...m.competences]
+    const texte = [m.nom, m.titre, m.organisation, m.specialite]
       .filter(Boolean)
       .join(" ");
     return normaliser(texte).includes(q);
@@ -37,7 +35,7 @@ export function AnnuaireMembres({ membres }: { membres: Member[] }) {
             type="search"
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Nom, entreprise, compétence…"
+            placeholder="Nom, poste, entreprise…"
             className="w-full border-[1.5px] border-encre bg-papier px-4 py-3 placeholder:text-encre/60"
           />
         </label>
@@ -69,25 +67,7 @@ export function AnnuaireMembres({ membres }: { membres: Member[] }) {
         <ul className="mt-6 grid gap-x-10 gap-y-10 md:grid-cols-2">
           {resultats.map((m) => (
             <li key={m.slug}>
-              <Link
-                href={`/membres/${m.slug}`}
-                className="group flex h-full items-start gap-5"
-              >
-                <Portrait nom={m.nom} photo={m.photo} />
-                <div className="min-w-0">
-                  <p className="font-titre text-2xl leading-tight group-hover:text-brun">{m.nom}</p>
-                  {m.fonction && (
-                    <p className="mt-1 inline-block border border-encre bg-moutarde px-2 py-0.5 text-sm">
-                      {m.fonction}
-                    </p>
-                  )}
-                  <p className="mt-1 font-bold">
-                    {m.titre}, {m.organisation}
-                    {m.promotion && ` (promotion ${m.promotion})`}
-                  </p>
-                  <p className="mt-2 leading-relaxed">{m.resume}</p>
-                </div>
-              </Link>
+              <CarteMembre membre={m} disposition="ligne" />
             </li>
           ))}
         </ul>

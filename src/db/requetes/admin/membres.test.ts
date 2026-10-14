@@ -1,16 +1,14 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { creerMembre, type DonneesMembre } from "@/db/operations/membres";
-import { trouverMembre } from "@/db/requetes/membres";
+import { creerMembre, type DonneesCreationMembre } from "@/db/operations/membres";
 import { creerCompte } from "@/db/operations/comptes";
 import { creerInvitation, inviterParEmail } from "@/db/operations/invitations";
 import { membres, mandats, postesBureau } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
-import { cheminApercu } from "./apercu";
 import { lireCompteDuMembre, lireMembreAdmin, listerMembresAdmin, optionsMembres } from "./membres";
 
-const base: DonneesMembre = {
+const base: DonneesCreationMembre = {
   nom: "Awa Ndiaye",
   slug: "awa-ndiaye",
   titre: "Géologue",
@@ -98,13 +96,5 @@ describe("lectures de l'admin des membres", () => {
       ["Awa Ndiaye", false],
       ["Zackaria Diaw", true],
     ]);
-  });
-
-  it("ne sert une fiche masquée qu'en aperçu et construit son chemin depuis la base", async () => {
-    const { id } = await creerMembre(db, { ...base, visible: false });
-    expect(await trouverMembre(db, "awa-ndiaye")).toBeUndefined();
-    expect((await trouverMembre(db, "awa-ndiaye", { masques: true }))?.nom).toBe("Awa Ndiaye");
-    expect(await cheminApercu(db, "membre", id)).toBe("/membres/awa-ndiaye");
-    expect(await cheminApercu(db, "membre", crypto.randomUUID())).toBeNull();
   });
 });

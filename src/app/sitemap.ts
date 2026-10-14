@@ -1,15 +1,11 @@
 import type { MetadataRoute } from "next";
 import { getActualites } from "@/lib/content/actualites";
 import { getEvenements } from "@/lib/content/evenements";
-import { getMembres } from "@/lib/content/membres";
 import { absoluteUrl, navigation } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [actualites, evenements, membres] = await Promise.all([
-    getActualites(),
-    getEvenements(),
-    getMembres(),
-  ]);
+  // Les membres n'ont plus de page à eux : seul l'annuaire /membres figure ici (via la navigation).
+  const [actualites, evenements] = await Promise.all([getActualites(), getEvenements()]);
 
   return [
     ...navigation.map((item) => ({
@@ -27,6 +23,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: e.debut,
       priority: 0.7,
     })),
-    ...membres.map((m) => ({ url: absoluteUrl(`/membres/${m.slug}`), priority: 0.6 })),
   ];
 }

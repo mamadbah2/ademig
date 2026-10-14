@@ -49,14 +49,3 @@ export async function membresVisibles(db: Db): Promise<{ id: string; membre: Mem
 export async function listerMembres(db: Db): Promise<Member[]> {
   return (await membresVisibles(db)).map((m) => m.membre);
 }
-
-// `masques` n'est utilisé que pour l'aperçu, après contrôle de la session (src/lib/apercu.ts).
-export async function trouverMembre(db: Db, slug: string, o: { masques?: boolean } = {}): Promise<Member | undefined> {
-  const r = await db.query.membres.findFirst({
-    where: (m, { and, eq }) => (o.masques ? eq(m.slug, slug) : and(eq(m.slug, slug), eq(m.visible, true))),
-    with: { photo: true },
-  });
-  if (!r) return undefined;
-  const postes = await postesDuMandatActif(db);
-  return versMembre(r, postes.get(r.id)?.fonction);
-}
