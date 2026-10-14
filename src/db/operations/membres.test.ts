@@ -7,9 +7,9 @@ import { schemaMembre } from "@/lib/validation/membres";
 import { creerDbTest } from "@/test/db";
 import { CONFLIT } from "./commun";
 import { ErreurMetier } from "./erreurs";
-import { creerMembre, type DonneesMembre, modifierMembre, supprimerMembre } from "./membres";
+import { creerMembre, type DonneesCreationMembre, type DonneesMembre, modifierMembre, supprimerMembre } from "./membres";
 
-const base: DonneesMembre = {
+const base: DonneesCreationMembre = {
   nom: "Awa Ndiaye",
   slug: "awa-ndiaye",
   titre: "Géologue",
@@ -77,6 +77,37 @@ describe("membres", () => {
     expect(erreur.champ).toBe("slug");
     await modifierMembre(db, id, { ...base, slug: "awa", visible: true }, { version: await version(db, id), modifierSlug: true });
     expect((await lire(db, id)).slug).toBe("awa");
+  });
+
+  it("crée une fiche sans résumé depuis l'admin (résumé vide)", async () => {
+    const saisie: DonneesMembre = {
+      nom: "Pape Emile Ndiaye",
+      slug: "pape-emile-ndiaye",
+      titre: "",
+      specialite: "",
+      promotion: null,
+      organisation: null,
+      liens: null,
+      photoId: null,
+      visible: true,
+    };
+    const { id } = await creerMembre(db, saisie);
+    expect(await lire(db, id)).toMatchObject({ resume: "", titre: "", bio: null, parcours: [], competences: [] });
+  });
+
+  it("n'écrit que les champs du formulaire : colonnes conservées, email et site gardés", async () => {
+    const { id } = await creerMembre(db, { ...base, liens: { email: "awa@example.org", site: "https://awa.sn", linkedin: "https://www.linkedin.com/in/ancien" } });
+    const saisie: DonneesMembre = { ...base, titre: "Cheffe de projet", liens: { linkedin: "https://www.linkedin.com/in/awa" } };
+    await modifierMembre(db, id, saisie, { version: await version(db, id), modifierSlug: false });
+    expect(await lire(db, id)).toMatchObject({
+      titre: "Cheffe de projet",
+      resume: "Résumé.",
+      ville: "Dakar",
+      competences: ["SIG"],
+      liens: { email: "awa@example.org", site: "https://awa.sn", linkedin: "https://www.linkedin.com/in/awa" },
+    });
+    await modifierMembre(db, id, { ...saisie, liens: null }, { version: await version(db, id), modifierSlug: false });
+    expect((await lire(db, id)).liens).toEqual({ email: "awa@example.org", site: "https://awa.sn" });
   });
 
   it("refuse de supprimer un membre qui occupe un poste, même dans un ancien mandat", async () => {

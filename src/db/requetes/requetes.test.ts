@@ -12,7 +12,7 @@ import { paragraphesEnHtml } from "@/lib/html";
 import { creerDbTest } from "@/test/db";
 import { listerActualites, trouverActualite } from "./actualites";
 import { listerEvenements, trouverEvenement } from "./evenements";
-import { listerMembres, trouverMembre } from "./membres";
+import { listerMembres } from "./membres";
 import { lireBureau, listerPartenaires } from "./organisation";
 import { lireReglages } from "./reglages";
 
@@ -45,7 +45,6 @@ describe("requêtes du site public après le seed", () => {
   it("rend les membres à l'identique, dans l'ordre protocolaire", async () => {
     const attendu = membresInitiaux.map((m) => ({ ...m, bio: m.bio && paragraphesEnHtml(m.bio) }));
     expect(await listerMembres(db)).toEqual(attendu);
-    expect(await trouverMembre(db, "ibrahima-diao")).toEqual(attendu[0]);
   });
 
   it("compose le bureau exécutif et les commissions du mandat actif", async () => {
@@ -81,7 +80,6 @@ describe("filtres de publication", () => {
     await db.update(t.membres).set({ visible: false }).where(eq(t.membres.slug, "oumar-niang"));
     await db.update(t.partenaires).set({ visible: false }).where(eq(t.partenaires.nom, "MODEC"));
     expect((await listerMembres(db)).map((m) => m.slug)).not.toContain("oumar-niang");
-    expect(await trouverMembre(db, "oumar-niang")).toBeUndefined();
     expect((await lireBureau(db)).commissions.flatMap((c) => c.membres.map((m) => m.slug))).not.toContain("oumar-niang");
     expect((await listerPartenaires(db)).map((p) => p.nom)).not.toContain("MODEC");
   });

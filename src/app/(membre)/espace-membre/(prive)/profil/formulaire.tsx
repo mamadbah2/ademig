@@ -199,8 +199,8 @@ export function FormulaireProfil({ profil }: { profil: ProfilMembre }) {
           {envoiPhoto ? "Envoi de la photo…" : enCours ? "Enregistrement…" : "Enregistrer"}
         </Bouton>
         {profil.visibilite === "publique" && (
-          <Link href={`/membres/${profil.slug}`} className="font-bold underline underline-offset-4">
-            Voir ma fiche publique
+          <Link href="/membres" className="font-bold underline underline-offset-4">
+            Voir l&apos;annuaire public
           </Link>
         )}
       </div>

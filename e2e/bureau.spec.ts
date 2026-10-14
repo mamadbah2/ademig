@@ -11,10 +11,9 @@ test("un éditeur prépare un mandat sans toucher au bureau en place, puis le su
   // Membre de test, masqué.
   await page.goto("/admin/membres/nouveau");
   await page.getByLabel("Nom", { exact: true }).fill(MEMBRE);
-  await expect(page.getByLabel("Lien de la page")).toHaveValue("e2e-membre-du-bureau");
-  await page.getByLabel("Poste actuel").fill("Géologue");
+  await expect(page.locator('input[type="hidden"][name="slug"]')).toHaveValue("e2e-membre-du-bureau");
+  await page.getByLabel("Titre", { exact: true }).fill("Géologue");
   await page.getByLabel("Spécialité").fill("Géologie");
-  await page.getByLabel("Résumé").fill("Membre créé par les tests.");
   await expect(page.getByLabel("Visible sur le site")).not.toBeChecked();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/membres\/[0-9a-f-]{36}\?cree=1$/);

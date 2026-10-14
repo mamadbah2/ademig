@@ -6,7 +6,7 @@ import { cheminApercu, type TypeApercu } from "@/db/requetes/admin/apercu";
 import { aLeRole } from "@/lib/roles";
 import { lireSession } from "@/lib/session";
 
-const TYPES: TypeApercu[] = ["actualite", "evenement", "membre"];
+const TYPES: TypeApercu[] = ["actualite", "evenement"];
 
 // Ouvert depuis l'admin dans un nouvel onglet ; active le Draft Mode puis affiche la vraie page.
 export async function GET(request: Request) {

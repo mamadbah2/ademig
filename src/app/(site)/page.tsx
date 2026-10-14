@@ -13,7 +13,7 @@ import {
 } from "@/components/illustration";
 import { Logo } from "@/components/logo";
 import { Vignette } from "@/components/photos";
-import { Portrait } from "@/components/portrait";
+import { CarteMembre } from "@/components/carte-membre";
 import {
   Bouton,
   Cadre,
@@ -339,16 +339,9 @@ export default async function Accueil() {
           {membres.slice(0, 4).map((m) => (
             <li
               key={m.slug}
-              className="flex w-[62%] shrink-0 snap-center flex-col items-center text-center sm:w-auto"
+              className="w-[62%] shrink-0 snap-center sm:w-auto"
             >
-              <Portrait nom={m.nom} photo={m.photo} taille="lg" />
-              <Link
-                href={`/membres/${m.slug}`}
-                className="font-titre mt-4 text-2xl leading-tight hover:text-brun"
-              >
-                {m.nom}
-              </Link>
-              <p className="mt-1">{m.fonction}</p>
+              <CarteMembre membre={m} avecFonction />
             </li>
           ))}
         </ul>

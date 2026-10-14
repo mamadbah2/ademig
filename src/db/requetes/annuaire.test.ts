@@ -1,12 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { creerMembre, type DonneesMembre } from "@/db/operations/membres";
+import { creerMembre, type DonneesCreationMembre } from "@/db/operations/membres";
 import { membres, user } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { creerDbTest } from "@/test/db";
 import { listerAnnuaire, PAR_PAGE_ANNUAIRE, type FiltreAnnuaire } from "./annuaire";
 
-const base: DonneesMembre = {
+const base: DonneesCreationMembre = {
   nom: "X",
   slug: "x",
   titre: "Ingénieur",
@@ -29,7 +29,7 @@ const tous: FiltreAnnuaire = { q: "", promotion: null, specialite: null, page: 1
 describe("listerAnnuaire", () => {
   let db: Db;
 
-  async function fiche(slug: string, nom: string, o: Partial<DonneesMembre> = {}, rattache?: { userId: string; annuaire: boolean }) {
+  async function fiche(slug: string, nom: string, o: Partial<DonneesCreationMembre> = {}, rattache?: { userId: string; annuaire: boolean }) {
     const { id } = await creerMembre(db, { ...base, ...o, slug, nom });
     await db
       .update(membres)

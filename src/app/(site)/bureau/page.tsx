@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { IconeCarre, ordreTons, type IconeName } from "@/components/illustration";
-import { Portrait } from "@/components/portrait";
+import { CarteMembre } from "@/components/carte-membre";
 import { Cadre, formatDate, PageHeader, SectionTitle } from "@/components/ui";
 import { getBureau } from "@/lib/content/organisation";
 import type { Member } from "@/lib/content/types";
@@ -19,17 +18,8 @@ const iconesCommissions: IconeName[] = ["lingots", "explosion", "partage", "casq
 
 function FicheBureau({ membre, priority = false }: { membre: Member; priority?: boolean }) {
   return (
-    <li className="flex flex-col items-center text-center">
-      <Portrait nom={membre.nom} photo={membre.photo} taille="lg" priority={priority} />
-      <p className="font-titre mt-4 text-2xl leading-tight">
-        <Link href={`/membres/${membre.slug}`} className="hover:text-brun">
-          {membre.nom}
-        </Link>
-      </p>
-      <p className="mt-1 font-bold">{membre.fonction}</p>
-      <p className="mt-1 text-sm">
-        {membre.titre}, {membre.organisation}
-      </p>
+    <li>
+      <CarteMembre membre={membre} avecFonction priority={priority} />
     </li>
   );
 }

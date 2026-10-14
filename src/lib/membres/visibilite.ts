@@ -4,7 +4,7 @@ export type Visibilite = (typeof VISIBILITES)[number];
 export const LIBELLES_VISIBILITE: Record<Visibilite, { titre: string; aide: string }> = {
   publique: {
     titre: "Publique",
-    aide: "Votre fiche apparaît sur le site, visible de tous, et dans l'annuaire des membres.",
+    aide: "Votre photo, votre nom et votre titre apparaissent sur la page Membres du site, avec un lien vers votre LinkedIn, et dans l'annuaire des membres.",
   },
   membres: {
     titre: "Membres seulement",

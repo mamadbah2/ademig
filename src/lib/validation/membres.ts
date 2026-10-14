@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Liens } from "@/lib/content/types";
 import { MESSAGE_LINKEDIN, normaliserLinkedin } from "@/lib/membres/profil";
-import { caseACocher, champJson, champSlug, htmlRicheFacultatif, idMediaFacultatif, texteFacultatif, urlWeb } from "./commun";
+import { caseACocher, champSlug, idMediaFacultatif, texteFacultatif } from "./commun";
 
 const texte = (message: string, max: number) => z.string().trim().min(1, message).max(max, `${max} caractères au plus.`);
 
@@ -23,7 +23,6 @@ function entierFacultatif(min: number, max: number, message: string) {
 }
 
 const vide = (v: string | undefined) => v?.trim() || undefined;
-const urlFacultative = z.string().optional().transform(vide).pipe(urlWeb.optional());
 // Même règle que le profil du membre : une seule adresse LinkedIn valide, vide autorisé.
 const linkedinFacultatif = z
   .string()
@@ -38,65 +37,27 @@ const linkedinFacultatif = z
     }
     return normalise;
   });
-const emailFacultatif = z
-  .string()
-  .optional()
-  .transform(vide)
-  .pipe(z.email({ error: "Adresse email invalide." }).optional());
+// Texte facultatif d'une colonne NOT NULL : vide donne "" (la carte du site masque alors la ligne).
+const texteVide = (max: number) => z.string().trim().max(max, `${max} caractères au plus.`).optional().transform((v) => v ?? "");
 
-const etape = z.object({
-  periode: texte("Indiquez la période.", 60),
-  poste: texte("Indiquez le poste.", 200),
-  organisation: texte("Indiquez l'employeur ou l'école.", 200),
-  description: z.string().trim().max(600, "600 caractères au plus.").optional().transform((v) => v || undefined),
-});
-
-const realisation = z.object({
-  titre: texte("Donnez un titre à chaque réalisation.", 200),
-  annee: z.string().trim().max(20, "20 caractères au plus.").optional().transform((v) => v || undefined),
-  description: texte("Décrivez chaque réalisation.", 600),
-});
-
-const competences = champJson(
-  z
-    .array(z.object({ nom: texte("Écrivez chaque compétence.", 60) }))
-    .max(30, "30 compétences au plus.")
-    .refine((l) => new Set(l.map((c) => c.nom.toLowerCase())).size === l.length, "Une compétence figure deux fois."),
-).transform((l) => l.map((c) => c.nom));
-
+// Champs du formulaire de l'admin. Il n'y a plus de page par membre : résumé, biographie, parcours,
+// compétences, réalisations, numéro, ville, email et site ne sont plus saisis (colonnes conservées).
 const champs = z.object({
   nom: texte("Indiquez le nom.", 120),
   slug: champSlug,
-  titre: texte("Indiquez le poste actuel.", 120),
-  specialite: texte("Indiquez la spécialité.", 120),
+  titre: texteVide(120),
+  specialite: texteVide(120),
   promotion: entierFacultatif(1950, 2100, "Indiquez l'année de la promotion (ex. : 2008)."),
-  numero: entierFacultatif(1, 99_999, "Le numéro est un nombre entier positif."),
   organisation: texteFacultatif(120),
-  ville: texteFacultatif(100),
-  resume: texte("Écrivez un résumé.", 600),
-  bio: htmlRicheFacultatif,
-  parcours: champJson(z.array(etape).max(30, "30 étapes au plus.")),
-  competences,
-  realisations: champJson(z.array(realisation).max(20, "20 réalisations au plus.")),
   lienLinkedin: linkedinFacultatif,
-  lienEmail: emailFacultatif,
-  lienSite: urlFacultative,
   photoId: idMediaFacultatif,
   visible: caseACocher,
 });
 
-// Les trois liens arrivent à plat (une erreur par champ) et sont rangés comme en base.
-function avecLiens<T extends { lienLinkedin?: string; lienEmail?: string; lienSite?: string }>({
-  lienLinkedin,
-  lienEmail,
-  lienSite,
-  ...reste
-}: T) {
-  const liens: Liens = {};
-  if (lienLinkedin) liens.linkedin = lienLinkedin;
-  if (lienEmail) liens.email = lienEmail;
-  if (lienSite) liens.site = lienSite;
-  return { ...reste, liens: Object.keys(liens).length > 0 ? liens : null };
+// Le lien LinkedIn arrive à plat (une erreur sur son champ) et est rangé comme en base.
+function avecLiens<T extends { lienLinkedin?: string }>({ lienLinkedin, ...reste }: T) {
+  const liens: Liens | null = lienLinkedin ? { linkedin: lienLinkedin } : null;
+  return { ...reste, liens };
 }
 
 export const schemaMembre = champs.transform(avecLiens);

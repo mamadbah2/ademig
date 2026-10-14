@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { versCarte } from "@/components/carte-membre";
 import { Cadre, PageHeader } from "@/components/ui";
 import { getMembres } from "@/lib/content/membres";
 import { AnnuaireMembres } from "./annuaire";
@@ -6,7 +7,7 @@ import { AnnuaireMembres } from "./annuaire";
 export const metadata: Metadata = {
   title: "Membres",
   description:
-    "L'annuaire des ingénieurs diplômés de l'ENSMG membres de l'ADEMIG : géologues, ingénieurs des mines, du pétrole et du gaz. Parcours et réalisations.",
+    "L'annuaire des ingénieurs diplômés de l'ENSMG membres de l'ADEMIG : géologues, ingénieurs des mines, du pétrole et du gaz, avec leur profil LinkedIn.",
   alternates: { canonical: "/membres" },
 };
 
@@ -16,11 +17,11 @@ export default async function Membres() {
     <>
       <PageHeader
         title="Les membres"
-        intro="Le parcours des ingénieurs diplômés de l'ENSMG"
+        intro="Les ingénieurs diplômés de l'ENSMG"
         illustration="tools"
       />
       <Cadre as="div">
-        <AnnuaireMembres membres={membres} />
+        <AnnuaireMembres membres={membres.map(versCarte)} />
       </Cadre>
     </>
   );
