@@ -232,46 +232,23 @@ function animerHero(nettoyages: (() => void)[]) {
   const logo = q("logo");
   const une = q("une");
   const legendes = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll("[data-hero-une]"));
-  // Sur un petit écran, le titre est long et occupe tout l'écran : il monte mot par mot, vite,
-  // au lieu de lettres dispersées illisibles pendant plusieurs secondes.
+  // Le titre monte mot par mot à l'intérieur de ses lignes, avec un court fondu (moins d'une
+  // seconde) : la même entrée sobre sur tous les écrans.
   const petitEcran = window.matchMedia("(max-width: 767px)").matches;
-  const split = petitEcran
-    ? SplitText.create(titre, { type: "lines,words", mask: "lines", linesClass: "ligne" })
-    : SplitText.create(titre, { type: "words,chars" });
+  const split = SplitText.create(titre, { type: "lines,words", mask: "lines", linesClass: "ligne" });
 
-  // 1. Entrée : le paysage se pose, les lettres tombent comme des blocs et soulèvent des pépites.
+  // 1. Entrée : le paysage se pose, le titre monte, puis les boutons et repères suivent.
   const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
   tl.set(texte, { opacity: 1 }).fromTo(fond, { scale: 1.18 }, { scale: 1, duration: 2.6, ease: "power3.out" }, 0);
-  if (petitEcran) {
-    tl.from(split.words, { yPercent: 100, opacity: 0, duration: 0.55, stagger: 0.025 }, 0.15).add(() => {
-      const r = titre.getBoundingClientRect();
-      eclats(r.left + r.width * 0.4, r.bottom, 12, 700);
-    }, 0.6);
-  } else {
-    tl.from(
-      split.chars,
-      {
-        y: () => gsap.utils.random(-320, -140),
-        rotation: () => gsap.utils.random(-50, 50),
-        opacity: 0,
-        duration: 1,
-        ease: "bounce.out",
-        stagger: { each: 0.022, from: "random" },
-      },
-      0.1,
-    ).add(() => {
-      const r = titre.getBoundingClientRect();
-      eclats(r.left + r.width * 0.35, r.bottom, 22, 800);
-    }, 0.75);
-  }
-  tl.from(boutons, { y: 26, opacity: 0, duration: 0.6, stagger: 0.1 }, petitEcran ? 0.55 : 1.15);
+  tl.from(split.words, { yPercent: 100, opacity: 0, duration: 0.55, stagger: 0.025 }, 0.15);
+  tl.from(boutons, { y: 26, opacity: 0, duration: 0.6, stagger: 0.1 }, 0.55);
   // Le médaillon du logo se pose en premier, comme un sceau.
   if (logo) {
     tl.from(logo, { y: -40, scale: 0.6, rotation: -12, opacity: 0, duration: 0.9, ease: "back.out(2.2)" }, 0);
   }
-  if (une) tl.from(une, { x: -30, opacity: 0, duration: 0.6 }, petitEcran ? 0.8 : 1.35);
+  if (une) tl.from(une, { x: -30, opacity: 0, duration: 0.6 }, 0.8);
   if (reperes.length) {
-    tl.from(reperes, { y: 20, opacity: 0, duration: 0.6, stagger: 0.08 }, petitEcran ? 0.8 : 1.3);
+    tl.from(reperes, { y: 20, opacity: 0, duration: 0.6, stagger: 0.08 }, 0.8);
   }
 
   // Sur mobile, le rail du wagonnet traverserait les boutons en bas du hero : il n'apparaît
