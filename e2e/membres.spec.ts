@@ -29,7 +29,7 @@ test("un éditeur prépare une fiche masquée avec le formulaire réduit, puis l
   // LinkedIn invalide : erreur sur le champ, saisie conservée.
   await page.getByLabel("Profil LinkedIn").fill("https://example.com/in/e2e");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByText(/LinkedIn/).filter({ hasNotText: "Profil LinkedIn" }).first()).toBeVisible();
+  await expect(page.getByText("Collez l'adresse de votre profil LinkedIn (https://www.linkedin.com/in/…).")).toBeVisible();
   await expect(page.getByLabel("Titre", { exact: true })).toHaveValue("Géologue d'exploration");
   await page.getByLabel("Profil LinkedIn").fill("https://www.linkedin.com/in/e2e-membre");
 

@@ -40,7 +40,7 @@ test("un membre invité active son compte, complète son profil et se retrouve d
   // 2. Profil.
   await page.goto("/espace-membre/profil");
   await page.getByLabel("Présentation").fill("Géologue de test, passionnée de cartographie.");
-  await page.getByLabel("LinkedIn").fill("https://www.linkedin.com/in/e2e-membre");
+  await page.getByLabel("LinkedIn", { exact: true }).fill("https://www.linkedin.com/in/e2e-membre");
   await page.getByRole("radio", { name: /Membres seulement/ }).check();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Profil enregistré.")).toBeVisible();
