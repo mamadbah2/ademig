@@ -5,7 +5,7 @@ export const ordreBureau = [
   "ibrahima-diao",
   "sokhna-khadidjatou-thioye",
   "bineta-gueye-fall",
-  "zackaria-diaw",
+  "pape-emile-ndiaye",
 ];
 
 export const commissions: (Commission & { membres: string[] })[] = [
@@ -17,17 +17,18 @@ export const commissions: (Commission & { membres: string[] })[] = [
   {
     nom: "Communication et relations publiques",
     mission: "Information des membres, relations avec la presse et présence en ligne de l'amicale.",
-    membres: ["birama-ndoye", "aloise-ngor-mak-diagne"],
+    membres: ["birama-ndoye", "aloise-ngor-mak-diagne", "khardiata-ka"],
   },
   {
     nom: "Insertion et partenariats",
     mission: "Stages, emploi des jeunes diplômés et relations avec les entreprises et les institutions.",
-    membres: ["daouda-mane"],
+    membres: ["daouda-mane", "thierno-abou-dia-thiam"],
   },
   {
     nom: "Sociale",
     mission: "Solidarité entre les membres et accompagnement dans les moments importants.",
-    membres: ["mahamat-tourki-nouri", "oumar-niang"],
+    // Présidence vacante depuis la démission de Mahamat Tourki Nouri.
+    membres: ["oumar-niang"],
   },
 ];
 
