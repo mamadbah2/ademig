@@ -80,6 +80,7 @@ export const membres: MembreInitial[] = [
   {
     slug: "pape-emile-ndiaye",
     nom: "Pape Emile Ndiaye",
+    photo: "/membres/pape-emile-ndiaye.jpg",
     fonction: "Secrétaire général adjoint",
     titre: "",
     specialite: "",
@@ -189,6 +190,7 @@ export const membres: MembreInitial[] = [
   {
     slug: "khardiata-ka",
     nom: "Khardiata Ka",
+    photo: "/membres/khardiata-ka.jpg",
     fonction: "Responsable digital de la commission communication et relations publiques",
     titre: "",
     specialite: "",
