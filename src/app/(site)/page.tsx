@@ -110,8 +110,8 @@ export default async function Accueil() {
               data-hero="boutons"
               className="mt-6 grid grid-cols-2 gap-2 sm:mt-10 sm:flex sm:flex-wrap sm:gap-3"
             >
-              <Bouton href="/membres" className="col-span-2 px-5 py-3 text-center">
-                Découvrir les membres
+              <Bouton href="/bureau" className="col-span-2 px-5 py-3 text-center">
+                Découvrir le bureau
               </Bouton>
               <Bouton
                 href="/amicale"
