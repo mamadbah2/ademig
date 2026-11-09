@@ -10,7 +10,6 @@ export const membres: MembreInitial[] = [
     nom: "Dr Ibrahima Diao",
     fonction: "Président",
     titre: "Directeur technique",
-    organisation: "CACO – BTP",
     specialite: "Géologie",
     promotion: 2006,
     numero: 173,
@@ -24,7 +23,6 @@ export const membres: MembreInitial[] = [
     ],
     parcours: [
       { periode: "Depuis 2024", poste: "Président", organisation: "ADEMIG" },
-      { periode: "Actuellement", poste: "Directeur technique", organisation: "CACO" },
       { periode: "2006", poste: "Ingénieur diplômé, n° 173", organisation: "IST, aujourd'hui ENSMG" },
     ],
     competences: ["Géologie", "Contenu local", "Secteur extractif"],
@@ -224,7 +222,7 @@ export const membres: MembreInitial[] = [
   },
   {
     slug: "thierno-abou-dia-thiam",
-    nom: "Thierno Abou Dia Thiam",
+    nom: "Abou Dia Thiam",
     photo: "/membres/thierno-abou-dia-thiam.jpg",
     fonction: "Vice-président de la commission insertion et partenariats",
     titre: "Ingénieur chef de projets",
