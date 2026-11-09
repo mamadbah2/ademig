@@ -9,8 +9,7 @@ export const membres: MembreInitial[] = [
     slug: "ibrahima-diao",
     nom: "Dr Ibrahima Diao",
     fonction: "Président",
-    titre: "Ingénieur Chef de Mission",
-    organisation: "CACO – BTP",
+    titre: "Directeur technique",
     specialite: "Géologie",
     promotion: 2006,
     numero: 173,
@@ -24,7 +23,6 @@ export const membres: MembreInitial[] = [
     ],
     parcours: [
       { periode: "Depuis 2024", poste: "Président", organisation: "ADEMIG" },
-      { periode: "Actuellement", poste: "Chef de mission", organisation: "CACO" },
       { periode: "2006", poste: "Ingénieur diplômé, n° 173", organisation: "IST, aujourd'hui ENSMG" },
     ],
     competences: ["Géologie", "Contenu local", "Secteur extractif"],
@@ -79,10 +77,10 @@ export const membres: MembreInitial[] = [
   },
   {
     slug: "pape-emile-ndiaye",
-    nom: "Pape Emile Ndiaye",
+    nom: "Emile Pape Dethie Ndiaye",
     photo: "/membres/pape-emile-ndiaye.jpg",
     fonction: "Secrétaire général adjoint",
-    titre: "",
+    titre: "Géologue de projets",
     specialite: "",
     resume: "",
     parcours: [],
@@ -224,12 +222,14 @@ export const membres: MembreInitial[] = [
   },
   {
     slug: "thierno-abou-dia-thiam",
-    nom: "Thierno Abou Dia Thiam",
+    nom: "Abou Dia Thiam",
+    photo: "/membres/thierno-abou-dia-thiam.jpg",
     fonction: "Vice-président de la commission insertion et partenariats",
     titre: "Ingénieur chef de projets",
     organisation: "BTP",
     specialite: "",
     promotion: 2014,
+    numero: 313,
     resume: "",
     parcours: [],
     competences: [],
@@ -263,7 +263,7 @@ export const membres: MembreInitial[] = [
     competences: ["Architecture SIG", "Bases de données spatiales", "Géomatique"],
   },
   // Anciens membres du bureau 2024-2027, restés membres sans poste : Zackaria Diaw (remplacé par
-  // Pape Emile Ndiaye au secrétariat général adjoint) et Mahamat Tourki Nouri (démissionnaire de la
+  // Emile Pape Dethie Ndiaye au secrétariat général adjoint) et Mahamat Tourki Nouri (démissionnaire de la
   // présidence de la commission sociale, restée vacante). Rangés par nom, après les postes.
   {
     slug: "mahamat-tourki-nouri",

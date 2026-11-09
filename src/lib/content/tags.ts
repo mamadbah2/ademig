@@ -3,6 +3,7 @@ export const TAGS = {
   actualites: "actualites",
   evenements: "evenements",
   membres: "membres",
+  alumni: "alumni",
   bureau: "bureau",
   partenaires: "partenaires",
   reglages: "reglages",

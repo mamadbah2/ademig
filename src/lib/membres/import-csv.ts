@@ -46,7 +46,7 @@ function detecterSeparateur(entete: string): string {
 type Enregistrement = { ligne: number; cellules: string[] };
 
 // Lecteur CSV conforme à la RFC 4180 : guillemets doublés, séparateur ou saut de ligne entre guillemets, CRLF et LF.
-function lireCsv(texte: string, separateur: string): Enregistrement[] {
+export function lireCsv(texte: string, separateur: string): Enregistrement[] {
   const resultat: Enregistrement[] = [];
   let cellules: string[] = [];
   let cellule = "";

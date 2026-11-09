@@ -36,6 +36,13 @@
       "when": 1791896346028,
       "tag": "0004_compte_desactive",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794217329202,
+      "tag": "0005_rainy_thor",
+      "breakpoints": true
     }
   ]
 }

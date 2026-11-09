@@ -16,6 +16,17 @@ export type Reseau = { label: string; url: string };
 // `faq` vaut null tant que le bureau n'a pas enregistré sa FAQ : le site affiche alors celle d'origine.
 export type Reglages = { contact: Contact; reseaux: Reseau[]; textes: Record<string, string>; faq: QuestionFaq[] | null };
 
+export type Alumni = {
+  numero: number;
+  nom: string;
+  promotion: number;
+  promotionOrdre: string;
+  structure?: string;
+  poste?: string;
+  domaines: string[];
+  decede: boolean;
+};
+
 export type Etape = {
   periode: string;
   poste: string;

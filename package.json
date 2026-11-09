@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "alumni:importer": "node --env-file-if-exists=.env.local --import tsx scripts/importer-alumni.ts",
     "db:seed": "node --env-file-if-exists=.env.local --import tsx scripts/seed.ts",
     "admin:creer": "node --env-file-if-exists=.env.local --import tsx scripts/creer-admin.ts",
     "test": "vitest run",

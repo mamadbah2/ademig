@@ -110,6 +110,20 @@ export const verification = pgTable(
 export const statutPublication = pgEnum("statut_publication", ["brouillon", "publie"]);
 export const categoriePartenaire = pgEnum("categorie_partenaire", ["Institution", "Entreprise", "Événement"]);
 
+// Anciens de l'école, importés depuis un fichier privé : aucune donnée de contact n'entre ici.
+export const alumni = pgTable("alumni", {
+  numero: integer("numero").primaryKey(),
+  prenom: text("prenom").notNull(),
+  nom: text("nom").notNull(),
+  promotion: integer("promotion").notNull(),
+  promotionOrdre: text("promotion_ordre").notNull(),
+  structure: text("structure"),
+  poste: text("poste"),
+  domaines: text("domaines").array().default(sql`'{}'::text[]`).notNull(),
+  decede: boolean("decede").default(false).notNull(),
+  ...horodatage(),
+});
+
 export const media = pgTable("media", {
   id: uuid("id").primaryKey().defaultRandom(),
   url: text("url").notNull().unique(),
