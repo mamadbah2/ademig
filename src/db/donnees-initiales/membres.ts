@@ -229,6 +229,7 @@ export const membres: MembreInitial[] = [
     organisation: "BTP",
     specialite: "",
     promotion: 2014,
+    numero: 313,
     resume: "",
     parcours: [],
     competences: [],

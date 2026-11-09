@@ -22,6 +22,7 @@ export const navigation = [
   { href: "/amicale", label: "L'Amicale" },
   { href: "/bureau", label: "Bureau et commissions" },
   { href: "/membres", label: "Membres" },
+  { href: "/alumni", label: "Alumni" },
   { href: "/actualites", label: "Actualités" },
   { href: "/evenements", label: "Événements" },
   { href: "/partenaires", label: "Partenaires" },
