@@ -87,16 +87,16 @@ export function SiteHeader({ email }: { email: string }) {
           }`}
         >
           <div className="flex items-center justify-between gap-6 px-5 py-3 sm:px-10 lg:px-16 lg:py-4 2xl:px-24">
-            <Link href="/" aria-label="ADEMIG, accueil" className="flex items-center gap-3" onClick={() => setOuvert(false)}>
+            <Link href="/" aria-label="ADEMIG, accueil" className="flex shrink-0 items-center gap-3" onClick={() => setOuvert(false)}>
               <Logo priority className="h-14 w-auto sm:h-16" />
-              <span className="hidden text-sm whitespace-nowrap sm:inline lg:hidden">
+              <span className="hidden text-sm whitespace-nowrap sm:inline xl:hidden">
                 Ingénieurs diplômés de l&apos;ENSMG
               </span>
             </Link>
 
             <button
               type="button"
-              className="flex h-11 items-center gap-2.5 border-[1.5px] border-encre bg-moutarde px-3.5 font-bold transition-transform active:scale-95 lg:hidden"
+              className="flex h-11 items-center gap-2.5 border-[1.5px] border-encre bg-moutarde px-3.5 font-bold transition-transform active:scale-95 xl:hidden"
               aria-expanded={ouvert}
               aria-controls="menu-principal"
               onClick={() => setOuvert((v) => !v)}
@@ -116,7 +116,7 @@ export function SiteHeader({ email }: { email: string }) {
               {ouvert ? "Fermer" : "Menu"}
             </button>
 
-            <nav aria-label="Navigation principale" className="hidden text-marine lg:block">
+            <nav aria-label="Navigation principale" className="hidden text-marine xl:block">
               <ul className="flex gap-1">
                 {navigation.slice(1).map((item) => (
                   <li key={item.href}>
@@ -151,7 +151,7 @@ export function SiteHeader({ email }: { email: string }) {
           aria-modal="true"
           aria-label="Menu"
           data-lenis-prevent
-          className="fixed inset-0 z-40 overflow-hidden lg:hidden"
+          className="fixed inset-0 z-40 overflow-hidden xl:hidden"
         >
           <span aria-hidden data-menu-strate className="absolute inset-0 bg-marine" />
           <span aria-hidden data-menu-strate className="absolute inset-0 bg-moutarde" />
