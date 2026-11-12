@@ -17,11 +17,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: absoluteUrl(`/actualites/${a.slug}`),
       lastModified: a.date,
       priority: 0.7,
+      images: a.photos?.map((p) => absoluteUrl(p.src)),
     })),
+    // Pas de lastModified : la date d'un événement est souvent à venir, ce n'est pas une date de modification.
     ...evenements.map((e) => ({
       url: absoluteUrl(`/evenements/${e.slug}`),
-      lastModified: e.debut,
       priority: 0.7,
+      images: [e.affiche, ...(e.photos ?? [])].flatMap((p) => (p ? [absoluteUrl(p.src)] : [])),
     })),
   ];
 }

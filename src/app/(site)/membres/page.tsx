@@ -3,13 +3,14 @@ import { versCarte } from "@/components/carte-membre";
 import { Cadre, PageHeader } from "@/components/ui";
 import { getMembres } from "@/lib/content/membres";
 import { AnnuaireMembres } from "./annuaire";
+import { metadonneesPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Membres",
+export const metadata: Metadata = metadonneesPage({
+  titre: "Membres",
   description:
     "L'annuaire des ingénieurs diplômés de l'ENSMG membres de l'ADEMIG : géologues, ingénieurs des mines, du pétrole et du gaz, avec leur profil LinkedIn.",
-  alternates: { canonical: "/membres" },
-};
+  chemin: "/membres",
+});
 
 export default async function Membres() {
   const membres = await getMembres();

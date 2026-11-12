@@ -10,8 +10,8 @@ export const site = {
   description:
     "L'ADEMIG réunit les ingénieurs diplômés de l'École nationale supérieure des mines et de la géologie (ENSMG) de Dakar. Elle contribue à un secteur extractif sénégalais plus inclusif et durable.",
   motto: "Réfléchir, proposer, agir",
-  // À CONFIRMER : nom de domaine définitif (ademig.org appartient à une autre association, au Niger).
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.ademig.sn",
+  // Domaine de production (ademig.org appartient à une autre association, au Niger).
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.ademig.com",
   locale: "fr_SN",
   // Site officiel de l'école (vérifié le 13/10/2026).
   ecole: { nom: "ENSMG", url: "https://ensmg.ucad.sn/" },

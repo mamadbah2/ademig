@@ -4,13 +4,14 @@ import { Bouton, Cadre, Etiquette, PageHeader, SectionTitle } from "@/components
 import { getReglages } from "@/lib/content/reglages";
 import { type CleTexte, fusionnerTextes } from "@/lib/content/textes";
 import { site } from "@/lib/site";
+import { metadonneesPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "L'Amicale",
+export const metadata: Metadata = metadonneesPage({
+  titre: "L'Amicale",
   description:
     "Qui est l'ADEMIG, l'Amicale des ingénieurs diplômés de l'ENSMG (ex-IST) de Dakar : son histoire depuis la création de l'AIGIST, sa vision pour 2030, ses valeurs, ses missions et son plan stratégique.",
-  alternates: { canonical: "/amicale" },
-};
+  chemin: "/amicale",
+});
 
 const missions: { titre: CleTexte; texte: CleTexte; icone: IconeName; ton: Ton }[] = [
   { titre: "amicale.mission1.titre", texte: "amicale.mission1.texte", icone: "mineur", ton: "ocre" },

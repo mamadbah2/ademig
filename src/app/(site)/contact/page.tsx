@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { IconeCarre } from "@/components/illustration";
 import { Cadre, PageHeader, SectionTitle } from "@/components/ui";
 import { getReglages } from "@/lib/content/reglages";
+import { metadonneesPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Contacter l'ADEMIG, l'Amicale des ingénieurs diplômés de l'ENSMG, à Dakar.",
-  alternates: { canonical: "/contact" },
-};
+export const metadata: Metadata = metadonneesPage({
+  titre: "Contact",
+  description:
+    "Contacter l'ADEMIG, l'Amicale des ingénieurs diplômés de l'ENSMG, à Dakar : adresse, e-mail, contact presse et réseaux sociaux, pour une adhésion, un partenariat ou une information.",
+  chemin: "/contact",
+});
 
 export default async function Contact() {
   const { contact, reseaux } = await getReglages();

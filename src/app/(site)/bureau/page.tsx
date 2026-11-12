@@ -4,14 +4,15 @@ import { CarteMembre } from "@/components/carte-membre";
 import { Cadre, formatDate, PageHeader, SectionTitle } from "@/components/ui";
 import { getBureau } from "@/lib/content/organisation";
 import type { Member } from "@/lib/content/types";
+import { metadonneesPage } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { dateElection } = await getBureau();
-  return {
-    title: "Bureau et commissions",
+  return metadonneesPage({
+    titre: "Bureau et commissions",
     description: `Le bureau exécutif de l'ADEMIG${dateElection ? `, élu le ${formatDate(dateElection)}` : ""}, et les commissions qui font vivre l'amicale.`,
-    alternates: { canonical: "/bureau" },
-  };
+    chemin: "/bureau",
+  });
 }
 
 const iconesCommissions: IconeName[] = ["lingots", "explosion", "partage", "casque"];
