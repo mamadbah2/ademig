@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { Cadre, LienSouligne, PageHeader } from "@/components/ui";
 import { getAlumni } from "@/lib/content/alumni";
 import { AnnuaireAlumni } from "./annuaire";
+import { metadonneesPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Alumni",
+export const metadata: Metadata = metadonneesPage({
+  titre: "Alumni",
   description:
     "La liste des anciens de l'ENSMG (ex-IST) et de l'ADEMIG, promotion par promotion, depuis 1986 : géologues, ingénieurs des mines, du pétrole et du gaz.",
-  alternates: { canonical: "/alumni" },
-};
+  chemin: "/alumni",
+});
 
 export default async function Alumni() {
   const alumni = await getAlumni();

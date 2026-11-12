@@ -4,13 +4,14 @@ import { IconeCarre, type IconeName, type Ton } from "@/components/illustration"
 import { Cadre, PageHeader, SectionTitle } from "@/components/ui";
 import { getPartenaires } from "@/lib/content/organisation";
 import type { Partenaire } from "@/lib/content/types";
+import { metadonneesPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Partenaires",
+export const metadata: Metadata = metadonneesPage({
+  titre: "Partenaires",
   description:
     "Les institutions et entreprises qui accompagnent l'ADEMIG : ENSMG, ministère des Mines et de la Géologie, CNSCL, entreprises du secteur extractif.",
-  alternates: { canonical: "/partenaires" },
-};
+  chemin: "/partenaires",
+});
 
 const categories: { cle: Partenaire["categorie"]; titre: string; icone: IconeName; ton: Ton }[] = [
   { cle: "Institution", titre: "Institutions", icone: "lanterne", ton: "brun" },

@@ -5,7 +5,7 @@ import { Galerie } from "@/components/photos";
 import { Cadre, DateTexte, Etiquette, JsonLd, LienSouligne, SectionTitle } from "@/components/ui";
 import { Videos } from "@/components/video-youtube";
 import { getEvenementPourPage, getEvenements } from "@/lib/content/evenements";
-import { absoluteUrl } from "@/lib/site";
+import { jsonLdEvenement, jsonLdFilAriane, metadonneesPage } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const evenements = await getEvenements();
@@ -16,12 +16,13 @@ export async function generateMetadata({ params }: PageProps<"/evenements/[slug]
   const { slug } = await params;
   const e = await getEvenementPourPage(slug);
   if (!e) return {};
-  return {
-    title: e.titre,
+  const visuel = e.affiche ?? e.photos?.[0];
+  return metadonneesPage({
+    titre: e.titre,
     description: e.resume,
-    alternates: { canonical: `/evenements/${e.slug}` },
-    openGraph: { title: e.titre, description: e.resume },
-  };
+    chemin: `/evenements/${e.slug}`,
+    image: visuel && { url: visuel.src, width: visuel.width, height: visuel.height, alt: visuel.alt },
+  });
 }
 
 export default async function PageEvenement({ params }: PageProps<"/evenements/[slug]">) {
@@ -31,25 +32,12 @@ export default async function PageEvenement({ params }: PageProps<"/evenements/[
 
   return (
     <article>
+      <JsonLd data={jsonLdEvenement(e)} />
       <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Event",
-          name: e.titre,
-          description: e.resume,
-          startDate: e.debut,
-          endDate: e.fin ?? e.debut,
-          eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-          eventStatus: "https://schema.org/EventScheduled",
-          location: {
-            "@type": "Place",
-            name: e.lieu.nom,
-            address: { "@type": "PostalAddress", addressLocality: e.lieu.ville, addressCountry: "SN" },
-          },
-          organizer: { "@id": absoluteUrl("/#organisation") },
-          url: absoluteUrl(`/evenements/${e.slug}`),
-          image: e.affiche ? absoluteUrl(e.affiche.src) : undefined,
-        }}
+        data={jsonLdFilAriane([
+          { nom: "Événements", chemin: "/evenements" },
+          { nom: e.titre, chemin: `/evenements/${e.slug}` },
+        ])}
       />
       <Cadre
         as="div"

@@ -4,7 +4,7 @@ import { Galerie, PhotoCadre } from "@/components/photos";
 import { Cadre, DateTexte, Etiquette, JsonLd, LienSouligne, SectionTitle } from "@/components/ui";
 import { Videos } from "@/components/video-youtube";
 import { getActualitePourPage, getActualites } from "@/lib/content/actualites";
-import { absoluteUrl, site } from "@/lib/site";
+import { jsonLdArticle, jsonLdFilAriane, metadonneesPage } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const actualites = await getActualites();
@@ -15,18 +15,15 @@ export async function generateMetadata({ params }: PageProps<"/actualites/[slug]
   const { slug } = await params;
   const a = await getActualitePourPage(slug);
   if (!a) return {};
-  return {
-    title: a.titre,
+  const photo = a.photos?.[0];
+  return metadonneesPage({
+    titre: a.titre,
     description: a.resume,
-    alternates: { canonical: `/actualites/${a.slug}` },
-    openGraph: {
-      type: "article",
-      title: a.titre,
-      description: a.resume,
-      publishedTime: a.date,
-      images: a.photos?.[0] ? [a.photos[0].src] : undefined,
-    },
-  };
+    chemin: `/actualites/${a.slug}`,
+    type: "article",
+    publie: a.date,
+    image: photo && { url: photo.src, width: photo.width, height: photo.height, alt: photo.alt },
+  });
 }
 
 export default async function Article({ params }: PageProps<"/actualites/[slug]">) {
@@ -36,19 +33,12 @@ export default async function Article({ params }: PageProps<"/actualites/[slug]"
 
   return (
     <article>
+      <JsonLd data={jsonLdArticle(a)} />
       <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "NewsArticle",
-          headline: a.titre,
-          description: a.resume,
-          datePublished: a.date,
-          inLanguage: "fr",
-          image: a.photos?.map((p) => absoluteUrl(p.src)),
-          mainEntityOfPage: absoluteUrl(`/actualites/${a.slug}`),
-          author: { "@id": absoluteUrl("/#organisation") },
-          publisher: { "@type": "Organization", name: site.fullName, url: site.url },
-        }}
+        data={jsonLdFilAriane([
+          { nom: "Actualités", chemin: "/actualites" },
+          { nom: a.titre, chemin: `/actualites/${a.slug}` },
+        ])}
       />
       <Cadre
         as="div"

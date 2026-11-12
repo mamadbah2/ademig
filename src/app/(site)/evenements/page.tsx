@@ -5,16 +5,17 @@ import { Vignette } from "@/components/photos";
 import { Cadre, DateTexte, LienSouligne, PageHeader, SectionTitle } from "@/components/ui";
 import { getEvenements } from "@/lib/content/evenements";
 import type { Evenement } from "@/lib/content/types";
+import { metadonneesPage } from "@/lib/seo";
 
 // Recalculée chaque heure pour qu'un événement passé change de section.
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Événements",
+export const metadata: Metadata = metadonneesPage({
+  titre: "Événements",
   description:
     "Journées de réflexion, forums de recrutement et rencontres organisés par l'ADEMIG dans le secteur des mines, du pétrole et du gaz au Sénégal.",
-  alternates: { canonical: "/evenements" },
-};
+  chemin: "/evenements",
+});
 
 const icones: IconeName[] = ["explosion", "mineur", "convoyeur"];
 

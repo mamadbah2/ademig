@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -31,6 +32,7 @@ import { getMembres } from "@/lib/content/membres";
 import { getPartenaires } from "@/lib/content/organisation";
 import { getReglages } from "@/lib/content/reglages";
 import { type CleTexte, fusionnerTextes } from "@/lib/content/textes";
+import { jsonLdSiteWeb, metadonneesPage } from "@/lib/seo";
 import { site } from "@/lib/site";
 
 const devise: { verbe: string; icone: IconeName; texte: CleTexte }[] = [
@@ -40,6 +42,13 @@ const devise: { verbe: string; icone: IconeName; texte: CleTexte }[] = [
 ];
 
 const iconesActualites: IconeName[] = ["strates", "mineur", "minerai"];
+
+export const metadata: Metadata = metadonneesPage({
+  titre: `${site.name}, ${site.shortDescription}`,
+  description: site.description,
+  chemin: "/",
+  titreAbsolu: true,
+});
 
 // Recalculée chaque heure : un événement passé quitte le hero même sans modification dans l'admin.
 export const revalidate = 3600;
@@ -62,6 +71,7 @@ export default async function Accueil() {
 
   return (
     <>
+      <JsonLd data={jsonLdSiteWeb()} />
       {/* Hero pleine largeur : les photos de l'actualité récente (ou, à défaut, une par univers de l'amicale) se relaient en fondu lent. */}
       <section
         data-hero-scene

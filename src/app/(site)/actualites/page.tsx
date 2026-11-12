@@ -4,13 +4,14 @@ import { IconeCarre, ordreTons, type IconeName } from "@/components/illustration
 import { Vignette } from "@/components/photos";
 import { Cadre, DateTexte, PageHeader } from "@/components/ui";
 import { getActualites } from "@/lib/content/actualites";
+import { metadonneesPage } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Actualités",
+export const metadata: Metadata = metadonneesPage({
+  titre: "Actualités",
   description:
     "Les prises de position, communiqués et activités de l'ADEMIG sur les mines, la géologie, le pétrole, le gaz et le contenu local au Sénégal.",
-  alternates: { canonical: "/actualites" },
-};
+  chemin: "/actualites",
+});
 
 const icones: IconeName[] = ["strates", "mineur", "minerai"];
 
